@@ -26,11 +26,19 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const currentUser = localStorage.getItem('currentUser');
-    if (currentUser) {
-      setUser(JSON.parse(currentUser));
+    if (typeof window !== 'undefined') {
+      const currentUser = localStorage.getItem('currentUser');
+      if (currentUser) {
+        try {
+          setUser(JSON.parse(currentUser));
+        } catch (error) {
+          localStorage.removeItem('currentUser');
+        }
+      }
+      setIsLoading(false);
     }
   }, []);
 
@@ -86,7 +94,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       logout,
       isAuthenticated: !!user
     }}>
-      {children}
+      {isLoading ? (
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <p className="text-muted-foreground">Loading...</p>
+          </div>
+        </div>
+      ) : (
+        children
+      )}
     </AuthContext.Provider>
   );
 }

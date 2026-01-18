@@ -43,7 +43,8 @@ export default function LoginPage() {
 
     if (user) {
       localStorage.setItem('currentUser', JSON.stringify(user));
-      router.push('/dashboard'); // Smooth client-side navigation
+      // Force page reload to ensure auth context updates
+      window.location.replace('/dashboard');
     } else {
       setError('Invalid email or password');
       setIsLoading(false);
