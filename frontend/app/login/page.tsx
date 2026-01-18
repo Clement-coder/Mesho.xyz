@@ -6,14 +6,13 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { CheckCircle, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
   const router = useRouter();
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -37,43 +36,19 @@ export default function LoginPage() {
     setIsLoading(true);
 
     const users = JSON.parse(localStorage.getItem('users') || '[]');
-    const user = users.find((u: any) => u.email === email.trim().toLowerCase() && u.password === password);
+    const user = users.find(
+      (u: any) =>
+        u.email === email.trim().toLowerCase() && u.password === password
+    );
 
     if (user) {
       localStorage.setItem('currentUser', JSON.stringify(user));
-      setIsLoading(false);
-      setShowSuccess(true);
+      router.push('/dashboard'); // Smooth client-side navigation
     } else {
       setError('Invalid email or password');
       setIsLoading(false);
     }
   };
-
-  if (showSuccess) {
-    return (
-      <div className="min-h-screen flex items-center justify-center px-4 bg-gradient-to-b from-accent/5 to-transparent">
-        <div className="text-center animate-in zoom-in duration-500">
-          <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6 animate-pulse">
-            <CheckCircle className="w-10 h-10 text-green-600" />
-          </div>
-          <h2 className="text-2xl font-bold text-green-600 mb-2 animate-in slide-in-from-bottom duration-700 delay-200">
-            Welcome Back!
-          </h2>
-          <p className="text-muted-foreground mb-6 animate-in slide-in-from-bottom duration-700 delay-400">
-            You have successfully signed in to your account.
-          </p>
-          <Link href="/dashboard">
-            <Button 
-              size="lg"
-              className="animate-in slide-in-from-bottom duration-700 delay-600"
-            >
-              Continue to Dashboard
-            </Button>
-          </Link>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 bg-gradient-to-b from-accent/5 to-transparent">
