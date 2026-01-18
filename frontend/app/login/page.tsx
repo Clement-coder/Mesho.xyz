@@ -36,14 +36,12 @@ export default function LoginPage() {
 
     setIsLoading(true);
 
-    // Simulate loading delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
-
     const users = JSON.parse(localStorage.getItem('users') || '[]');
     const user = users.find((u: any) => u.email === email.trim().toLowerCase() && u.password === password);
 
     if (user) {
       localStorage.setItem('currentUser', JSON.stringify(user));
+      setIsLoading(false);
       setShowSuccess(true);
     } else {
       setError('Invalid email or password');

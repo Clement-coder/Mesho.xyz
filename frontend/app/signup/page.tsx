@@ -75,7 +75,6 @@ export default function SignUpPage() {
 
     users.push(newUser);
     localStorage.setItem('users', JSON.stringify(users));
-    localStorage.setItem('currentUser', JSON.stringify(newUser));
     
     setShowSuccess(true);
   };
@@ -99,14 +98,14 @@ export default function SignUpPage() {
             Welcome to Mesho, {name}!
           </p>
           <p className="text-muted-foreground mb-6 animate-in slide-in-from-bottom duration-700 delay-600">
-            Your account has been successfully created.
+            Your account has been successfully created. Please sign in to continue.
           </p>
-          <Link href="/dashboard">
+          <Link href="/login">
             <Button 
               size="lg"
               className="animate-in slide-in-from-bottom duration-700 delay-800"
             >
-              Continue to Dashboard
+              Sign In Now
             </Button>
           </Link>
         </div>
