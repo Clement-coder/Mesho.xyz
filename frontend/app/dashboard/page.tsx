@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import React, { useState } from 'react';
 import { projects } from '@/lib/mock-data';
 import { Button } from '@/components/ui/button';
@@ -75,19 +76,19 @@ export default function DashboardPage() {
                   Settings
                 </h3>
                 <nav className="space-y-2">
-                  {[
-                    { label: 'Profile Settings', icon: 'Settings' },
-                    { label: 'Logout', icon: 'LogOut', onClick: logout },
-                  ].map((item, index) => (
-                    <button
-                      key={index}
-                      onClick={item.onClick}
-                      className="w-full flex items-center gap-3 px-4 py-2 rounded-lg text-foreground hover:bg-muted transition-colors text-sm"
-                    >
-                      <Icon name={item.icon as any} size={16} />
-                      {item.label}
+                  <Link href="/profile">
+                    <button className="w-full flex items-center gap-3 px-4 py-2 rounded-lg text-foreground hover:bg-muted transition-colors text-sm">
+                      <Icon name="Settings" size={16} />
+                      Profile Settings
                     </button>
-                  ))}
+                  </Link>
+                  <button
+                    onClick={logout}
+                    className="w-full flex items-center gap-3 px-4 py-2 rounded-lg text-foreground hover:bg-muted transition-colors text-sm"
+                  >
+                    <Icon name="LogOut" size={16} />
+                    Logout
+                  </button>
                 </nav>
               </div>
             </div>

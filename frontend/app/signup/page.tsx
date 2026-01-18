@@ -78,11 +78,6 @@ export default function SignUpPage() {
     localStorage.setItem('currentUser', JSON.stringify(newUser));
     
     setShowSuccess(true);
-    
-    // Show success animation then redirect
-    setTimeout(() => {
-      window.location.replace('/dashboard');
-    }, 2500);
   };
 
   if (showSuccess) {
@@ -103,20 +98,17 @@ export default function SignUpPage() {
           <p className="text-lg font-medium text-foreground mb-2 animate-in slide-in-from-bottom duration-700 delay-400">
             Welcome to Mesho, {name}!
           </p>
-          <p className="text-muted-foreground animate-in slide-in-from-bottom duration-700 delay-600">
-            Setting up your dashboard...
+          <p className="text-muted-foreground mb-6 animate-in slide-in-from-bottom duration-700 delay-600">
+            Your account has been successfully created.
           </p>
-          <div className="flex justify-center mt-6">
-            <div className="flex space-x-1">
-              {[0, 1, 2, 3].map((i) => (
-                <div
-                  key={i}
-                  className="w-3 h-3 bg-gradient-to-r from-accent to-accent/80 rounded-full animate-bounce"
-                  style={{ animationDelay: `${i * 0.15}s` }}
-                />
-              ))}
-            </div>
-          </div>
+          <Link href="/dashboard">
+            <Button 
+              size="lg"
+              className="animate-in slide-in-from-bottom duration-700 delay-800"
+            >
+              Continue to Dashboard
+            </Button>
+          </Link>
         </div>
       </div>
     );

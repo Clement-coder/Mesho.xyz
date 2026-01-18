@@ -45,11 +45,6 @@ export default function LoginPage() {
     if (user) {
       localStorage.setItem('currentUser', JSON.stringify(user));
       setShowSuccess(true);
-      
-      // Show success animation then redirect
-      setTimeout(() => {
-        window.location.replace('/dashboard');
-      }, 2000);
     } else {
       setError('Invalid email or password');
       setIsLoading(false);
@@ -66,20 +61,17 @@ export default function LoginPage() {
           <h2 className="text-2xl font-bold text-green-600 mb-2 animate-in slide-in-from-bottom duration-700 delay-200">
             Welcome Back!
           </h2>
-          <p className="text-muted-foreground animate-in slide-in-from-bottom duration-700 delay-400">
-            Redirecting to your dashboard...
+          <p className="text-muted-foreground mb-6 animate-in slide-in-from-bottom duration-700 delay-400">
+            You have successfully signed in to your account.
           </p>
-          <div className="flex justify-center mt-4">
-            <div className="flex space-x-1">
-              {[0, 1, 2].map((i) => (
-                <div
-                  key={i}
-                  className="w-2 h-2 bg-accent rounded-full animate-bounce"
-                  style={{ animationDelay: `${i * 0.2}s` }}
-                />
-              ))}
-            </div>
-          </div>
+          <Link href="/dashboard">
+            <Button 
+              size="lg"
+              className="animate-in slide-in-from-bottom duration-700 delay-600"
+            >
+              Continue to Dashboard
+            </Button>
+          </Link>
         </div>
       </div>
     );
