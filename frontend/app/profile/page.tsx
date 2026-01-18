@@ -7,13 +7,16 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { User, Mail, Calendar, Save } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { LogoutModal } from '@/components/logout-modal';
+import { User, Mail, Calendar, Save, Camera } from 'lucide-react';
 
 export default function ProfilePage() {
-  const { user, logout } = useAuth();
+  const { user, logout, refreshUser } = useAuth();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [profilePicture, setProfilePicture] = useState('');
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -24,8 +27,33 @@ export default function ProfilePage() {
     if (user) {
       setName(user.name);
       setEmail(user.email);
+      setProfilePicture(user.profilePicture || '');
     }
   }, [user]);
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const imageUrl = event.target?.result as string;
+        setProfilePicture(imageUrl);
+        
+        // Update user data immediately
+        const users = JSON.parse(localStorage.getItem('users') || '[]');
+        const userIndex = users.findIndex((u: any) => u.id === user?.id);
+        
+        if (userIndex !== -1) {
+          users[userIndex] = { ...users[userIndex], profilePicture: imageUrl };
+          localStorage.setItem('users', JSON.stringify(users));
+          localStorage.setItem('currentUser', JSON.stringify(users[userIndex]));
+          refreshUser(); // Refresh auth context
+          setMessage('Profile picture updated successfully!');
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const handleUpdateProfile = (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,7 +69,7 @@ export default function ProfilePage() {
     const userIndex = users.findIndex((u: any) => u.id === user?.id);
 
     if (userIndex !== -1) {
-      users[userIndex] = { ...users[userIndex], name: name.trim() };
+      users[userIndex] = { ...users[userIndex], name: name.trim(), profilePicture };
       localStorage.setItem('users', JSON.stringify(users));
       localStorage.setItem('currentUser', JSON.stringify(users[userIndex]));
       setMessage('Profile updated successfully!');
@@ -86,6 +114,11 @@ export default function ProfilePage() {
     setMessage('Password changed successfully!');
   };
 
+  const handleLogout = () => {
+    logout();
+    setShowLogoutModal(false);
+  };
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -108,11 +141,23 @@ export default function ProfilePage() {
             <div className="lg:col-span-1">
               <Card>
                 <CardHeader className="text-center">
-                  <Avatar className="w-20 h-20 mx-auto mb-4">
-                    <AvatarFallback className="text-2xl bg-accent text-white">
-                      {user?.name?.charAt(0).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
+                  <div className="relative inline-block">
+                    <Avatar className="w-20 h-20 mx-auto mb-4">
+                      <AvatarImage src={profilePicture} alt={user?.name} />
+                      <AvatarFallback className="text-2xl bg-accent text-white">
+                        {user?.name?.charAt(0).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <label className="absolute bottom-4 right-0 bg-accent text-white rounded-full p-2 cursor-pointer hover:bg-accent/80 transition-colors">
+                      <Camera className="w-4 h-4" />
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageUpload}
+                        className="hidden"
+                      />
+                    </label>
+                  </div>
                   <CardTitle className="text-xl">{user?.name}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -249,7 +294,7 @@ export default function ProfilePage() {
                   <p className="text-sm text-muted-foreground mb-4">
                     Once you logout, you'll need to sign in again to access your account.
                   </p>
-                  <Button variant="destructive" onClick={logout}>
+                  <Button variant="destructive" onClick={() => setShowLogoutModal(true)}>
                     Logout
                   </Button>
                 </CardContent>
@@ -257,6 +302,13 @@ export default function ProfilePage() {
             </div>
           </div>
         </div>
+
+        {/* Logout Modal */}
+        <LogoutModal
+          isOpen={showLogoutModal}
+          onClose={() => setShowLogoutModal(false)}
+          onConfirm={handleLogout}
+        />
       </div>
     </ProtectedRoute>
   );

@@ -8,10 +8,13 @@ import { ProjectCard } from '../components/project-card';
 import { Icon } from '../components/icon-wrapper';
 import { ProtectedRoute } from '@/components/protected-route';
 import { useAuth } from '@/lib/auth-context';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { LogoutModal } from '@/components/logout-modal';
 import { BarChart3, Settings, LogOut, BookOpen, TrendingUp } from 'lucide-react';
 
 export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState<'all' | 'enrolled' | 'wishlist'>('enrolled');
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
   const { user, logout } = useAuth();
   const [currentUser, setCurrentUser] = useState<any>({});
 
@@ -21,6 +24,19 @@ export default function DashboardPage() {
       const userData = JSON.parse(localStorage.getItem('currentUser') || '{}');
       setCurrentUser(userData);
     }
+  }, []);
+
+  // Listen for user data changes
+  React.useEffect(() => {
+    const handleStorageChange = () => {
+      if (typeof window !== 'undefined') {
+        const userData = JSON.parse(localStorage.getItem('currentUser') || '{}');
+        setCurrentUser(userData);
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
   const enrolledCourses = currentUser.enrolledCourses || [];
@@ -36,6 +52,11 @@ export default function DashboardPage() {
       : activeTab === 'wishlist'
         ? wishlistProjects
         : projects;
+
+  const handleLogout = () => {
+    logout();
+    setShowLogoutModal(false);
+  };
 
   return (
     <ProtectedRoute>
@@ -83,7 +104,7 @@ export default function DashboardPage() {
                     </button>
                   </Link>
                   <button
-                    onClick={logout}
+                    onClick={() => setShowLogoutModal(true)}
                     className="w-full flex items-center gap-3 px-4 py-2 rounded-lg text-foreground hover:bg-muted transition-colors text-sm"
                   >
                     <Icon name="LogOut" size={16} />
@@ -100,17 +121,14 @@ export default function DashboardPage() {
               {/* Header */}
               <div className="mb-8 animate-in fade-in slide-in-from-top duration-500">
                 <div className="flex items-center gap-4 mb-4">
-                  <div className="w-16 h-16 bg-accent/10 rounded-full flex items-center justify-center">
-                    <span className="text-2xl font-bold text-accent">
+                  <Avatar className="w-16 h-16">
+                    <AvatarImage src={currentUser?.profilePicture || user?.profilePicture} alt={user?.name} />
+                    <AvatarFallback className="text-2xl bg-accent text-white">
                       {user?.name?.charAt(0).toUpperCase()}
-                    </span>
-                  </div>
+                    </AvatarFallback>
+                  </Avatar>
                   <div>
                     <h1 className="text-3xl md:text-4xl font-bold">Welcome back, {user?.name}!</h1>
-                    <p className="text-muted-foreground">{user?.email}</p>
-                    <p className="text-sm text-muted-foreground">
-                      Member since {new Date(user?.createdAt || '').toLocaleDateString()}
-                    </p>
                   </div>
                 </div>
                 <p className="text-muted-foreground">
@@ -236,6 +254,13 @@ export default function DashboardPage() {
 
         {/* Bottom padding for mobile nav */}
         <div className="md:hidden h-20" />
+
+        {/* Logout Modal */}
+        <LogoutModal
+          isOpen={showLogoutModal}
+          onClose={() => setShowLogoutModal(false)}
+          onConfirm={handleLogout}
+        />
       </div>
     </ProtectedRoute>
   );

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Menu, X, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/lib/auth-context';
+import { LogoutModal } from '@/components/logout-modal';
 
 interface NavbarProps {
   currentPage?: string;
@@ -12,7 +13,14 @@ interface NavbarProps {
 
 export const Navbar = ({ currentPage }: NavbarProps) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
   const { user, logout, isAuthenticated } = useAuth();
+
+  const handleLogout = () => {
+    logout();
+    setShowLogoutModal(false);
+    setMobileMenuOpen(false);
+  };
 
   const navLinks = [
     { href: '/', label: 'Home', id: 'home' },
@@ -63,7 +71,7 @@ export const Navbar = ({ currentPage }: NavbarProps) => {
                     <User size={16} />
                     <span>{user?.name}</span>
                   </div>
-                  <Button variant="outline" size="sm" onClick={logout}>
+                  <Button variant="outline" size="sm" onClick={() => setShowLogoutModal(true)}>
                     Logout
                   </Button>
                 </div>
@@ -107,7 +115,7 @@ export const Navbar = ({ currentPage }: NavbarProps) => {
               ))}
               <div className="flex gap-2 pt-2">
                 {isAuthenticated ? (
-                  <Button variant="outline" size="sm" className="flex-1" onClick={logout}>
+                  <Button variant="outline" size="sm" className="flex-1" onClick={() => setShowLogoutModal(true)}>
                     Logout
                   </Button>
                 ) : (
@@ -129,6 +137,13 @@ export const Navbar = ({ currentPage }: NavbarProps) => {
           )}
         </div>
       </nav>
+
+      {/* Logout Modal */}
+      <LogoutModal
+        isOpen={showLogoutModal}
+        onClose={() => setShowLogoutModal(false)}
+        onConfirm={handleLogout}
+      />
     </>
   );
 };

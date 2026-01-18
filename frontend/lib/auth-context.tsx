@@ -7,6 +7,7 @@ interface User {
   name: string;
   email: string;
   password: string;
+  profilePicture?: string;
   createdAt: string;
   enrolledCourses: string[];
   wishlist: string[];
@@ -19,6 +20,7 @@ interface AuthContextType {
   login: (email: string, password: string) => boolean;
   signup: (name: string, email: string, password: string) => boolean;
   logout: () => void;
+  refreshUser: () => void;
   isAuthenticated: boolean;
 }
 
@@ -39,6 +41,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       }
       setIsLoading(false);
+
+      // Listen for localStorage changes
+      const handleStorageChange = () => {
+        const updatedUser = localStorage.getItem('currentUser');
+        if (updatedUser) {
+          try {
+            setUser(JSON.parse(updatedUser));
+          } catch (error) {
+            localStorage.removeItem('currentUser');
+            setUser(null);
+          }
+        } else {
+          setUser(null);
+        }
+      };
+
+      window.addEventListener('storage', handleStorageChange);
+      return () => window.removeEventListener('storage', handleStorageChange);
     }
   }, []);
 
@@ -81,6 +101,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return true;
   };
 
+  const refreshUser = () => {
+    if (typeof window !== 'undefined') {
+      const currentUser = localStorage.getItem('currentUser');
+      if (currentUser) {
+        try {
+          setUser(JSON.parse(currentUser));
+        } catch (error) {
+          localStorage.removeItem('currentUser');
+          setUser(null);
+        }
+      }
+    }
+  };
+
   const logout = () => {
     setUser(null);
     localStorage.removeItem('currentUser');
@@ -92,6 +126,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       login,
       signup,
       logout,
+      refreshUser,
       isAuthenticated: !!user
     }}>
       {isLoading ? (
