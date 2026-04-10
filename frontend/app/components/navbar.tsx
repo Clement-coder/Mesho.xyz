@@ -23,7 +23,7 @@ export const Navbar = () => {
     { href: '/', label: 'Home', icon: Home },
     { href: '/departments', label: 'Research Materials', icon: FileText },
     { href: '/training', label: 'SPSS Training', icon: BarChart3 },
-    { href: '/hire', label: 'Hire an Analyst', icon: UserCheck },
+    { href: '/hire', label: 'Hire a Data Analyst', icon: UserCheck },
   ];
 
   const isActive = (href: string) => pathname === href;

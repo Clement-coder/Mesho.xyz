@@ -41,38 +41,53 @@ export default function HomePage() {
   return (
     <div className="w-full">
       {/* Hero Section */}
-      <section className="py-16 md:py-24 px-4 bg-gradient-to-b from-accent/5 to-transparent">
-        <div className="max-w-7xl mx-auto">
+      <section
+        className="py-16 md:py-24 px-4 relative overflow-hidden"
+        style={{
+          backgroundImage: 'linear-gradient(135deg, rgba(15,23,42,0.82) 0%, rgba(59,130,246,0.75) 100%), url(/landing_background.jpeg)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
+      >
+        <div className="max-w-7xl mx-auto relative z-10">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
             <div className="space-y-6 animate-in fade-in slide-in-from-left duration-500 text-center md:text-left">
-              <h1 className="text-4xl md:text-5xl font-bold leading-tight text-balance">
+              <h1 className="text-4xl md:text-5xl font-bold leading-tight text-balance text-white">
                 Your Academic Research Support Platform
               </h1>
-              <p className="text-lg text-muted-foreground max-w-lg">
+              <p className="text-lg text-white/75 max-w-lg">
                 Access department-specific project materials, hire qualified academic data analysts, and master SPSS data analysis — all in one place.
               </p>
-              <div className="flex flex-wrap gap-4 pt-4 justify-center md:justify-start">
+              <div className="flex flex-wrap gap-3 pt-4 justify-center md:justify-start">
                 <Link href="/departments">
-                  <Button size="lg" aria-label="Browse research materials organized by academic department" title="Browse department-specific project topics and full research materials">
+                  <Button size="lg" aria-label="Browse research materials organized by academic department" title="Browse department-specific project topics and full research materials" className="bg-white text-accent hover:bg-white/90">
                     <FileText size={18} className="mr-2" aria-hidden="true" />
                     Browse Research Materials
                   </Button>
                 </Link>
                 <Link href="/hire">
-                  <Button variant="outline" size="lg" className="bg-transparent" aria-label="Hire a qualified academic data analyst for your research project" title="Submit your project details and get matched with a professional analyst">
+                  <Button variant="outline" size="lg" aria-label="Hire a qualified academic data analyst" title="Submit your project details and get matched with a professional analyst" className="border-white text-white hover:bg-white/10 bg-transparent">
                     <UserCheck size={18} className="mr-2" aria-hidden="true" />
-                    Hire an Analyst
+                    Hire a Data Analyst
+                  </Button>
+                </Link>
+                <Link href="/hire-researcher">
+                  <Button variant="outline" size="lg" aria-label="Hire a professional academic researcher" title="Get a qualified researcher to handle your full research project" className="border-white/60 text-white hover:bg-white/10 bg-transparent">
+                    <Users size={18} className="mr-2" aria-hidden="true" />
+                    Hire a Researcher
                   </Button>
                 </Link>
               </div>
             </div>
-            <div className="relative h-64 md:h-full min-h-96 bg-gradient-to-br from-accent/10 to-accent/5 rounded-2xl border border-accent/20 flex items-center justify-center animate-in fade-in slide-in-from-right duration-500">
-              <div className="text-center">
-                <div className="inline-flex items-center justify-center w-20 h-20 bg-accent rounded-full mb-4">
+            <div className="relative h-64 md:h-full min-h-80 rounded-2xl border border-white/20 flex items-center justify-center animate-in fade-in slide-in-from-right duration-500 overflow-hidden"
+              style={{ background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(12px)' }}
+            >
+              <div className="text-center px-6">
+                <div className="inline-flex items-center justify-center w-20 h-20 bg-white/20 rounded-full mb-4">
                   <Icon name="BookOpen" size={40} className="text-white" aria-hidden="true" />
                 </div>
-                <p className="text-sm font-medium text-foreground">Academic Research Support</p>
-                <p className="text-xs text-muted-foreground mt-1">Materials · Training · Analysis</p>
+                <p className="text-sm font-semibold text-white">Academic Research Support</p>
+                <p className="text-xs text-white/60 mt-1">Materials · Training · Analysis</p>
               </div>
             </div>
           </div>
