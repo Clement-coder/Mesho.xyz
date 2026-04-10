@@ -85,7 +85,7 @@ export default function ProfilePage() {
 
   return (
     <ProtectedRoute>
-      <div className="flex min-h-screen">
+      <div className="flex min-h-screen w-full">
         {/* Sidebar — no tab nav on profile page */}
         <DashboardSidebar onLogout={() => setShowLogoutModal(true)} />
 

@@ -1,9 +1,10 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { CheckCircle, Eraser, BarChart3, FileSearch, FileText, Database, ClipboardList } from 'lucide-react';
+import { CheckCircle, Eraser, BarChart3, FileSearch, FileText, Database, ChevronLeft } from 'lucide-react';
 
 const services = [
   { id: 'cleaning', label: 'Data Cleaning & Preparation', icon: Eraser },
@@ -27,6 +28,7 @@ export default function HirePage() {
   });
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState('');
+  const router = useRouter();
 
   const toggleService = (id: string) => {
     setForm(f => ({
@@ -52,6 +54,9 @@ export default function HirePage() {
       {/* Header */}
       <section className="py-12 md:py-16 px-4 bg-gradient-to-b from-accent/5 to-transparent border-b border-border">
         <div className="max-w-7xl mx-auto">
+          <button onClick={() => router.back()} className="flex items-center gap-2 text-accent hover:text-accent/80 transition-colors mb-6 text-sm font-medium" aria-label="Go back">
+            <ChevronLeft size={18} aria-hidden="true" /> Back
+          </button>
           <h1 className="text-3xl md:text-4xl font-bold mb-2 animate-in fade-in slide-in-from-top duration-500">
             Hire an Academic Data Analyst
           </h1>
