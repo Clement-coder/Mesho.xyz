@@ -17,7 +17,7 @@ export const Navbar = () => {
   const { user, logout, isAuthenticated } = useAuth();
   const pathname = usePathname();
 
-  const isDashboard = pathname?.startsWith('/dashboard') || pathname?.startsWith('/profile');
+  const isDashboard = pathname?.startsWith('/dashboard');
   const handleLogout = () => { logout(); setShowLogoutModal(false); setMobileMenuOpen(false); };
 
   const navLinks = [
