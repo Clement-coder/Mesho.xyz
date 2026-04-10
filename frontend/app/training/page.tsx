@@ -3,16 +3,22 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Icon } from '@/app/components/icon-wrapper';
-import { MessageAlert } from '@/app/components/message-alert';
-import { CheckCircle } from 'lucide-react';
+import { CheckCircle, GraduationCap, BookOpen, Users, Clock, Calendar, Wifi } from 'lucide-react';
 
 const schedules = [
-  { id: 'weekday-morning', label: 'Weekdays — Morning (8am–11am)' },
-  { id: 'weekday-evening', label: 'Weekdays — Evening (5pm–8pm)' },
-  { id: 'weekend-morning', label: 'Weekends — Morning (9am–12pm)' },
-  { id: 'weekend-afternoon', label: 'Weekends — Afternoon (1pm–4pm)' },
-  { id: 'flexible', label: 'Flexible / Online (Self-paced)' },
+  { id: 'weekday-morning', label: 'Weekdays — Morning (8am–11am)', icon: Clock },
+  { id: 'weekday-evening', label: 'Weekdays — Evening (5pm–8pm)', icon: Clock },
+  { id: 'weekend-morning', label: 'Weekends — Morning (9am–12pm)', icon: Calendar },
+  { id: 'weekend-afternoon', label: 'Weekends — Afternoon (1pm–4pm)', icon: Calendar },
+  { id: 'flexible', label: 'Flexible / Online (Self-paced)', icon: Wifi },
+];
+
+const whoIsItFor = [
+  { label: 'Undergraduate students', icon: GraduationCap },
+  { label: 'Postgraduate students', icon: GraduationCap },
+  { label: 'Academic researchers', icon: BookOpen },
+  { label: 'Lecturers and supervisors', icon: Users },
+  { label: 'Independent scholars', icon: BookOpen },
 ];
 
 export default function TrainingPage() {
@@ -71,11 +77,13 @@ export default function TrainingPage() {
 
               <div className="clay p-6">
                 <h2 className="text-xl font-bold mb-4">Who Is This For?</h2>
-                <ul className="space-y-2 text-sm text-muted-foreground">
-                  {['Undergraduate students', 'Postgraduate students', 'Academic researchers', 'Lecturers and supervisors', 'Independent scholars'].map((u, i) => (
-                    <li key={i} className="flex items-center gap-2">
-                      <span className="w-1.5 h-1.5 bg-accent rounded-full" />
-                      {u}
+                <ul className="space-y-3">
+                  {whoIsItFor.map((u, i) => (
+                    <li key={i} className="flex items-center gap-3 text-sm">
+                      <div className="w-8 h-8 bg-accent/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <u.icon size={15} className="text-accent" aria-hidden="true" />
+                      </div>
+                      <span>{u.label}</span>
                     </li>
                   ))}
                 </ul>
@@ -134,18 +142,12 @@ export default function TrainingPage() {
                         {schedules.map(s => (
                           <label
                             key={s.id}
-                            className={`flex items-center gap-3 p-3 border rounded-lg cursor-pointer transition-colors text-sm ${
+                            className={`flex items-center gap-3 p-3 border rounded-xl cursor-pointer transition-colors text-sm ${
                               form.schedule === s.id ? 'border-accent bg-accent/5' : 'border-border hover:border-accent/50'
                             }`}
                           >
-                            <input
-                              type="radio"
-                              name="schedule"
-                              value={s.id}
-                              checked={form.schedule === s.id}
-                              onChange={() => setForm({ ...form, schedule: s.id })}
-                              className="accent-accent"
-                            />
+                            <input type="radio" name="schedule" value={s.id} checked={form.schedule === s.id} onChange={() => setForm({ ...form, schedule: s.id })} className="accent-accent" />
+                            <s.icon size={15} className="text-accent flex-shrink-0" aria-hidden="true" />
                             {s.label}
                           </label>
                         ))}

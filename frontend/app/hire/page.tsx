@@ -3,14 +3,21 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { CheckCircle } from 'lucide-react';
+import { CheckCircle, Eraser, BarChart3, FileSearch, FileText, Database, ClipboardList } from 'lucide-react';
 
 const services = [
-  { id: 'cleaning', label: 'Data Cleaning & Preparation' },
-  { id: 'analysis', label: 'Statistical Analysis (SPSS)' },
-  { id: 'interpretation', label: 'Interpretation of Results' },
-  { id: 'report', label: 'Report Writing Support' },
-  { id: 'full', label: 'Full Project Data Analysis' },
+  { id: 'cleaning', label: 'Data Cleaning & Preparation', icon: Eraser },
+  { id: 'analysis', label: 'Statistical Analysis (SPSS)', icon: BarChart3 },
+  { id: 'interpretation', label: 'Interpretation of Results', icon: FileSearch },
+  { id: 'report', label: 'Report Writing Support', icon: FileText },
+  { id: 'full', label: 'Full Project Data Analysis', icon: Database },
+];
+
+const serviceDetails = [
+  { icon: Eraser, title: 'Data Cleaning & Preparation', desc: 'Organise and clean your raw data for analysis' },
+  { icon: BarChart3, title: 'Statistical Analysis', desc: 'Run tests and analysis using SPSS' },
+  { icon: FileSearch, title: 'Interpretation of Results', desc: 'Clear explanation of your statistical output' },
+  { icon: FileText, title: 'Report Writing Support', desc: 'Professionally written chapter 4 & 5' },
 ];
 
 export default function HirePage() {
@@ -63,17 +70,14 @@ export default function HirePage() {
               <div className="clay p-6">
                 <h2 className="text-xl font-bold mb-6">Services Available</h2>
                 <ul className="space-y-4">
-                  {[
-                    { icon: '🧹', title: 'Data Cleaning & Preparation', desc: 'Organise and clean your raw data for analysis' },
-                    { icon: '📊', title: 'Statistical Analysis', desc: 'Run tests and analysis using SPSS' },
-                    { icon: '📝', title: 'Interpretation of Results', desc: 'Clear explanation of your statistical output' },
-                    { icon: '📄', title: 'Report Writing Support', desc: 'Professionally written chapter 4 & 5' },
-                  ].map((s, i) => (
+                  {serviceDetails.map((s, i) => (
                     <li key={i} className="flex items-start gap-3 text-sm">
-                      <span className="text-lg">{s.icon}</span>
+                      <div className="w-9 h-9 bg-accent/10 rounded-xl flex items-center justify-center flex-shrink-0">
+                        <s.icon size={16} className="text-accent" aria-hidden="true" />
+                      </div>
                       <div>
                         <p className="font-medium">{s.title}</p>
-                        <p className="text-muted-foreground">{s.desc}</p>
+                        <p className="text-muted-foreground text-xs mt-0.5">{s.desc}</p>
                       </div>
                     </li>
                   ))}
@@ -166,16 +170,12 @@ export default function HirePage() {
                         {services.map(s => (
                           <label
                             key={s.id}
-                            className={`flex items-center gap-3 p-3 border rounded-lg cursor-pointer transition-colors text-sm ${
+                            className={`flex items-center gap-3 p-3 border rounded-xl cursor-pointer transition-colors text-sm ${
                               form.selectedServices.includes(s.id) ? 'border-accent bg-accent/5' : 'border-border hover:border-accent/50'
                             }`}
                           >
-                            <input
-                              type="checkbox"
-                              checked={form.selectedServices.includes(s.id)}
-                              onChange={() => toggleService(s.id)}
-                              className="accent-accent"
-                            />
+                            <input type="checkbox" checked={form.selectedServices.includes(s.id)} onChange={() => toggleService(s.id)} className="accent-accent" />
+                            <s.icon size={15} className="text-accent flex-shrink-0" aria-hidden="true" />
                             {s.label}
                           </label>
                         ))}

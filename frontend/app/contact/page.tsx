@@ -75,9 +75,10 @@ export default function ContactPage() {
               href="https://wa.me/1234567890"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center justify-center gap-2 w-full bg-[#25D366] hover:bg-[#20BA5A] text-white py-3 rounded-lg transition-colors font-medium text-sm"
+              aria-label="Open WhatsApp chat with Mesho Data Sciences"
+              className="flex items-center justify-center gap-2 w-full bg-[#25D366] hover:bg-[#20BA5A] text-white py-3 rounded-xl transition-colors font-medium text-sm clay-btn"
             >
-              <MessageCircle size={18} />
+              <MessageCircle size={18} aria-hidden="true" />
               Chat on WhatsApp
             </a>
           </div>
