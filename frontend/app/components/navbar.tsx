@@ -111,8 +111,8 @@ export const Navbar = () => {
       {mobileMenuOpen && (
         <div className="fixed inset-0 bg-black/50 z-30 md:hidden" onClick={() => setMobileMenuOpen(false)} />
       )}
-      <nav className="sticky top-0 z-40 bg-background border-b border-border" style={{ boxShadow: '0 4px 12px rgba(0,0,0,0.06)' }}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+      <nav className="sticky top-0 z-40 bg-background border-b border-border h-[57px] flex items-center" style={{ boxShadow: '0 4px 12px rgba(0,0,0,0.06)' }}>
+        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between">
             <Link href="/" className="flex items-center gap-2 font-bold text-xl" aria-label="Mesho Data Sciences home">
               <div className="w-8 h-8 bg-accent rounded-xl flex items-center justify-center text-white font-bold text-sm">M</div>
