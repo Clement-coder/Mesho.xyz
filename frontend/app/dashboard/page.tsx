@@ -64,17 +64,17 @@ export default function DashboardPage() {
         <main className="flex-1 md:ml-64 px-4 sm:px-6 py-6 pb-24 md:pb-6">
 
           {/* Welcome */}
-          <div className="clay p-4 sm:p-5 mb-6 animate-in fade-in slide-in-from-top duration-500">
+          <div className="clay p-4 mb-6 animate-in fade-in slide-in-from-top duration-500">
             <div className="flex items-center gap-3">
-              <Avatar className="w-11 h-11 flex-shrink-0">
+              <Avatar className="w-10 h-10 flex-shrink-0">
                 <AvatarImage src={currentUser?.profilePicture || user?.profilePicture} alt={user?.name} />
                 <AvatarFallback className="text-base bg-accent text-white font-bold">
                   {user?.name?.charAt(0).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
-              <div className="min-w-0">
-                <h1 className="text-base sm:text-xl font-bold leading-tight truncate">Welcome back, {user?.name}!</h1>
-                <p className="text-muted-foreground text-xs sm:text-sm mt-0.5">Manage your research materials and track your academic progress.</p>
+              <div className="min-w-0 flex-1">
+                <h1 className="text-sm sm:text-lg font-bold leading-tight truncate">Welcome back, {user?.name}!</h1>
+                <p className="text-muted-foreground text-xs mt-0.5 line-clamp-1">Manage your research materials and track your academic progress.</p>
               </div>
             </div>
           </div>
