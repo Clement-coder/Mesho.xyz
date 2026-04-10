@@ -177,11 +177,17 @@ export default function SignUpPage() {
                 <Mail size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
                 <input
                   id="email" type="email" autoComplete="email"
+                  list="email-suggestions"
                   placeholder="you@example.com"
                   value={form.email} onChange={e => set('email', e.target.value)}
                   aria-label="Enter your email address" required
                   className="w-full pl-9 pr-4 h-10 rounded-xl border border-border bg-input text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring clay-inset"
                 />
+                <datalist id="email-suggestions">
+                  {['gmail.com','yahoo.com','hotmail.com','outlook.com','icloud.com','live.com'].map(d => (
+                    <option key={d} value={form.email.includes('@') ? form.email.split('@')[0] + '@' + d : ''} />
+                  ))}
+                </datalist>
               </div>
             </div>
 

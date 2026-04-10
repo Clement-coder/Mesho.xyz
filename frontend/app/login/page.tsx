@@ -84,6 +84,7 @@ export default function LoginPage() {
                   id="email"
                   type="email"
                   autoComplete="email"
+                  list="email-suggestions"
                   placeholder="you@example.com"
                   value={email}
                   onChange={e => setEmail(e.target.value)}
@@ -91,6 +92,11 @@ export default function LoginPage() {
                   required
                   className="w-full pl-9 pr-4 h-10 rounded-xl border border-border bg-input text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring clay-inset"
                 />
+                <datalist id="email-suggestions">
+                  {['gmail.com','yahoo.com','hotmail.com','outlook.com','icloud.com','live.com'].map(d => (
+                    <option key={d} value={email.includes('@') ? email.split('@')[0] + '@' + d : ''} />
+                  ))}
+                </datalist>
               </div>
             </div>
 
