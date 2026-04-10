@@ -27,14 +27,14 @@ export default function HomePage() {
       <section className="py-16 md:py-24 px-4 bg-gradient-to-b from-accent/5 to-transparent">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-            <div className="space-y-6 animate-in fade-in slide-in-from-left duration-500">
+            <div className="space-y-6 animate-in fade-in slide-in-from-left duration-500 text-center md:text-left">
               <h1 className="text-4xl md:text-5xl font-bold leading-tight text-balance">
                 Your Academic Research Support Platform
               </h1>
               <p className="text-lg text-muted-foreground max-w-lg">
                 Access department-specific project materials, hire qualified academic data analysts, and master SPSS data analysis — all in one place.
               </p>
-              <div className="flex flex-wrap gap-4 pt-4">
+              <div className="flex flex-wrap gap-4 pt-4 justify-center md:justify-start">
                 <Link href="/departments">
                   <Button size="lg" className="animate-in fade-in slide-in-from-left duration-700 delay-100">
                     Browse Research Materials
