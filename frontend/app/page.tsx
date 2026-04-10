@@ -53,14 +53,14 @@ export default function HomePage() {
               </p>
               <div className="flex flex-wrap gap-4 pt-4 justify-center md:justify-start">
                 <Link href="/departments">
-                  <Button size="lg" aria-label="Browse research materials by department">
-                    <FileText size={18} className="mr-2" />
+                  <Button size="lg" aria-label="Browse research materials organized by academic department" title="Browse department-specific project topics and full research materials">
+                    <FileText size={18} className="mr-2" aria-hidden="true" />
                     Browse Research Materials
                   </Button>
                 </Link>
                 <Link href="/hire">
-                  <Button variant="outline" size="lg" className="bg-transparent" aria-label="Hire a qualified academic data analyst">
-                    <UserCheck size={18} className="mr-2" />
+                  <Button variant="outline" size="lg" className="bg-transparent" aria-label="Hire a qualified academic data analyst for your research project" title="Submit your project details and get matched with a professional analyst">
+                    <UserCheck size={18} className="mr-2" aria-hidden="true" />
                     Hire an Analyst
                   </Button>
                 </Link>
