@@ -72,9 +72,9 @@ export default function DashboardPage() {
                 </h3>
                 <nav className="space-y-2">
                   {[
-                    { id: 'enrolled', label: 'Enrolled Courses', icon: 'BookOpen' },
-                    { id: 'all', label: 'All Courses', icon: 'TrendingUp' },
-                    { id: 'wishlist', label: 'Wishlist', icon: 'Heart' },
+                    { id: 'enrolled', label: 'My Materials', icon: 'BookOpen' },
+                    { id: 'all', label: 'All Topics', icon: 'TrendingUp' },
+                    { id: 'wishlist', label: 'Saved', icon: 'Heart' },
                   ].map((item) => (
                     <button
                       key={item.id}
@@ -132,28 +132,16 @@ export default function DashboardPage() {
                   </div>
                 </div>
                 <p className="text-muted-foreground">
-                  Continue your learning journey and explore new courses.
+                  Manage your research materials and track your academic progress.
                 </p>
               </div>
 
             {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
               {[
-                {
-                  icon: 'BookOpen',
-                  label: 'Enrolled Courses',
-                  value: enrolledProjects.length,
-                },
-                {
-                  icon: 'BarChart3',
-                  label: 'Hours Learned',
-                  value: `${currentUser.hoursLearned || 0}h`,
-                },
-                { 
-                  icon: 'Award', 
-                  label: 'Certificates', 
-                  value: currentUser.certificates || 0 
-                },
+                { icon: 'BookOpen', label: 'Purchased Materials', value: enrolledProjects.length },
+                { icon: 'BarChart3', label: 'Training Sessions', value: `${currentUser.hoursLearned || 0}` },
+                { icon: 'Award', label: 'Completed Projects', value: currentUser.certificates || 0 },
               ].map((stat, index) => (
                 <div
                   key={index}
@@ -174,9 +162,9 @@ export default function DashboardPage() {
             {/* Tab Navigation */}
             <div className="flex gap-2 mb-6 overflow-x-auto pb-2 border-b border-border">
               {[
-                { id: 'enrolled', label: 'Enrolled' },
-                { id: 'all', label: 'All Courses' },
-                { id: 'wishlist', label: 'Wishlist' },
+                { id: 'enrolled', label: 'My Materials' },
+                { id: 'all', label: 'All Topics' },
+                { id: 'wishlist', label: 'Saved' },
               ].map((tab) => (
                 <button
                   key={tab.id}
@@ -217,12 +205,12 @@ export default function DashboardPage() {
                   <Icon name="BookOpen" size={48} className="mx-auto mb-4 text-muted-foreground" />
                   <p className="text-muted-foreground mb-4">
                     {activeTab === 'enrolled'
-                      ? 'You haven\'t enrolled in any courses yet'
+                      ? "You haven't purchased any materials yet"
                       : activeTab === 'wishlist'
-                        ? 'Your wishlist is empty'
-                        : 'No courses available'}
+                        ? 'Your saved list is empty'
+                        : 'No topics available'}
                   </p>
-                  <Button variant="outline">Explore Courses</Button>
+                  <Button variant="outline">Browse Research Materials</Button>
                 </div>
               )}
             </div>

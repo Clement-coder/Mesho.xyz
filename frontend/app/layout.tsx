@@ -12,8 +12,8 @@ const _geist = Geist({ subsets: ['latin'] });
 const _geistMono = Geist_Mono({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Mesho - Learn Data Skills',
-  description: 'Learn data skills through real-world projects in Web Development, Data Science, Mobile Development, and DevOps',
+  title: 'Mesho Data Sciences - Academic Research Support',
+  description: 'Access department-specific project materials, hire academic data analysts, and learn SPSS data analysis for your research.',
   icons: {
     icon: [
       {

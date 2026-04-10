@@ -95,10 +95,10 @@ export default function SignUpPage() {
             Account Created!
           </h2>
           <p className="text-lg font-medium text-foreground mb-2 animate-in slide-in-from-bottom duration-700 delay-400">
-            Welcome to Mesho, {name}!
+            Welcome to Mesho Data Sciences, {name}!
           </p>
           <p className="text-muted-foreground mb-6 animate-in slide-in-from-bottom duration-700 delay-600">
-            Your account has been successfully created. Please sign in to continue.
+            Your account has been successfully created. Please sign in to access research materials and services.
           </p>
           <Link href="/login">
             <Button 
@@ -118,7 +118,7 @@ export default function SignUpPage() {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl font-bold">Create Account</CardTitle>
-          <p className="text-muted-foreground">Sign up to get started</p>
+          <p className="text-muted-foreground">Sign up to access research materials and services</p>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSignUp} className="space-y-4">

@@ -25,10 +25,10 @@ export default function DepartmentsPage() {
       <section className="py-12 md:py-16 px-4 bg-gradient-to-b from-accent/5 to-transparent border-b border-border">
         <div className="max-w-7xl mx-auto">
           <h1 className="text-3xl md:text-4xl font-bold mb-2 animate-in fade-in slide-in-from-top duration-500">
-            Explore Departments
+            Browse Departments
           </h1>
           <p className="text-muted-foreground mb-8 animate-in fade-in slide-in-from-top duration-500 delay-100">
-            Choose from our diverse range of departments and start your learning journey.
+            Select your department to find project topics and research materials.
           </p>
 
           {/* Search Bar */}

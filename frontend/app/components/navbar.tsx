@@ -24,7 +24,7 @@ export const Navbar = ({ currentPage }: NavbarProps) => {
 
   const navLinks = [
     { href: '/', label: 'Home', id: 'home' },
-    { href: '/departments', label: 'Departments', id: 'departments' },
+    { href: '/departments', label: 'Research Materials', id: 'departments' },
     ...(isAuthenticated ? [{ href: '/dashboard', label: 'Dashboard', id: 'dashboard' }] : []),
   ];
 
@@ -45,7 +45,7 @@ export const Navbar = ({ currentPage }: NavbarProps) => {
               <div className="w-8 h-8 bg-accent rounded-lg flex items-center justify-center text-white font-bold">
                 M
               </div>
-              <span>Mesho</span>
+              <span>Mesho Data Sciences</span>
             </Link>
 
             <div className="hidden md:flex items-center gap-8">

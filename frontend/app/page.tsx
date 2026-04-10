@@ -13,22 +13,12 @@ export default function HomePage() {
   const [selectedProject, setSelectedProject] = React.useState<string | null>(null);
 
   const featuredProjects = projects.slice(0, 6);
+  const featuredDepartments = departments.slice(0, 8);
+
   const steps = [
-    {
-      icon: 'BookOpen',
-      title: 'Explore',
-      description: 'Browse departments and courses',
-    },
-    {
-      icon: 'Briefcase',
-      title: 'Learn',
-      description: 'Build real-world projects',
-    },
-    {
-      icon: 'Award',
-      title: 'Achieve',
-      description: 'Get certificates and skills',
-    },
+    { icon: 'Search', title: 'Browse', description: 'Search for your department and project topic' },
+    { icon: 'CreditCard', title: 'Request & Pay', description: 'Submit your request and complete payment securely' },
+    { icon: 'Download', title: 'Download', description: 'Instantly access your full research material' },
   ];
 
   return (
@@ -39,15 +29,15 @@ export default function HomePage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
             <div className="space-y-6 animate-in fade-in slide-in-from-left duration-500">
               <h1 className="text-4xl md:text-5xl font-bold leading-tight text-balance">
-                Learn Data Skills Through Real Projects
+                Your Academic Research Support Platform
               </h1>
               <p className="text-lg text-muted-foreground max-w-lg">
-                Master web development, data science, mobile development, and DevOps with industry-leading instructors.
+                Access department-specific project materials, hire qualified academic data analysts, and master SPSS data analysis — all in one place.
               </p>
               <div className="flex flex-wrap gap-4 pt-4">
                 <Link href="/departments">
                   <Button size="lg" className="animate-in fade-in slide-in-from-left duration-700 delay-100">
-                    Start Learning
+                    Browse Research Materials
                   </Button>
                 </Link>
                 <Button
@@ -55,16 +45,16 @@ export default function HomePage() {
                   size="lg"
                   className="animate-in fade-in slide-in-from-left duration-700 delay-200 bg-transparent"
                 >
-                  Watch Demo
+                  Hire an Analyst
                 </Button>
               </div>
             </div>
             <div className="relative h-64 md:h-full min-h-96 bg-gradient-to-br from-accent/10 to-accent/5 rounded-2xl border border-accent/20 flex items-center justify-center animate-in fade-in slide-in-from-right duration-500">
               <div className="text-center">
                 <div className="inline-flex items-center justify-center w-20 h-20 bg-accent rounded-full mb-4">
-                  <Icon name="Code" size={40} className="text-white" />
+                  <Icon name="BookOpen" size={40} className="text-white" />
                 </div>
-                <p className="text-sm text-muted-foreground">Interactive Learning</p>
+                <p className="text-sm text-muted-foreground">Academic Research Support</p>
               </div>
             </div>
           </div>
@@ -75,9 +65,9 @@ export default function HomePage() {
       <section className="py-16 md:py-24 px-4 border-t border-border">
         <div className="max-w-7xl mx-auto">
           <div className="mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">How Mesho Works</h2>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">How It Works</h2>
             <p className="text-muted-foreground max-w-lg">
-              Get started in four simple steps and begin your learning journey today.
+              Get your research materials in three simple steps.
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -114,13 +104,13 @@ export default function HomePage() {
       <section className="py-16 md:py-24 px-4 bg-card">
         <div className="max-w-7xl mx-auto">
           <div className="mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Popular Departments</h2>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">Browse by Department</h2>
             <p className="text-muted-foreground max-w-lg">
-              Choose from a wide variety of departments and start learning today.
+              Find project topics and research materials specific to your academic department.
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {departments.map((dept, index) => (
+            {featuredDepartments.map((dept, index) => (
               <div
                 key={dept.id}
                 className="animate-in fade-in slide-in-from-bottom duration-500"
@@ -131,9 +121,7 @@ export default function HomePage() {
                   description={dept.description}
                   icon={dept.icon}
                   color={dept.color}
-                  onClick={() => {
-                    // Navigate to department page
-                  }}
+                  onClick={() => {}}
                 />
               </div>
             ))}
@@ -152,9 +140,9 @@ export default function HomePage() {
       <section className="py-16 md:py-24 px-4">
         <div className="max-w-7xl mx-auto">
           <div className="mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Featured Projects</h2>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">Featured Project Topics</h2>
             <p className="text-muted-foreground max-w-lg">
-              Get a preview of the real-world projects you'll build.
+              A sample of the well-structured research topics available on the platform.
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -177,21 +165,46 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Services Section */}
+      <section className="py-16 md:py-24 px-4 bg-card border-t border-border">
+        <div className="max-w-7xl mx-auto">
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">Our Services</h2>
+          <p className="text-muted-foreground max-w-lg mb-12">
+            Mesho Data Sciences offers three core services to support your academic journey.
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {[
+              { icon: 'FileText', title: 'Research Materials', desc: 'Access department-specific project topics and full research materials after payment.' },
+              { icon: 'BarChart3', title: 'SPSS Training', desc: 'Structured training in academic data analysis using SPSS — from coding to interpretation.' },
+              { icon: 'UserCheck', title: 'Hire a Data Analyst', desc: 'Engage qualified academic data analysts for data cleaning, analysis, and report writing.' },
+            ].map((service, index) => (
+              <div key={index} className="p-6 bg-background border border-border rounded-xl hover:border-accent transition-colors">
+                <div className="w-12 h-12 bg-accent/10 rounded-lg flex items-center justify-center mb-4">
+                  <Icon name={service.icon as any} size={24} className="text-accent" />
+                </div>
+                <h3 className="font-semibold text-lg mb-2">{service.title}</h3>
+                <p className="text-muted-foreground text-sm">{service.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* CTA Section */}
       <section className="py-16 md:py-24 px-4 bg-accent text-white">
         <div className="max-w-4xl mx-auto text-center space-y-6 animate-in fade-in duration-500">
-          <h2 className="text-3xl md:text-4xl font-bold">Ready to start learning?</h2>
+          <h2 className="text-3xl md:text-4xl font-bold">Ready to get started?</h2>
           <p className="text-lg text-accent/90 max-w-2xl mx-auto">
-            Join thousands of students already mastering data skills on Mesho.
+            Join students and researchers already using Mesho Data Sciences for quality academic support.
           </p>
           <div className="flex flex-wrap gap-4 justify-center pt-4">
             <Link href="/departments">
               <Button size="lg" variant="secondary">
-                Explore Courses
+                Browse Materials
               </Button>
             </Link>
             <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10 bg-transparent">
-              Learn More
+              Contact Us
             </Button>
           </div>
         </div>
@@ -200,13 +213,13 @@ export default function HomePage() {
       {/* Benefits Section */}
       <section className="py-16 md:py-24 px-4">
         <div className="max-w-7xl mx-auto">
-          <h2 className="text-3xl md:text-4xl font-bold mb-12 text-center">Why Choose Mesho?</h2>
+          <h2 className="text-3xl md:text-4xl font-bold mb-12 text-center">Why Choose Mesho Data Sciences?</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {[
-              { title: 'Hands-On Learning', desc: 'Build real projects, not just watch tutorials' },
-              { title: 'Expert Instructors', desc: 'Learn from industry professionals' },
-              { title: 'Flexible Schedule', desc: 'Learn at your own pace, anytime' },
-              { title: 'Career Support', desc: 'Get job-ready with certificates' },
+              { title: 'Department-Specific Topics', desc: 'Materials organized by your exact academic department' },
+              { title: 'Professional Analysts', desc: 'Hire qualified experts for your data analysis needs' },
+              { title: 'SPSS Training', desc: 'Practical skills in data coding, analysis, and interpretation' },
+              { title: 'Instant Access', desc: 'Download full materials immediately after payment' },
             ].map((benefit, index) => (
               <div key={index} className="p-6 bg-card border border-border rounded-lg text-center hover:border-accent transition-colors">
                 <CheckCircle className="w-8 h-8 text-accent mx-auto mb-4" />
