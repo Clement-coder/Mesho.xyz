@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Loader2, Mail, Lock, Eye, EyeOff, User, Phone, BookOpen, CheckCircle, Sparkles, UserPlus } from 'lucide-react';
 
@@ -108,7 +109,7 @@ export default function SignUpPage() {
       {/* Left branding panel */}
       <div className="hidden lg:flex lg:w-1/2 bg-accent flex-col justify-between p-12 text-white">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 bg-white/20 rounded-xl flex items-center justify-center font-bold text-lg">M</div>
+          <Image src="/Mesho_logo.png" alt="Mesho Data Sciences logo" width={36} height={36} className="rounded-xl" />
           <span className="font-bold text-lg">Mesho Data Sciences</span>
         </div>
         <div>
@@ -137,7 +138,7 @@ export default function SignUpPage() {
 
           {/* Mobile logo */}
           <div className="flex items-center gap-2 mb-6 lg:hidden">
-            <div className="w-8 h-8 bg-accent rounded-xl flex items-center justify-center text-white font-bold text-sm">M</div>
+            <Image src="/Mesho_logo.png" alt="Mesho logo" width={32} height={32} className="rounded-xl" />
             <span className="font-bold">Mesho Data Sciences</span>
           </div>
 

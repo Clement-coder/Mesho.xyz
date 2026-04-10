@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Menu, X, Bell, FileText, BarChart3, UserCheck, Home } from 'lucide-react';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useAuth } from '@/lib/auth-context';
@@ -55,7 +56,7 @@ export const Navbar = () => {
         <nav className="sticky top-0 z-40 bg-background border-b border-border h-[57px] flex items-center" style={{ boxShadow: '0 4px 12px rgba(0,0,0,0.06)' }}>
           <div className="w-full px-4 sm:px-6 lg:px-8 flex items-center justify-between">
             <Link href="/" className="flex items-center gap-2 font-bold" aria-label="Go to homepage">
-              <div className="w-8 h-8 bg-accent rounded-xl flex items-center justify-center text-white font-bold text-sm">M</div>
+              <Image src="/Mesho_logo.png" alt="Mesho Data Sciences logo" width={32} height={32} className="rounded-xl" />
               <span className="hidden sm:inline text-base">Mesho Data Sciences</span>
             </Link>
             <div className="flex items-center gap-2">
@@ -87,7 +88,7 @@ export const Navbar = () => {
         <nav className="bg-background border-b border-border h-[57px] flex items-center" style={{ boxShadow: '0 4px 12px rgba(0,0,0,0.06)' }}>
           <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
             <Link href="/" className="flex items-center gap-2 font-bold" aria-label="Mesho Data Sciences home">
-              <div className="w-8 h-8 bg-accent rounded-xl flex items-center justify-center text-white font-bold text-sm">M</div>
+              <Image src="/Mesho_logo.png" alt="Mesho Data Sciences logo" width={32} height={32} className="rounded-xl" />
               <span className="hidden sm:inline">Mesho Data Sciences</span>
               <span className="sm:hidden font-bold">Mesho</span>
             </Link>
