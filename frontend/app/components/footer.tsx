@@ -16,8 +16,8 @@ export const Footer = () => {
             <h4 className="font-semibold text-sm mb-4">Services</h4>
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li><a href="/departments" className="hover:text-foreground transition-colors">Research Materials</a></li>
-              <li><a href="#" className="hover:text-foreground transition-colors">SPSS Training</a></li>
-              <li><a href="#" className="hover:text-foreground transition-colors">Hire a Data Analyst</a></li>
+              <li><a href="/training" className="hover:text-foreground transition-colors">SPSS Training</a></li>
+              <li><a href="/hire" className="hover:text-foreground transition-colors">Hire a Data Analyst</a></li>
             </ul>
           </div>
           <div>

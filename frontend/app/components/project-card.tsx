@@ -43,7 +43,7 @@ export const ProjectCard = ({
         <Badge variant={difficultyColor[difficulty as keyof typeof difficultyColor]}>
           {difficulty}
         </Badge>
-        <span className="text-sm font-semibold text-accent">${price}</span>
+        <span className="text-sm font-semibold text-accent">₦{price.toLocaleString()}</span>
       </div>
     </button>
   );

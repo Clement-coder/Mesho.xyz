@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/app/components/badge';
 import { SlideModal } from '@/app/components/slide-modal';
 import { MessageAlert } from '@/app/components/message-alert';
-import { ChevronLeft, Clock, Users, Award, Lock, MessageCircle } from 'lucide-react';
+import { ChevronLeft, Clock, GraduationCap, FileText, Lock, MessageCircle } from 'lucide-react';
 
 export default function ProjectPreviewPage() {
   const params = useParams();
@@ -34,19 +34,13 @@ export default function ProjectPreviewPage() {
     setShowSuccessAlert(true);
   };
 
-  const difficultyColor = {
-    Beginner: 'success',
-    Intermediate: 'info',
-    Advanced: 'warning',
-  } as const;
-
   return (
     <div className="w-full">
       {showSuccessAlert && (
         <div className="fixed top-20 left-4 right-4 z-50 max-w-md">
           <MessageAlert
             type="success"
-            message="Successfully enrolled! Check your email for next steps."
+            message="Payment successful! Your research material is ready for download."
             onClose={() => setShowSuccessAlert(false)}
           />
         </div>
@@ -64,23 +58,14 @@ export default function ProjectPreviewPage() {
           </button>
           <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 animate-in fade-in slide-in-from-left duration-500 delay-100">
             <div>
-              <Badge
-                variant={difficultyColor[project.difficulty as keyof typeof difficultyColor]}
-                className="mb-4"
-              >
-                {project.difficulty}
-              </Badge>
+              <Badge variant="info" className="mb-4">{project.difficulty}</Badge>
               <h1 className="text-3xl md:text-4xl font-bold mb-2">{project.title}</h1>
               <p className="text-muted-foreground">{project.description}</p>
             </div>
             <div className="text-right">
-              <div className="text-4xl font-bold text-accent mb-2">${project.price}</div>
-              <Button
-                size="lg"
-                onClick={() => setIsPurchaseModalOpen(true)}
-                className="w-full md:w-auto"
-              >
-                Enroll Now
+              <div className="text-4xl font-bold text-accent mb-2">₦{project.price.toLocaleString()}</div>
+              <Button size="lg" onClick={() => setIsPurchaseModalOpen(true)} className="w-full md:w-auto">
+                Get This Material
               </Button>
             </div>
           </div>
@@ -91,24 +76,23 @@ export default function ProjectPreviewPage() {
       <section className="py-12 md:py-16 px-4">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Main Content */}
             <div className="lg:col-span-2 space-y-8">
-              {/* Project Details Card */}
+              {/* Material Details */}
               <div className="bg-card border border-border rounded-lg p-6 animate-in fade-in slide-in-from-left duration-500">
-                <h2 className="text-2xl font-bold mb-6">Project Details</h2>
+                <h2 className="text-2xl font-bold mb-6">Material Details</h2>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-accent/10 rounded-lg flex items-center justify-center">
                       <Clock size={20} className="text-accent" />
                     </div>
                     <div>
-                      <p className="text-xs text-muted-foreground">Duration</p>
+                      <p className="text-xs text-muted-foreground">Delivery</p>
                       <p className="font-semibold">{project.duration}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-accent/10 rounded-lg flex items-center justify-center">
-                      <Users size={20} className="text-accent" />
+                      <GraduationCap size={20} className="text-accent" />
                     </div>
                     <div>
                       <p className="text-xs text-muted-foreground">Level</p>
@@ -117,39 +101,35 @@ export default function ProjectPreviewPage() {
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-accent/10 rounded-lg flex items-center justify-center">
-                      <Award size={20} className="text-accent" />
+                      <FileText size={20} className="text-accent" />
                     </div>
                     <div>
-                      <p className="text-xs text-muted-foreground">Certificate</p>
-                      <p className="font-semibold">Included</p>
+                      <p className="text-xs text-muted-foreground">Format</p>
+                      <p className="font-semibold">Full Document</p>
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Learning Outcomes */}
+              {/* What's Included */}
               <div className="bg-card border border-border rounded-lg p-6 animate-in fade-in slide-in-from-left duration-500 delay-100">
-                <h2 className="text-2xl font-bold mb-6">What You'll Learn</h2>
+                <h2 className="text-2xl font-bold mb-6">What's Included</h2>
                 <ul className="space-y-3">
                   {project.learningOutcomes.map((outcome, index) => (
                     <li key={index} className="flex items-start gap-3">
-                      <span className="w-5 h-5 bg-accent rounded-full flex items-center justify-center flex-shrink-0 text-white text-xs mt-1">
-                        ✓
-                      </span>
+                      <span className="w-5 h-5 bg-accent rounded-full flex items-center justify-center flex-shrink-0 text-white text-xs mt-1">✓</span>
                       <span>{outcome}</span>
                     </li>
                   ))}
                 </ul>
               </div>
 
-              {/* Tools Required */}
+              {/* Tools & Software */}
               <div className="bg-card border border-border rounded-lg p-6 animate-in fade-in slide-in-from-left duration-500 delay-200">
-                <h2 className="text-2xl font-bold mb-6">Tools & Technologies</h2>
+                <h2 className="text-2xl font-bold mb-6">Tools & Software Used</h2>
                 <div className="flex flex-wrap gap-2">
                   {project.tools.map((tool) => (
-                    <Badge key={tool} variant="secondary">
-                      {tool}
-                    </Badge>
+                    <Badge key={tool} variant="secondary">{tool}</Badge>
                   ))}
                 </div>
               </div>
@@ -157,28 +137,22 @@ export default function ProjectPreviewPage() {
 
             {/* Sidebar */}
             <div className="lg:col-span-1 space-y-6">
-              {/* Locked Content Preview */}
               <div className="bg-gradient-to-br from-accent/5 to-accent/10 border border-accent/20 rounded-lg p-6 relative overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-br from-transparent to-black/5 pointer-events-none" />
                 <div className="relative z-10">
                   <Lock className="w-8 h-8 text-accent mb-4" />
-                  <h3 className="font-bold text-lg mb-2">Premium Content Locked</h3>
+                  <h3 className="font-bold text-lg mb-2">Full Material Locked</h3>
                   <p className="text-sm text-muted-foreground mb-6">
-                    Enroll in this project to unlock all lessons, assignments, and resources.
+                    Complete payment to unlock and download the full research material instantly.
                   </p>
-                  <Button
-                    size="lg"
-                    className="w-full"
-                    onClick={() => setIsPurchaseModalOpen(true)}
-                  >
-                    Enroll Now - ${project.price}
+                  <Button size="lg" className="w-full" onClick={() => setIsPurchaseModalOpen(true)}>
+                    Get This Material — ₦{project.price.toLocaleString()}
                   </Button>
                 </div>
               </div>
 
-              {/* Quick Contact */}
               <div className="bg-card border border-border rounded-lg p-6">
-                <h3 className="font-bold mb-4">Have Questions?</h3>
+                <h3 className="font-bold mb-4">Need Help?</h3>
                 <a
                   href="https://wa.me/1234567890"
                   target="_blank"
@@ -186,7 +160,7 @@ export default function ProjectPreviewPage() {
                   className="w-full flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#20BA5A] text-white py-3 rounded-lg transition-colors font-medium"
                 >
                   <MessageCircle size={18} />
-                  Contact on WhatsApp
+                  Chat on WhatsApp
                 </a>
               </div>
             </div>
@@ -198,7 +172,7 @@ export default function ProjectPreviewPage() {
       <SlideModal
         isOpen={isPurchaseModalOpen}
         onClose={() => setIsPurchaseModalOpen(false)}
-        title="Enroll in Project"
+        title="Purchase Research Material"
       >
         <div className="space-y-6 py-4">
           <div>
@@ -206,8 +180,8 @@ export default function ProjectPreviewPage() {
             <p className="text-muted-foreground text-sm mb-4">{project.description}</p>
             <div className="bg-accent/10 rounded-lg p-4 mb-4">
               <div className="flex justify-between items-center">
-                <span className="font-medium">Total Price</span>
-                <span className="text-2xl font-bold text-accent">${project.price}</span>
+                <span className="font-medium">Total Amount</span>
+                <span className="text-2xl font-bold text-accent">₦{project.price.toLocaleString()}</span>
               </div>
             </div>
           </div>
@@ -216,38 +190,32 @@ export default function ProjectPreviewPage() {
             <div className="flex items-start gap-3 pb-3 border-b border-border">
               <span className="text-accent font-bold mt-0.5">✓</span>
               <div>
-                <p className="font-medium">Lifetime Access</p>
-                <p className="text-sm text-muted-foreground">
-                  Access course materials forever
-                </p>
+                <p className="font-medium">Full Research Document</p>
+                <p className="text-sm text-muted-foreground">Complete chapters, references, and appendices</p>
               </div>
             </div>
             <div className="flex items-start gap-3 pb-3 border-b border-border">
               <span className="text-accent font-bold mt-0.5">✓</span>
               <div>
-                <p className="font-medium">Certificate of Completion</p>
-                <p className="text-sm text-muted-foreground">
-                  Add to your professional profile
-                </p>
+                <p className="font-medium">Instant Download</p>
+                <p className="text-sm text-muted-foreground">Access your material immediately after payment</p>
               </div>
             </div>
             <div className="flex items-start gap-3">
               <span className="text-accent font-bold mt-0.5">✓</span>
               <div>
-                <p className="font-medium">Project Files & Resources</p>
-                <p className="text-sm text-muted-foreground">
-                  Download all project materials
-                </p>
+                <p className="font-medium">SPSS Data & Analysis</p>
+                <p className="text-sm text-muted-foreground">Includes data file and statistical output where applicable</p>
               </div>
             </div>
           </div>
 
           <Button size="lg" className="w-full" onClick={handlePurchase}>
-            Complete Purchase - ${project.price}
+            Proceed to Payment — ₦{project.price.toLocaleString()}
           </Button>
 
           <p className="text-xs text-muted-foreground text-center">
-            Secure payment processed. Money-back guarantee if not satisfied.
+            Secure payment. Your material is released immediately after confirmation.
           </p>
         </div>
       </SlideModal>

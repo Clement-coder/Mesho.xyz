@@ -25,6 +25,8 @@ export const Navbar = ({ currentPage }: NavbarProps) => {
   const navLinks = [
     { href: '/', label: 'Home', id: 'home' },
     { href: '/departments', label: 'Research Materials', id: 'departments' },
+    { href: '/training', label: 'SPSS Training', id: 'training' },
+    { href: '/hire', label: 'Hire an Analyst', id: 'hire' },
     ...(isAuthenticated ? [{ href: '/dashboard', label: 'Dashboard', id: 'dashboard' }] : []),
   ];
 
