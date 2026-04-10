@@ -60,7 +60,7 @@ export default function HomePage() {
               </p>
               <div className="flex flex-wrap gap-3 pt-4 justify-center md:justify-start">
                 <Link href="/departments">
-                  <Button size="lg" aria-label="Browse research materials organized by academic department" title="Browse department-specific project topics and full research materials" className="bg-white text-accent hover:bg-white/90">
+                  <Button size="lg" className="bg-white text-accent hover:bg-white/90 clay-btn" aria-label="Browse research materials organized by academic department" title="Browse department-specific project topics and full research materials">
                     <FileText size={18} className="mr-2" aria-hidden="true" />
                     Browse Research Materials
                   </Button>
