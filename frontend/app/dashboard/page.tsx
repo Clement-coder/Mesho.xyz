@@ -67,21 +67,7 @@ export default function DashboardPage() {
         <div className="flex min-h-screen">
 
           {/* Desktop Sidebar */}
-          <aside className="hidden md:flex flex-col w-64 border-r border-border p-5 sticky top-20 h-[calc(100vh-80px)] overflow-y-auto bg-card">
-            {/* User Info */}
-            <div className="clay p-4 mb-6 flex items-center gap-3">
-              <Avatar className="w-10 h-10 flex-shrink-0">
-                <AvatarImage src={currentUser?.profilePicture || user?.profilePicture} alt={user?.name} />
-                <AvatarFallback className="bg-accent text-white font-bold">
-                  {user?.name?.charAt(0).toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-              <div className="min-w-0">
-                <p className="font-semibold text-sm truncate">{user?.name}</p>
-                <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
-              </div>
-            </div>
-
+          <aside className="hidden md:flex flex-col w-64 border-r border-border p-5 fixed top-[73px] left-0 h-[calc(100vh-73px)] overflow-y-auto bg-card z-20">
             {/* Navigation */}
             <div className="mb-6">
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3 px-2">Navigation</p>
@@ -153,7 +139,7 @@ export default function DashboardPage() {
           </aside>
 
           {/* Main Content */}
-          <main className="flex-1 px-4 md:px-8 py-8 min-w-0">
+          <main className="flex-1 px-4 md:px-8 py-8 min-w-0 md:ml-64">
             {/* Welcome Header */}
             <div className="clay p-6 mb-8 animate-in fade-in slide-in-from-top duration-500">
               <div className="flex items-center gap-4">
