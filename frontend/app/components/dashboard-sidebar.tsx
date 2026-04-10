@@ -26,7 +26,7 @@ export function DashboardSidebar({ activeTab, onTabChange, onLogout }: Dashboard
   ];
 
   return (
-    <aside className="hidden md:flex flex-col w-64 border-r border-border fixed top-[57px] left-0 h-[calc(100vh-57px)] bg-card z-20">
+    <aside className="hidden md:flex flex-col w-64 border-r border-border fixed top-[57px] left-0 h-[calc(100vh-57px)] bg-card z-30">
       <div className="flex flex-col h-full p-4 pt-5 overflow-y-auto">
 
         {/* Navigation — only on dashboard */}
