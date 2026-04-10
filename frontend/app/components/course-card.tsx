@@ -29,7 +29,7 @@ export const CourseCard = ({
   return (
     <button
       onClick={onClick}
-      className="group w-full text-left bg-card hover:bg-muted border border-border rounded-lg p-5 transition-all duration-300 hover:shadow-md hover:border-accent cursor-pointer text-left"
+      className="group w-full text-left clay clay-hover p-5 transition-all duration-300 cursor-pointer"
     >
       <div className="flex items-start justify-between mb-3">
         <Icon name={icon as any} size={24} className="text-accent" />

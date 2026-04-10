@@ -3,7 +3,7 @@ import { MessageCircle } from 'lucide-react';
 
 export const Footer = () => {
   return (
-    <footer className="bg-card border-t border-border mt-12">
+    <footer className="bg-card border-t border-border mt-12" style={{ boxShadow: '0 -4px 12px rgba(0,0,0,0.04)' }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
           <div>

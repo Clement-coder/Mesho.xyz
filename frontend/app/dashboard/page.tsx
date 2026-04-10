@@ -145,7 +145,7 @@ export default function DashboardPage() {
               ].map((stat, index) => (
                 <div
                   key={index}
-                  className="bg-card border border-border rounded-lg p-6 animate-in fade-in slide-in-from-bottom duration-500"
+                  className="clay p-6 animate-in fade-in slide-in-from-bottom duration-500"
                   style={{ animationDelay: `${index * 100}ms` }}
                 >
                   <div className="flex items-center justify-between mb-4">

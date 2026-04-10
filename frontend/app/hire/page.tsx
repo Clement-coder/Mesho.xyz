@@ -60,7 +60,7 @@ export default function HirePage() {
 
             {/* Services Info */}
             <div className="lg:col-span-1 space-y-6">
-              <div className="bg-card border border-border rounded-xl p-6">
+              <div className="clay p-6">
                 <h2 className="text-xl font-bold mb-6">Services Available</h2>
                 <ul className="space-y-4">
                   {[
@@ -80,7 +80,7 @@ export default function HirePage() {
                 </ul>
               </div>
 
-              <div className="bg-card border border-border rounded-xl p-6">
+              <div className="clay p-6">
                 <h2 className="text-xl font-bold mb-4">How It Works</h2>
                 <ol className="space-y-3 text-sm">
                   {[
@@ -101,7 +101,7 @@ export default function HirePage() {
             {/* Hire Form */}
             <div className="lg:col-span-2">
               {submitted ? (
-                <div className="bg-card border border-border rounded-xl p-10 text-center animate-in zoom-in duration-500">
+                <div className="clay p-10 text-center animate-in zoom-in duration-500">
                   <div className="w-16 h-16 bg-accent/10 rounded-full flex items-center justify-center mx-auto mb-4">
                     <CheckCircle className="w-8 h-8 text-accent" />
                   </div>
@@ -114,7 +114,7 @@ export default function HirePage() {
                   </p>
                 </div>
               ) : (
-                <div className="bg-card border border-border rounded-xl p-8 animate-in fade-in slide-in-from-bottom duration-500">
+                <div className="clay p-8 animate-in fade-in slide-in-from-bottom duration-500">
                   <h2 className="text-2xl font-bold mb-6">Submit Your Project Details</h2>
 
                   {error && (
@@ -189,7 +189,7 @@ export default function HirePage() {
                         placeholder="Describe your project, data type, specific requirements, or any other relevant information..."
                         value={form.details}
                         onChange={e => setForm({ ...form, details: e.target.value })}
-                        className="w-full px-3 py-2 bg-background border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent resize-none"
+                        className="w-full px-4 py-3 bg-input border border-border rounded-xl text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:border-accent resize-none clay-inset"
                       />
                     </div>
 

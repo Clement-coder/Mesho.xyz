@@ -181,7 +181,7 @@ export default function HomePage() {
               { icon: 'UserCheck', title: 'Hire a Data Analyst', desc: 'Engage qualified academic data analysts for data cleaning, analysis, and report writing.', href: '/hire' },
             ].map((service, index) => (
               <Link key={index} href={service.href}>
-                <div className="p-6 bg-background border border-border rounded-xl hover:border-accent transition-colors cursor-pointer h-full">
+                <div className="clay p-6 hover:border-accent transition-colors cursor-pointer h-full">
                   <div className="w-12 h-12 bg-accent/10 rounded-lg flex items-center justify-center mb-4">
                     <Icon name={service.icon as any} size={24} className="text-accent" />
                   </div>
@@ -205,7 +205,7 @@ export default function HomePage() {
               { title: 'SPSS Training', desc: 'Practical skills in data coding, analysis, and interpretation' },
               { title: 'Instant Access', desc: 'Download full materials immediately after payment' },
             ].map((benefit, index) => (
-              <div key={index} className="p-6 bg-card border border-border rounded-lg text-center hover:border-accent transition-colors">
+              <div key={index} className="clay p-6 text-center hover:border-accent transition-colors">
                 <CheckCircle className="w-8 h-8 text-accent mx-auto mb-4" />
                 <h3 className="font-semibold text-lg mb-2">{benefit.title}</h3>
                 <p className="text-muted-foreground text-sm">{benefit.desc}</p>

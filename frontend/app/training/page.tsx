@@ -50,7 +50,7 @@ export default function TrainingPage() {
 
             {/* What You'll Learn */}
             <div className="lg:col-span-1 space-y-6">
-              <div className="bg-card border border-border rounded-xl p-6">
+              <div className="clay p-6">
                 <h2 className="text-xl font-bold mb-6">What You'll Learn</h2>
                 <ul className="space-y-4">
                   {[
@@ -69,7 +69,7 @@ export default function TrainingPage() {
                 </ul>
               </div>
 
-              <div className="bg-card border border-border rounded-xl p-6">
+              <div className="clay p-6">
                 <h2 className="text-xl font-bold mb-4">Who Is This For?</h2>
                 <ul className="space-y-2 text-sm text-muted-foreground">
                   {['Undergraduate students', 'Postgraduate students', 'Academic researchers', 'Lecturers and supervisors', 'Independent scholars'].map((u, i) => (
@@ -85,7 +85,7 @@ export default function TrainingPage() {
             {/* Registration Form */}
             <div className="lg:col-span-2">
               {submitted ? (
-                <div className="bg-card border border-border rounded-xl p-10 text-center animate-in zoom-in duration-500">
+                <div className="clay p-10 text-center animate-in zoom-in duration-500">
                   <div className="w-16 h-16 bg-accent/10 rounded-full flex items-center justify-center mx-auto mb-4">
                     <CheckCircle className="w-8 h-8 text-accent" />
                   </div>
@@ -98,7 +98,7 @@ export default function TrainingPage() {
                   </p>
                 </div>
               ) : (
-                <div className="bg-card border border-border rounded-xl p-8 animate-in fade-in slide-in-from-bottom duration-500">
+                <div className="clay p-8 animate-in fade-in slide-in-from-bottom duration-500">
                   <h2 className="text-2xl font-bold mb-6">Register for Training</h2>
 
                   {error && (

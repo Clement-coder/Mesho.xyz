@@ -78,7 +78,7 @@ export default function ProjectPreviewPage() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2 space-y-8">
               {/* Material Details */}
-              <div className="bg-card border border-border rounded-lg p-6 animate-in fade-in slide-in-from-left duration-500">
+              <div className="clay p-6 animate-in fade-in slide-in-from-left duration-500">
                 <h2 className="text-2xl font-bold mb-6">Material Details</h2>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
                   <div className="flex items-center gap-3">
@@ -112,7 +112,7 @@ export default function ProjectPreviewPage() {
               </div>
 
               {/* What's Included */}
-              <div className="bg-card border border-border rounded-lg p-6 animate-in fade-in slide-in-from-left duration-500 delay-100">
+              <div className="clay p-6 animate-in fade-in slide-in-from-left duration-500 delay-100">
                 <h2 className="text-2xl font-bold mb-6">What's Included</h2>
                 <ul className="space-y-3">
                   {project.learningOutcomes.map((outcome, index) => (
@@ -125,7 +125,7 @@ export default function ProjectPreviewPage() {
               </div>
 
               {/* Tools & Software */}
-              <div className="bg-card border border-border rounded-lg p-6 animate-in fade-in slide-in-from-left duration-500 delay-200">
+              <div className="clay p-6 animate-in fade-in slide-in-from-left duration-500 delay-200">
                 <h2 className="text-2xl font-bold mb-6">Tools & Software Used</h2>
                 <div className="flex flex-wrap gap-2">
                   {project.tools.map((tool) => (
@@ -151,7 +151,7 @@ export default function ProjectPreviewPage() {
                 </div>
               </div>
 
-              <div className="bg-card border border-border rounded-lg p-6">
+              <div className="clay p-6">
                 <h3 className="font-bold mb-4">Need Help?</h3>
                 <a
                   href="https://wa.me/1234567890"

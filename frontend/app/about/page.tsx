@@ -24,7 +24,7 @@ export default function AboutPage() {
                 Mesho Data Sciences exists to bridge the gap between academic research demands and access to reliable analytical support services. We provide a centralized platform that simplifies access to research materials, professional data analysis, and practical SPSS training — all in one place.
               </p>
             </div>
-            <div className="bg-card border border-border rounded-xl p-8 flex items-center justify-center">
+            <div className="clay p-8 flex items-center justify-center">
               <Target className="w-24 h-24 text-accent/30" />
             </div>
           </div>
@@ -38,7 +38,7 @@ export default function AboutPage() {
                 { icon: CheckCircle, title: 'SPSS Training', desc: 'We offer structured training programs in academic data analysis using SPSS, equipping users with practical skills in data coding, analysis, interpretation, and result presentation.' },
                 { icon: Users, title: 'Data Analyst Hiring', desc: 'We connect students and researchers with qualified academic data analysts for data cleaning, statistical analysis, interpretation of results, and report writing support.' },
               ].map((item, i) => (
-                <div key={i} className="bg-card border border-border rounded-xl p-6">
+                <div key={i} className="clay p-6">
                   <item.icon className="w-8 h-8 text-accent mb-4" />
                   <h3 className="font-semibold text-lg mb-2">{item.title}</h3>
                   <p className="text-muted-foreground text-sm leading-relaxed">{item.desc}</p>
@@ -48,7 +48,7 @@ export default function AboutPage() {
           </div>
 
           {/* Who We Serve */}
-          <div className="bg-card border border-border rounded-xl p-8">
+          <div className="clay p-8">
             <h2 className="text-2xl font-bold mb-6">Who We Serve</h2>
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
               {['Undergraduate Students', 'Postgraduate Students', 'Academic Researchers', 'Lecturers & Supervisors', 'Independent Scholars'].map((u, i) => (
