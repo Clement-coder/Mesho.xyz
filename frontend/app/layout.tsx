@@ -46,6 +46,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           <ConditionalFooter />
         </AuthProvider>
         <Analytics />
+        <script dangerouslySetInnerHTML={{ __html: `if('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js')` }} />
       </body>
     </html>
   );
