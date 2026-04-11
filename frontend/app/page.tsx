@@ -58,15 +58,15 @@ export default function HomePage() {
               <p className="text-lg text-white/75 max-w-lg">
                 Access department-specific project materials, hire qualified academic data analysts, and master SPSS data analysis — all in one place.
               </p>
-              <div className="flex flex-wrap gap-3 pt-4 justify-center md:justify-start">
-                <Link href="/departments">
-                  <Button size="lg" className="bg-white text-accent hover:bg-white/90 clay-btn" aria-label="Browse research materials organized by academic department" title="Browse department-specific project topics and full research materials">
+              <div className="flex flex-col sm:flex-row gap-3 pt-4 w-full sm:w-auto justify-center md:justify-start">
+                <Link href="/departments" className="w-full sm:w-auto">
+                  <Button size="lg" className="w-full sm:w-auto bg-white text-accent hover:bg-white/90" aria-label="Browse research materials organized by academic department" title="Browse department-specific project topics and full research materials">
                     <FileText size={18} className="mr-2" aria-hidden="true" />
                     Browse Research Materials
                   </Button>
                 </Link>
-                <Link href="/hire">
-                  <Button variant="outline" size="lg" aria-label="Hire a qualified academic data analyst" title="Submit your project details and get matched with a professional analyst" className="border-white text-white hover:bg-white/10 bg-transparent">
+                <Link href="/hire" className="w-full sm:w-auto">
+                  <Button size="lg" className="w-full sm:w-auto bg-accent text-white hover:bg-accent/90" aria-label="Hire a qualified academic data analyst" title="Submit your project details and get matched with a professional analyst">
                     <UserCheck size={18} className="mr-2" aria-hidden="true" />
                     Hire a Data Analyst
                   </Button>
