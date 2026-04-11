@@ -71,23 +71,33 @@ export default function HomePage() {
                     Hire a Data Analyst
                   </Button>
                 </Link>
-                <Link href="/hire-researcher">
-                  <Button variant="outline" size="lg" aria-label="Hire a professional academic researcher" title="Get a qualified researcher to handle your full research project" className="border-white/60 text-white hover:bg-white/10 bg-transparent">
-                    <Users size={18} className="mr-2" aria-hidden="true" />
-                    Hire a Researcher
-                  </Button>
-                </Link>
               </div>
             </div>
             <div className="relative h-64 md:h-full min-h-80 rounded-2xl border border-white/20 flex items-center justify-center animate-in fade-in slide-in-from-right duration-500 overflow-hidden"
               style={{ background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(12px)' }}
             >
-              <div className="text-center px-6">
-                <div className="inline-flex items-center justify-center w-20 h-20 bg-white/20 rounded-full mb-4">
-                  <Icon name="BookOpen" size={40} className="text-white" aria-hidden="true" />
+              <div className="text-center px-6 space-y-5">
+                <div className="inline-flex items-center justify-center w-16 h-16 bg-white/20 rounded-full">
+                  <Icon name="BookOpen" size={32} className="text-white" aria-hidden="true" />
                 </div>
-                <p className="text-sm font-semibold text-white">Academic Research Support</p>
-                <p className="text-xs text-white/60 mt-1">Materials · Training · Analysis</p>
+                <div>
+                  <p className="text-sm font-semibold text-white">Academic Research Support</p>
+                  <p className="text-xs text-white/60 mt-1">Materials · Training · Analysis</p>
+                </div>
+                <div className="flex flex-col gap-2 w-full">
+                  <Link href="/hire?tab=analyst" className="w-full">
+                    <button className="w-full flex items-center gap-2 justify-center px-4 py-2.5 rounded-xl bg-white/15 hover:bg-white/25 text-white text-sm font-medium transition-colors border border-white/20">
+                      <UserCheck size={15} aria-hidden="true" />
+                      Hire a Data Analyst
+                    </button>
+                  </Link>
+                  <Link href="/hire?tab=researcher" className="w-full">
+                    <button className="w-full flex items-center gap-2 justify-center px-4 py-2.5 rounded-xl bg-white/15 hover:bg-white/25 text-white text-sm font-medium transition-colors border border-white/20">
+                      <Users size={15} aria-hidden="true" />
+                      Hire a Researcher
+                    </button>
+                  </Link>
+                </div>
               </div>
             </div>
           </div>
