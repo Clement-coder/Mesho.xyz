@@ -101,11 +101,11 @@ function HirePageContent() {
           <p className="text-muted-foreground max-w-2xl text-sm">Choose whether you need a data analyst for SPSS analysis or a researcher for your full project.</p>
 
           {/* Tab Toggle */}
-          <div className="clay p-1 flex gap-1 mt-6 w-fit">
+          <div className="clay p-1 flex flex-col sm:flex-row gap-1 mt-6 w-full sm:w-fit">
             <button
               onClick={() => { setActiveTab('analyst'); setError(''); }}
               aria-label="Hire a Data Analyst — SPSS analysis and data services"
-              className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${activeTab === 'analyst' ? 'bg-accent text-white shadow-md' : 'text-muted-foreground hover:text-foreground hover:bg-muted'}`}
+              className={`flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${activeTab === 'analyst' ? 'bg-accent text-white shadow-md' : 'text-muted-foreground hover:text-foreground hover:bg-muted'}`}
             >
               <BarChart3 size={16} aria-hidden="true" />
               Hire a Data Analyst
@@ -113,7 +113,7 @@ function HirePageContent() {
             <button
               onClick={() => { setActiveTab('researcher'); setError(''); }}
               aria-label="Hire a Researcher — full academic research project support"
-              className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${activeTab === 'researcher' ? 'bg-accent text-white shadow-md' : 'text-muted-foreground hover:text-foreground hover:bg-muted'}`}
+              className={`flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${activeTab === 'researcher' ? 'bg-accent text-white shadow-md' : 'text-muted-foreground hover:text-foreground hover:bg-muted'}`}
             >
               <UserCheck size={16} aria-hidden="true" />
               Hire a Researcher
