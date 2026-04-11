@@ -6,21 +6,21 @@ import { ChevronLeft, ChevronRight, BookOpen, BarChart3, UserCheck } from 'lucid
 
 const slides = [
   {
-    src: '/research-material-acces.jpeg',
+    src: '/research-material-acces.jpg',
     alt: 'Research Material Access',
     icon: BookOpen,
     title: 'Research Material Access',
     desc: 'Browse and download department-specific project topics and full research materials instantly after payment.',
   },
   {
-    src: '/data-anylyst-traning.jpeg',
+    src: '/data-anylyst-traning.jpg',
     alt: 'Data Analyst Training',
     icon: BarChart3,
     title: 'SPSS Data Analysis Training',
     desc: 'Structured training programs to master academic data analysis — from data coding to result interpretation.',
   },
   {
-    src: '/Hire-Data-anylyst.jpeg',
+    src: '/Hire-Data-anylyst.jpg',
     alt: 'Hire a Data Analyst',
     icon: UserCheck,
     title: 'Hire a Data Analyst',
