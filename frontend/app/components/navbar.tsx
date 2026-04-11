@@ -56,7 +56,7 @@ export const Navbar = () => {
         <nav className="sticky top-0 z-40 bg-background border-b border-border h-[57px] flex items-center" style={{ boxShadow: '0 4px 12px rgba(0,0,0,0.06)' }}>
           <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
             <Link href="/" className="flex items-center gap-2 font-bold" aria-label="Go to homepage">
-              <Image src="/mesho_logo.png" alt="Mesho Data Sciences logo" width={32} height={32} className="rounded-xl" />
+              <Image src="/mesho_logo.png" alt="Mesho Data Sciences logo" width={56} height={56} className="rounded-xl" />
               <span className="hidden sm:inline text-base">Mesho Data Sciences</span>
             </Link>
             <div className="flex items-center gap-2">
@@ -88,7 +88,7 @@ export const Navbar = () => {
         <nav className="bg-background border-b border-border h-[57px] flex items-center" style={{ boxShadow: '0 4px 12px rgba(0,0,0,0.06)' }}>
           <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
             <Link href="/" className="flex items-center gap-2 font-bold" aria-label="Mesho Data Sciences home">
-              <Image src="/mesho_logo.png" alt="Mesho Data Sciences logo" width={32} height={32} className="rounded-xl" />
+              <Image src="/mesho_logo.png" alt="Mesho Data Sciences logo" width={56} height={56} className="rounded-xl" />
               <span className="hidden sm:inline">Mesho Data Sciences</span>
               <span className="sm:hidden font-bold">Mesho</span>
             </Link>

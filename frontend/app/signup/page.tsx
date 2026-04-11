@@ -110,7 +110,7 @@ export default function SignUpPage() {
       {/* Left branding panel */}
       <div className="hidden lg:flex lg:w-1/2 bg-accent flex-col justify-between p-12 text-white">
         <div className="flex items-center gap-3">
-          <Image src="/mesho_logo.png" alt="Mesho Data Sciences logo" width={36} height={36} className="rounded-xl" />
+          <Image src="/mesho_logo.png" alt="Mesho Data Sciences logo" width={64} height={64} className="rounded-xl" />
           <span className="font-bold text-lg">Mesho Data Sciences</span>
         </div>
         <div>
@@ -139,7 +139,7 @@ export default function SignUpPage() {
 
           {/* Mobile logo */}
           <div className="flex items-center gap-2 mb-6 lg:hidden">
-            <Image src="/mesho_logo.png" alt="Mesho logo" width={32} height={32} className="rounded-xl" />
+            <Image src="/mesho_logo.png" alt="Mesho logo" width={56} height={56} className="rounded-xl" />
             <span className="font-bold">Mesho Data Sciences</span>
           </div>
 
