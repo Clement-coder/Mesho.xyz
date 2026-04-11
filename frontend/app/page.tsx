@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { DepartmentCard } from './components/department-card';
 import { departments, projects } from '@/lib/mock-data';
 import { ProjectCard } from './components/project-card';
-import { Icon } from './components/icon-wrapper';
+import { HeroCarousel } from './components/hero-carousel';
 import {
   CheckCircle, Search, CreditCard, Download,
   FileText, BarChart3, UserCheck,
@@ -73,32 +73,8 @@ export default function HomePage() {
                 </Link>
               </div>
             </div>
-            <div className="relative h-64 md:h-full min-h-80 rounded-2xl border border-white/20 flex items-center justify-center animate-in fade-in slide-in-from-right duration-500 overflow-hidden"
-              style={{ background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(12px)' }}
-            >
-              <div className="text-center px-6 space-y-5">
-                <div className="inline-flex items-center justify-center w-16 h-16 bg-white/20 rounded-full">
-                  <Icon name="BookOpen" size={32} className="text-white" aria-hidden="true" />
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-white">Academic Research Support</p>
-                  <p className="text-xs text-white/60 mt-1">Materials · Training · Analysis</p>
-                </div>
-                <div className="flex flex-col gap-2 w-full">
-                  <Link href="/hire?tab=analyst" className="w-full">
-                    <button className="w-full flex items-center gap-2 justify-center px-4 py-2.5 rounded-xl bg-white/15 hover:bg-white/25 text-white text-sm font-medium transition-colors border border-white/20">
-                      <UserCheck size={15} aria-hidden="true" />
-                      Hire a Data Analyst
-                    </button>
-                  </Link>
-                  <Link href="/hire?tab=researcher" className="w-full">
-                    <button className="w-full flex items-center gap-2 justify-center px-4 py-2.5 rounded-xl bg-white/15 hover:bg-white/25 text-white text-sm font-medium transition-colors border border-white/20">
-                      <Users size={15} aria-hidden="true" />
-                      Hire a Researcher
-                    </button>
-                  </Link>
-                </div>
-              </div>
+            <div className="relative h-64 md:h-full min-h-80 animate-in fade-in slide-in-from-right duration-500">
+              <HeroCarousel />
             </div>
           </div>
         </div>
