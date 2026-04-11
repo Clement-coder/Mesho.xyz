@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { CustomSelect } from '../components/custom-select';
 import { Button } from '@/components/ui/button';
 import { Loader2, Mail, Lock, Eye, EyeOff, User, Phone, BookOpen, CheckCircle, Sparkles, UserPlus } from 'lucide-react';
 
@@ -196,19 +197,14 @@ export default function SignUpPage() {
             <div>
               <label className="text-sm font-medium mb-1.5 block" htmlFor="phone">Phone Number <span className="text-muted-foreground font-normal">(optional)</span></label>
               <div className="flex gap-2">
-                <div className="relative">
-                  <select
-                    value={form.countryCode}
-                    onChange={e => set('countryCode', e.target.value)}
-                    aria-label="Select country code"
-                    title="Select your country calling code"
-                    className="h-10 pl-2 pr-6 rounded-xl border border-border bg-input text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring clay-inset appearance-none cursor-pointer"
-                  >
-                    {countryCodes.map(c => (
-                      <option key={c.code} value={c.code}>{c.flag} {c.code}</option>
-                    ))}
-                  </select>
-                </div>
+                <CustomSelect
+                  options={countryCodes.map(c => ({ value: c.code, label: c.code, prefix: c.flag }))}
+                  value={form.countryCode}
+                  onChange={v => set('countryCode', v)}
+                  aria-label="Select country calling code"
+                  title="Select your country calling code"
+                  className="w-28 flex-shrink-0"
+                />
                 <div className="relative flex-1">
                   <Phone size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
                   <input
