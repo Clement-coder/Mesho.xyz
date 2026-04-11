@@ -57,7 +57,7 @@ export default function HomePage() {
                 Your Academic Research Support Platform
               </h1>
               <p className="text-lg text-white/75 max-w-lg">
-                Access department-specific project materials, hire qualified academic data analysts, and master SPSS data analysis — all in one place.
+                Access department-specific project materials, hire qualified academic data analysts, and master SPSS data analysis all in one place.
               </p>
               <div className="flex flex-col sm:flex-row gap-3 pt-4 w-full sm:w-auto justify-center md:justify-start">
                 <Link href="/departments" className="w-full sm:w-auto">
