@@ -60,13 +60,13 @@ export default function HomePage() {
               </p>
               <div className="flex flex-col sm:flex-row gap-3 pt-4 w-full sm:w-auto justify-center md:justify-start">
                 <Link href="/departments" className="w-full sm:w-auto">
-                  <Button size="lg" className="w-full sm:w-auto bg-white text-accent hover:bg-white/90" aria-label="Browse research materials organized by academic department" title="Browse department-specific project topics and full research materials">
+                  <Button size="lg" className="w-full sm:w-auto bg-white/90 text-accent hover:bg-white border-0 shadow-none" aria-label="Browse research materials organized by academic department" title="Browse department-specific project topics and full research materials">
                     <FileText size={18} className="mr-2" aria-hidden="true" />
                     Browse Research Materials
                   </Button>
                 </Link>
                 <Link href="/hire" className="w-full sm:w-auto">
-                  <Button size="lg" className="w-full sm:w-auto bg-accent text-white hover:bg-accent/90" aria-label="Hire a qualified academic data analyst" title="Submit your project details and get matched with a professional analyst">
+                  <Button size="lg" className="w-full sm:w-auto bg-accent/90 text-white hover:bg-accent border-0 shadow-none" aria-label="Hire a qualified academic data analyst" title="Submit your project details and get matched with a professional analyst">
                     <UserCheck size={18} className="mr-2" aria-hidden="true" />
                     Hire a Data Analyst
                   </Button>
