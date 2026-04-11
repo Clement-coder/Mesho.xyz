@@ -44,9 +44,8 @@ export default function HomePage() {
       <section
         className="py-16 md:py-24 px-4 relative overflow-hidden"
         style={{
-          backgroundImage: 'linear-gradient(135deg, rgba(15,23,42,0.82) 0%, rgba(59,130,246,0.75) 100%), url(/landing_background.jpeg)',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
+          backgroundImage: 'linear-gradient(135deg, rgba(15,23,42,0.95) 0%, rgba(30,58,95,0.95) 100%)',
+          backgroundColor: '#0f172a',
         }}
       >
         <div className="max-w-7xl mx-auto relative z-10">
