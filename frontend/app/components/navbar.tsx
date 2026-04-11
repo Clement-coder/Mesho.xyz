@@ -18,7 +18,7 @@ export const Navbar = () => {
   const pathname = usePathname();
 
   const isDashboard = pathname?.startsWith('/dashboard');
-  const handleLogout = () => { logout(); setShowLogoutModal(false); setMobileMenuOpen(false); };
+  const handleLogout = async () => { await logout(); setShowLogoutModal(false); setMobileMenuOpen(false); };
 
   const navLinks = [
     { href: '/', label: 'Home', icon: Home },

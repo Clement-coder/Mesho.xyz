@@ -1,12 +1,17 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import {
+  onAuthStateChanged, signOut, signInWithEmailAndPassword,
+  createUserWithEmailAndPassword, updateProfile, User as FirebaseUser,
+  signInWithPopup,
+} from 'firebase/auth';
+import { auth, googleProvider } from '@/lib/firebase';
 
 interface User {
   id: string;
   name: string;
   email: string;
-  password: string;
   profilePicture?: string;
   createdAt: string;
   enrolledCourses: string[];
@@ -17,135 +22,82 @@ interface User {
 
 interface AuthContextType {
   user: User | null;
-  login: (email: string, password: string) => boolean;
-  signup: (name: string, email: string, password: string) => boolean;
-  logout: () => void;
-  refreshUser: () => void;
   isAuthenticated: boolean;
+  isLoading: boolean;
+  loginWithEmail: (email: string, password: string) => Promise<void>;
+  signupWithEmail: (name: string, email: string, password: string) => Promise<void>;
+  loginWithGoogle: () => Promise<void>;
+  logout: () => Promise<void>;
+  refreshUser: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+function firebaseUserToUser(fbUser: FirebaseUser): User {
+  return {
+    id: fbUser.uid,
+    name: fbUser.displayName || fbUser.email?.split('@')[0] || 'User',
+    email: fbUser.email || '',
+    profilePicture: fbUser.photoURL || '',
+    createdAt: fbUser.metadata.creationTime || new Date().toISOString(),
+    enrolledCourses: [],
+    wishlist: [],
+    hoursLearned: 0,
+    certificates: 0,
+  };
+}
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const currentUser = localStorage.getItem('currentUser');
-      if (currentUser) {
-        try {
-          setUser(JSON.parse(currentUser));
-        } catch (error) {
-          localStorage.removeItem('currentUser');
-        }
-      }
+    const unsub = onAuthStateChanged(auth, (fbUser) => {
+      setUser(fbUser ? firebaseUserToUser(fbUser) : null);
       setIsLoading(false);
-
-      // Listen for localStorage changes
-      const handleStorageChange = () => {
-        const updatedUser = localStorage.getItem('currentUser');
-        if (updatedUser) {
-          try {
-            setUser(JSON.parse(updatedUser));
-          } catch (error) {
-            localStorage.removeItem('currentUser');
-            setUser(null);
-          }
-        } else {
-          setUser(null);
-        }
-      };
-
-      window.addEventListener('storage', handleStorageChange);
-      return () => window.removeEventListener('storage', handleStorageChange);
-    }
+    });
+    return unsub;
   }, []);
 
-  const login = (email: string, password: string): boolean => {
-    const users = JSON.parse(localStorage.getItem('users') || '[]');
-    const foundUser = users.find((u: any) => u.email === email && u.password === password);
-    
-    if (foundUser) {
-      setUser(foundUser);
-      localStorage.setItem('currentUser', JSON.stringify(foundUser));
-      return true;
-    }
-    return false;
+  const loginWithEmail = async (email: string, password: string) => {
+    await signInWithEmailAndPassword(auth, email, password);
   };
 
-  const signup = (name: string, email: string, password: string): boolean => {
-    const users = JSON.parse(localStorage.getItem('users') || '[]');
-    
-    if (users.find((u: any) => u.email === email)) {
-      return false;
-    }
+  const signupWithEmail = async (name: string, email: string, password: string) => {
+    const cred = await createUserWithEmailAndPassword(auth, email, password);
+    await updateProfile(cred.user, { displayName: name });
+    setUser(firebaseUserToUser({ ...cred.user, displayName: name }));
+  };
 
-    const newUser = {
-      id: Date.now().toString(),
-      name,
-      email,
-      password,
-      createdAt: new Date().toISOString(),
-      enrolledCourses: [],
-      wishlist: [],
-      hoursLearned: 0,
-      certificates: 0
-    };
+  const loginWithGoogle = async () => {
+    await signInWithPopup(auth, googleProvider);
+  };
 
-    users.push(newUser);
-    localStorage.setItem('users', JSON.stringify(users));
-    
-    setUser(newUser);
-    localStorage.setItem('currentUser', JSON.stringify(newUser));
-    return true;
+  const logout = async () => {
+    await signOut(auth);
   };
 
   const refreshUser = () => {
-    if (typeof window !== 'undefined') {
-      const currentUser = localStorage.getItem('currentUser');
-      if (currentUser) {
-        try {
-          setUser(JSON.parse(currentUser));
-        } catch (error) {
-          localStorage.removeItem('currentUser');
-          setUser(null);
-        }
-      }
-    }
+    if (auth.currentUser) setUser(firebaseUserToUser(auth.currentUser));
   };
 
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem('currentUser');
-  };
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="w-10 h-10 border-4 border-accent border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
-    <AuthContext.Provider value={{
-      user,
-      login,
-      signup,
-      logout,
-      refreshUser,
-      isAuthenticated: !!user
-    }}>
-      {isLoading ? (
-        <div className="min-h-screen flex items-center justify-center">
-          <div className="text-center">
-            <p className="text-muted-foreground">Loading...</p>
-          </div>
-        </div>
-      ) : (
-        children
-      )}
+    <AuthContext.Provider value={{ user, isAuthenticated: !!user, isLoading, loginWithEmail, signupWithEmail, loginWithGoogle, logout, refreshUser }}>
+      {children}
     </AuthContext.Provider>
   );
 }
 
 export function useAuth() {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error('useAuth must be used within AuthProvider');
+  return ctx;
 }

@@ -6,8 +6,8 @@ import Image from 'next/image';
 import { CustomSelect } from '../components/custom-select';
 import { Button } from '@/components/ui/button';
 import { Loader2, Mail, Lock, Eye, EyeOff, User, Phone, BookOpen, CheckCircle, Sparkles, UserPlus } from 'lucide-react';
-import { auth, googleProvider } from '@/lib/firebase';
-import { signInWithPopup } from 'firebase/auth';
+import { useAuth } from '@/lib/auth-context';
+import { useRouter } from 'next/navigation';
 
 const countryCodes = [
   { code: '+234', flag: '🇳🇬', name: 'Nigeria' },
@@ -38,8 +38,7 @@ function PasswordStrength({ password }: { password: string }) {
       <div className="flex flex-wrap gap-x-3 gap-y-1">
         {checks.map((c, i) => (
           <span key={i} className={`flex items-center gap-1 text-xs ${c.pass ? 'text-green-600' : 'text-muted-foreground'}`}>
-            <CheckCircle size={10} aria-hidden="true" />
-            {c.label}
+            <CheckCircle size={10} aria-hidden="true" />{c.label}
           </span>
         ))}
       </div>
@@ -55,33 +54,8 @@ export default function SignUpPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
-
-  const handleGoogleSignUp = async () => {
-    setGoogleLoading(true);
-    setError('');
-    try {
-      const result = await signInWithPopup(auth, googleProvider);
-      const user = result.user;
-      const userData = {
-        id: user.uid,
-        name: user.displayName || 'User',
-        email: user.email || '',
-        profilePicture: user.photoURL || '',
-        createdAt: new Date().toISOString(),
-        enrolledCourses: [], wishlist: [], hoursLearned: 0, certificates: 0,
-      };
-      const users = JSON.parse(localStorage.getItem('users') || '[]');
-      const exists = users.findIndex((u: any) => u.email === userData.email);
-      if (exists === -1) users.push(userData);
-      else users[exists] = { ...users[exists], ...userData };
-      localStorage.setItem('users', JSON.stringify(users));
-      localStorage.setItem('currentUser', JSON.stringify(exists === -1 ? userData : users[exists]));
-      window.location.replace('/dashboard');
-    } catch (e: any) {
-      setError('Google sign-in failed. Please try again.');
-      setGoogleLoading(false);
-    }
-  };
+  const { signupWithEmail, loginWithGoogle } = useAuth();
+  const router = useRouter();
 
   const set = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }));
 
@@ -94,22 +68,30 @@ export default function SignUpPage() {
     if (form.password.length < 6) { setError('Password must be at least 6 characters'); return; }
     if (form.password !== form.confirmPassword) { setError('Passwords do not match'); return; }
     setIsLoading(true);
-    await new Promise(r => setTimeout(r, 1000));
-    const users = JSON.parse(localStorage.getItem('users') || '[]');
-    if (users.find((u: any) => u.email === form.email.trim().toLowerCase())) {
-      setError('An account with this email already exists'); setIsLoading(false); return;
+    try {
+      await signupWithEmail(form.name.trim(), form.email.trim().toLowerCase(), form.password);
+      setShowSuccess(true);
+    } catch (e: any) {
+      const msg = e.code === 'auth/email-already-in-use'
+        ? 'An account with this email already exists'
+        : e.code === 'auth/weak-password'
+        ? 'Password is too weak'
+        : 'Sign up failed. Please try again.';
+      setError(msg);
+      setIsLoading(false);
     }
-    users.push({
-      id: Date.now().toString(),
-      name: form.name.trim(),
-      email: form.email.trim().toLowerCase(),
-      phone: form.countryCode + form.phone,
-      password: form.password,
-      createdAt: new Date().toISOString(),
-      enrolledCourses: [], wishlist: [], hoursLearned: 0, certificates: 0,
-    });
-    localStorage.setItem('users', JSON.stringify(users));
-    setShowSuccess(true);
+  };
+
+  const handleGoogleSignUp = async () => {
+    setGoogleLoading(true);
+    setError('');
+    try {
+      await loginWithGoogle();
+      router.replace('/dashboard');
+    } catch {
+      setError('Google sign-in failed. Please try again.');
+      setGoogleLoading(false);
+    }
   };
 
   if (showSuccess) {
@@ -128,7 +110,7 @@ export default function SignUpPage() {
           <p className="text-muted-foreground text-sm mb-1">Welcome to Mesho Data Sciences, <span className="font-semibold text-foreground">{form.name}</span>!</p>
           <p className="text-muted-foreground text-sm mb-7">Your account is ready. Sign in to access research materials and services.</p>
           <Link href="/login">
-            <Button size="lg" className="w-full" aria-label="Go to sign in page">Sign In Now</Button>
+            <Button size="lg" className="w-full">Sign In Now</Button>
           </Link>
         </div>
       </div>
@@ -140,7 +122,7 @@ export default function SignUpPage() {
       {/* Left branding panel */}
       <div className="hidden lg:flex lg:w-1/2 bg-accent flex-col justify-between p-12 text-white">
         <div className="flex items-center gap-3">
-          <Image src="/mesho_logo.png" alt="Mesho Data Sciences logo" width={64} height={64} className="rounded-xl object-contain" />
+          <Image src="/mesho_logo.png" alt="Mesho Data Sciences logo" width={56} height={56} className="rounded-xl object-contain" />
           <span className="font-bold text-lg">Mesho Data Sciences</span>
         </div>
         <div>
@@ -154,8 +136,7 @@ export default function SignUpPage() {
           <div className="mt-8 space-y-3">
             {['16 academic departments covered', 'Instant material download after payment', 'Professional SPSS data analysts available'].map((f, i) => (
               <div key={i} className="flex items-center gap-2 text-sm text-white/80">
-                <CheckCircle size={15} className="text-white/60" aria-hidden="true" />
-                {f}
+                <CheckCircle size={15} className="text-white/60" aria-hidden="true" />{f}
               </div>
             ))}
           </div>
@@ -166,10 +147,8 @@ export default function SignUpPage() {
       {/* Right form panel */}
       <div className="flex-1 flex items-center justify-center px-4 py-10 bg-background overflow-y-auto">
         <div className="w-full max-w-md">
-
-          {/* Mobile logo */}
           <div className="flex items-center gap-2 mb-6 lg:hidden">
-            <Image src="/mesho_logo.png" alt="Mesho logo" width={56} height={56} className="rounded-xl object-contain" />
+            <Image src="/mesho_logo.png" alt="Mesho logo" width={44} height={44} className="rounded-xl object-contain" />
             <span className="font-bold">Mesho Data Sciences</span>
           </div>
 
@@ -180,23 +159,18 @@ export default function SignUpPage() {
 
           {error && (
             <div className="flex items-center gap-2 bg-destructive/10 text-destructive text-sm p-3 rounded-xl mb-5" role="alert">
-              <Lock size={14} aria-hidden="true" />
-              {error}
+              <Lock size={14} aria-hidden="true" />{error}
             </div>
           )}
 
-          <form onSubmit={handleSignUp} className="space-y-4">
-
+          <form onSubmit={handleSignUp} className="space-y-4" noValidate>
             {/* Full Name */}
             <div>
               <label className="text-sm font-medium mb-1.5 block" htmlFor="name">Full Name</label>
               <div className="relative">
                 <User size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
-                <input
-                  id="name" type="text" autoComplete="name"
-                  placeholder="e.g. Armang Meshak S."
-                  value={form.name} onChange={e => set('name', e.target.value)}
-                  aria-label="Enter your full name" required
+                <input id="name" type="text" autoComplete="name" placeholder="e.g. Armang Meshak S."
+                  value={form.name} onChange={e => set('name', e.target.value)} aria-label="Enter your full name" required
                   className="w-full pl-9 pr-4 h-10 rounded-xl border border-border bg-input text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring clay-inset"
                 />
               </div>
@@ -207,12 +181,8 @@ export default function SignUpPage() {
               <label className="text-sm font-medium mb-1.5 block" htmlFor="email">Email Address</label>
               <div className="relative">
                 <Mail size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
-                <input
-                  id="email" type="email" autoComplete="email"
-                  list="email-suggestions"
-                  placeholder="you@example.com"
-                  value={form.email} onChange={e => set('email', e.target.value)}
-                  aria-label="Enter your email address" required
+                <input id="email" type="email" autoComplete="email" list="email-suggestions" placeholder="you@example.com"
+                  value={form.email} onChange={e => set('email', e.target.value)} aria-label="Enter your email address" required
                   className="w-full pl-9 pr-4 h-10 rounded-xl border border-border bg-input text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring clay-inset"
                 />
                 <datalist id="email-suggestions">
@@ -229,17 +199,12 @@ export default function SignUpPage() {
               <div className="flex gap-2">
                 <CustomSelect
                   options={countryCodes.map(c => ({ value: c.code, label: c.code, prefix: c.flag }))}
-                  value={form.countryCode}
-                  onChange={v => set('countryCode', v)}
-                  aria-label="Select country calling code"
-                  title="Select your country calling code"
-                  className="w-28 flex-shrink-0"
+                  value={form.countryCode} onChange={v => set('countryCode', v)}
+                  aria-label="Select country calling code" className="w-28 flex-shrink-0"
                 />
                 <div className="relative flex-1">
                   <Phone size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
-                  <input
-                    id="phone" type="tel" autoComplete="tel-national"
-                    placeholder="8012345678"
+                  <input id="phone" type="tel" autoComplete="tel-national" placeholder="8012345678"
                     value={form.phone} onChange={e => set('phone', e.target.value.replace(/\D/g, ''))}
                     aria-label="Enter your phone number without country code"
                     className="w-full pl-9 pr-4 h-10 rounded-xl border border-border bg-input text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring clay-inset"
@@ -253,18 +218,12 @@ export default function SignUpPage() {
               <label className="text-sm font-medium mb-1.5 block" htmlFor="password">Password</label>
               <div className="relative">
                 <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
-                <input
-                  id="password" type={showPassword ? 'text' : 'password'} autoComplete="new-password"
-                  placeholder="Create a strong password"
-                  value={form.password} onChange={e => set('password', e.target.value)}
-                  aria-label="Create a password" required
+                <input id="password" type={showPassword ? 'text' : 'password'} autoComplete="new-password" placeholder="Create a strong password"
+                  value={form.password} onChange={e => set('password', e.target.value)} aria-label="Create a password" required
                   className="w-full pl-9 pr-10 h-10 rounded-xl border border-border bg-input text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring clay-inset"
                 />
-                <button type="button" onClick={() => setShowPassword(!showPassword)}
-                  aria-label={showPassword ? 'Hide password' : 'Show password'}
-                  title={showPassword ? 'Hide password' : 'Show password'}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                >
+                <button type="button" onClick={() => setShowPassword(!showPassword)} aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
                   {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
@@ -276,19 +235,12 @@ export default function SignUpPage() {
               <label className="text-sm font-medium mb-1.5 block" htmlFor="confirmPassword">Confirm Password</label>
               <div className="relative">
                 <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
-                <input
-                  id="confirmPassword" type={showConfirm ? 'text' : 'password'} autoComplete="new-password"
-                  placeholder="Repeat your password"
-                  value={form.confirmPassword} onChange={e => set('confirmPassword', e.target.value)}
-                  aria-label="Confirm your password" required
-                  className={`w-full pl-9 pr-10 h-10 rounded-xl border bg-input text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring clay-inset ${
-                    form.confirmPassword && form.confirmPassword !== form.password ? 'border-destructive' : 'border-border'
-                  }`}
+                <input id="confirmPassword" type={showConfirm ? 'text' : 'password'} autoComplete="new-password" placeholder="Repeat your password"
+                  value={form.confirmPassword} onChange={e => set('confirmPassword', e.target.value)} aria-label="Confirm your password" required
+                  className={`w-full pl-9 pr-10 h-10 rounded-xl border bg-input text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring clay-inset ${form.confirmPassword && form.confirmPassword !== form.password ? 'border-destructive' : 'border-border'}`}
                 />
-                <button type="button" onClick={() => setShowConfirm(!showConfirm)}
-                  aria-label={showConfirm ? 'Hide confirm password' : 'Show confirm password'}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                >
+                <button type="button" onClick={() => setShowConfirm(!showConfirm)} aria-label={showConfirm ? 'Hide' : 'Show'}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
                   {showConfirm ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
@@ -298,24 +250,16 @@ export default function SignUpPage() {
             </div>
 
             <Button type="submit" className="w-full" size="lg" disabled={isLoading} aria-label="Create your account">
-              {isLoading ? (
-                <><Loader2 size={16} className="mr-2 animate-spin" aria-hidden="true" />Creating Account...</>
-              ) : (
-                <><UserPlus size={16} className="mr-2" aria-hidden="true" />Create Account</>
-              )}
+              {isLoading ? <><Loader2 size={16} className="mr-2 animate-spin" />Creating Account...</> : <><UserPlus size={16} className="mr-2" />Create Account</>}
             </Button>
 
-            <div className="relative my-2">
+            <div className="relative my-1">
               <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-border" /></div>
-              <div className="relative flex justify-center text-xs text-muted-foreground"><span className="bg-card px-2">or</span></div>
+              <div className="relative flex justify-center text-xs text-muted-foreground"><span className="bg-background px-2">or</span></div>
             </div>
 
             <Button type="button" variant="outline" className="w-full" size="lg" onClick={handleGoogleSignUp} disabled={googleLoading} aria-label="Sign up with Google">
-              {googleLoading ? (
-                <><Loader2 size={16} className="mr-2 animate-spin" />Connecting...</>
-              ) : (
-                <><Image src="/google-icon.svg" alt="Google" width={18} height={18} className="mr-2" />Continue with Google</>
-              )}
+              {googleLoading ? <><Loader2 size={16} className="mr-2 animate-spin" />Connecting...</> : <><Image src="/google-icon.svg" alt="Google" width={18} height={18} className="mr-2" />Continue with Google</>}
             </Button>
           </form>
 

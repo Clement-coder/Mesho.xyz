@@ -5,8 +5,8 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Loader2, Mail, Lock, Eye, EyeOff, BookOpen, LogIn } from 'lucide-react';
-import { auth, googleProvider } from '@/lib/firebase';
-import { signInWithPopup } from 'firebase/auth';
+import { useAuth } from '@/lib/auth-context';
+import { useRouter } from 'next/navigation';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -15,34 +15,8 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
-
-  const handleGoogleSignIn = async () => {
-    setGoogleLoading(true);
-    setError('');
-    try {
-      const result = await signInWithPopup(auth, googleProvider);
-      const user = result.user;
-      const userData = {
-        id: user.uid,
-        name: user.displayName || 'User',
-        email: user.email || '',
-        profilePicture: user.photoURL || '',
-        createdAt: new Date().toISOString(),
-        enrolledCourses: [], wishlist: [], hoursLearned: 0, certificates: 0,
-      };
-      // Merge with existing users
-      const users = JSON.parse(localStorage.getItem('users') || '[]');
-      const exists = users.findIndex((u: any) => u.email === userData.email);
-      if (exists === -1) users.push(userData);
-      else users[exists] = { ...users[exists], ...userData };
-      localStorage.setItem('users', JSON.stringify(users));
-      localStorage.setItem('currentUser', JSON.stringify(exists === -1 ? userData : users[exists]));
-      window.location.replace('/dashboard');
-    } catch (e: any) {
-      setError('Google sign-in failed. Please try again.');
-      setGoogleLoading(false);
-    }
-  };
+  const { loginWithEmail, loginWithGoogle } = useAuth();
+  const router = useRouter();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,23 +25,38 @@ export default function LoginPage() {
     if (!/\S+@\S+\.\S+/.test(email)) { setError('Please enter a valid email'); return; }
     if (!password) { setError('Password is required'); return; }
     setIsLoading(true);
-    const users = JSON.parse(localStorage.getItem('users') || '[]');
-    const user = users.find((u: any) => u.email === email.trim().toLowerCase() && u.password === password);
-    if (user) {
-      localStorage.setItem('currentUser', JSON.stringify(user));
-      window.location.replace('/dashboard');
-    } else {
-      setError('Invalid email or password');
+    try {
+      await loginWithEmail(email.trim().toLowerCase(), password);
+      router.replace('/dashboard');
+    } catch (e: any) {
+      const msg = e.code === 'auth/invalid-credential' || e.code === 'auth/wrong-password' || e.code === 'auth/user-not-found'
+        ? 'Invalid email or password'
+        : e.code === 'auth/too-many-requests'
+        ? 'Too many attempts. Please try again later.'
+        : 'Sign in failed. Please try again.';
+      setError(msg);
       setIsLoading(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    setGoogleLoading(true);
+    setError('');
+    try {
+      await loginWithGoogle();
+      router.replace('/dashboard');
+    } catch {
+      setError('Google sign-in failed. Please try again.');
+      setGoogleLoading(false);
     }
   };
 
   return (
     <div className="min-h-screen flex">
-      {/* Left panel — branding */}
+      {/* Left branding panel */}
       <div className="hidden lg:flex lg:w-1/2 bg-accent flex-col justify-between p-12 text-white">
         <div className="flex items-center gap-3">
-          <Image src="/mesho_logo.png" alt="Mesho Data Sciences logo" width={64} height={64} className="rounded-xl object-contain" />
+          <Image src="/mesho_logo.png" alt="Mesho Data Sciences logo" width={56} height={56} className="rounded-xl object-contain" />
           <span className="font-bold text-lg">Mesho Data Sciences</span>
         </div>
         <div>
@@ -82,13 +71,11 @@ export default function LoginPage() {
         <p className="text-white/40 text-xs">© 2026 Mesho Data Sciences</p>
       </div>
 
-      {/* Right panel — form */}
+      {/* Right form panel */}
       <div className="flex-1 flex items-center justify-center px-4 py-12 bg-background">
         <div className="w-full max-w-md">
-
-          {/* Mobile logo */}
           <div className="flex items-center gap-2 mb-8 lg:hidden">
-            <Image src="/mesho_logo.png" alt="Mesho logo" width={56} height={56} className="rounded-xl object-contain" />
+            <Image src="/mesho_logo.png" alt="Mesho logo" width={44} height={44} className="rounded-xl object-contain" />
             <span className="font-bold">Mesho Data Sciences</span>
           </div>
 
@@ -99,40 +86,27 @@ export default function LoginPage() {
 
           {error && (
             <div className="flex items-center gap-2 bg-destructive/10 text-destructive text-sm p-3 rounded-xl mb-5" role="alert">
-              <Lock size={14} aria-hidden="true" />
-              {error}
+              <Lock size={14} aria-hidden="true" />{error}
             </div>
           )}
 
-          <form onSubmit={handleLogin} className="space-y-4">
-            {/* Email */}
+          <form onSubmit={handleLogin} className="space-y-4" noValidate>
             <div>
-              <label className="text-sm font-medium mb-1.5 block" htmlFor="email">
-                Email Address
-              </label>
+              <label className="text-sm font-medium mb-1.5 block" htmlFor="email">Email Address</label>
               <div className="relative">
                 <Mail size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
-                <input
-                  id="email"
-                  type="email"
-                  autoComplete="email"
-                  list="email-suggestions"
-                  placeholder="you@example.com"
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
-                  aria-label="Enter your email address"
-                  required
+                <input id="email" type="email" autoComplete="email" list="email-suggestions" placeholder="you@example.com"
+                  value={email} onChange={e => setEmail(e.target.value)} aria-label="Enter your email address" required
                   className="w-full pl-9 pr-4 h-10 rounded-xl border border-border bg-input text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring clay-inset"
                 />
                 <datalist id="email-suggestions">
-                  {['gmail.com','yahoo.com','hotmail.com','outlook.com','icloud.com','live.com'].map(d => (
+                  {['gmail.com','yahoo.com','hotmail.com','outlook.com','icloud.com'].map(d => (
                     <option key={d} value={email.includes('@') ? email.split('@')[0] + '@' + d : ''} />
                   ))}
                 </datalist>
               </div>
             </div>
 
-            {/* Password */}
             <div>
               <div className="flex items-center justify-between mb-1.5">
                 <label className="text-sm font-medium" htmlFor="password">Password</label>
@@ -140,48 +114,28 @@ export default function LoginPage() {
               </div>
               <div className="relative">
                 <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
-                <input
-                  id="password"
-                  type={showPassword ? 'text' : 'password'}
-                  autoComplete="current-password"
-                  placeholder="Enter your password"
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
-                  aria-label="Enter your password"
-                  required
+                <input id="password" type={showPassword ? 'text' : 'password'} autoComplete="current-password" placeholder="Enter your password"
+                  value={password} onChange={e => setPassword(e.target.value)} aria-label="Enter your password" required
                   className="w-full pl-9 pr-10 h-10 rounded-xl border border-border bg-input text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring clay-inset"
                 />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  aria-label={showPassword ? 'Hide password' : 'Show password'}
-                  title={showPassword ? 'Hide password' : 'Show password'}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                >
+                <button type="button" onClick={() => setShowPassword(!showPassword)} aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
                   {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
             </div>
 
-            <Button type="submit" className="w-full" size="lg" disabled={isLoading} aria-label="Sign in to your account">
-              {isLoading ? (
-                <><Loader2 size={16} className="mr-2 animate-spin" aria-hidden="true" />Signing In...</>
-              ) : (
-                <><LogIn size={16} className="mr-2" aria-hidden="true" />Sign In</>
-              )}
+            <Button type="submit" className="w-full" size="lg" disabled={isLoading} aria-label="Sign in">
+              {isLoading ? <><Loader2 size={16} className="mr-2 animate-spin" />Signing In...</> : <><LogIn size={16} className="mr-2" />Sign In</>}
             </Button>
 
-            <div className="relative my-2">
+            <div className="relative my-1">
               <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-border" /></div>
-              <div className="relative flex justify-center text-xs text-muted-foreground"><span className="bg-card px-2">or</span></div>
+              <div className="relative flex justify-center text-xs text-muted-foreground"><span className="bg-background px-2">or</span></div>
             </div>
 
             <Button type="button" variant="outline" className="w-full" size="lg" onClick={handleGoogleSignIn} disabled={googleLoading} aria-label="Sign in with Google">
-              {googleLoading ? (
-                <><Loader2 size={16} className="mr-2 animate-spin" />Connecting...</>
-              ) : (
-                <><Image src="/google-icon.svg" alt="Google" width={18} height={18} className="mr-2" />Continue with Google</>
-              )}
+              {googleLoading ? <><Loader2 size={16} className="mr-2 animate-spin" />Connecting...</> : <><Image src="/google-icon.svg" alt="Google" width={18} height={18} className="mr-2" />Continue with Google</>}
             </Button>
           </form>
 
