@@ -2,13 +2,13 @@ import { initializeApp, getApps } from 'firebase/app';
 import { getAuth, GoogleAuthProvider } from 'firebase/auth';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDwsOJasfRxnyLWw8-9MxWA-D8_3_H6abI",
-  authDomain: "mesho-data-sciences-18d96.firebaseapp.com",
-  projectId: "mesho-data-sciences-18d96",
-  storageBucket: "mesho-data-sciences-18d96.firebasestorage.app",
-  messagingSenderId: "416205100132",
-  appId: "1:416205100132:web:3f69843624349a4011fb71",
-  measurementId: "G-SRT2867G0V",
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
 };
 
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
