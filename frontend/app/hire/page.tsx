@@ -3,12 +3,12 @@
 import React, { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import {
   CheckCircle, ChevronLeft, User, Mail, Phone, BookOpen,
   FileText, Clock, GraduationCap, UserCheck, Eraser,
-  BarChart3, FileSearch, Database,
+  BarChart3, FileSearch, Database, Building,
 } from 'lucide-react';
+import { FormField, IconInput, StyledTextarea } from '@/app/components/form-field';
 
 const analystServices = [
   { id: 'cleaning', label: 'Data Cleaning & Preparation', icon: Eraser },
@@ -50,10 +50,12 @@ function HirePageContent() {
   const [researcherForm, setResearcherForm] = useState({ name: '', email: '', phone: '', department: '', topic: '', deadline: '', researchType: '', details: '' });
   const [analystSubmitted, setAnalystSubmitted] = useState(false);
   const [researcherSubmitted, setResearcherSubmitted] = useState(false);
+  const [analystErrors, setAnalystErrors] = useState<Record<string, string>>({});
+  const [researcherErrors, setResearcherErrors] = useState<Record<string, string>>({});
   const [error, setError] = useState('');
 
-  const setA = (k: string, v: string) => setAnalystForm(f => ({ ...f, [k]: v }));
-  const setR = (k: string, v: string) => setResearcherForm(f => ({ ...f, [k]: v }));
+  const setA = (k: string, v: string) => { setAnalystForm(f => ({ ...f, [k]: v })); setAnalystErrors(e => ({ ...e, [k]: '' })); };
+  const setR = (k: string, v: string) => { setResearcherForm(f => ({ ...f, [k]: v })); setResearcherErrors(e => ({ ...e, [k]: '' })); };
 
   const toggleService = (id: string) => setAnalystForm(f => ({
     ...f,
@@ -62,20 +64,42 @@ function HirePageContent() {
       : [...f.selectedServices, id],
   }));
 
+  const validateAnalyst = () => {
+    const e: Record<string, string> = {};
+    if (!analystForm.name.trim()) e.name = 'Full name is required';
+    if (!analystForm.email.trim()) e.email = 'Email is required';
+    else if (!/\S+@\S+\.\S+/.test(analystForm.email)) e.email = 'Enter a valid email';
+    if (!analystForm.phone.trim()) e.phone = 'Phone number is required';
+    else if (!/^\d{7,15}$/.test(analystForm.phone.replace(/\s/g, ''))) e.phone = 'Enter a valid phone number';
+    if (!analystForm.department.trim()) e.department = 'Department is required';
+    if (analystForm.selectedServices.length === 0) e.services = 'Select at least one service';
+    return e;
+  };
+
+  const validateResearcher = () => {
+    const e: Record<string, string> = {};
+    if (!researcherForm.name.trim()) e.name = 'Full name is required';
+    if (!researcherForm.email.trim()) e.email = 'Email is required';
+    else if (!/\S+@\S+\.\S+/.test(researcherForm.email)) e.email = 'Enter a valid email';
+    if (!researcherForm.phone.trim()) e.phone = 'Phone number is required';
+    else if (!/^\d{7,15}$/.test(researcherForm.phone.replace(/\s/g, ''))) e.phone = 'Enter a valid phone number';
+    if (!researcherForm.department.trim()) e.department = 'Department is required';
+    if (!researcherForm.researchType) e.researchType = 'Select a research type';
+    return e;
+  };
+
   const handleAnalystSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!analystForm.name || !analystForm.email || !analystForm.phone || !analystForm.department || analystForm.selectedServices.length === 0) {
-      setError('Please fill in all required fields and select at least one service.'); return;
-    }
-    setError(''); setAnalystSubmitted(true);
+    const errs = validateAnalyst();
+    if (Object.keys(errs).length) { setAnalystErrors(errs); return; }
+    setAnalystSubmitted(true);
   };
 
   const handleResearcherSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!researcherForm.name || !researcherForm.email || !researcherForm.phone || !researcherForm.department || !researcherForm.researchType) {
-      setError('Please fill in all required fields and select a research type.'); return;
-    }
-    setError(''); setResearcherSubmitted(true);
+    const errs = validateResearcher();
+    if (Object.keys(errs).length) { setResearcherErrors(errs); return; }
+    setResearcherSubmitted(true);
   };
 
   const SuccessCard = ({ name, email }: { name: string; email: string }) => (
@@ -159,53 +183,49 @@ function HirePageContent() {
 
           {/* Form */}
           <div className="lg:col-span-2">
-            {error && <div className="bg-destructive/10 text-destructive text-sm p-3 rounded-xl mb-4">{error}</div>}
 
             {/* Data Analyst Form */}
             {activeTab === 'analyst' && (
               analystSubmitted ? <SuccessCard name={analystForm.name} email={analystForm.email} /> : (
                 <div className="clay p-8">
                   <h2 className="text-2xl font-bold mb-6">Submit Your Project Details</h2>
-                  <form onSubmit={handleAnalystSubmit} className="space-y-5">
+                  <form onSubmit={handleAnalystSubmit} className="space-y-5" noValidate>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="text-sm font-medium mb-1.5 block">Full Name <span className="text-destructive">*</span></label>
-                        <Input placeholder="Your full name" value={analystForm.name} onChange={e => setA('name', e.target.value)} />
-                      </div>
-                      <div>
-                        <label className="text-sm font-medium mb-1.5 block">Email Address <span className="text-destructive">*</span></label>
-                        <Input type="email" placeholder="your@email.com" value={analystForm.email} onChange={e => setA('email', e.target.value)} />
-                      </div>
+                      <FormField label="Full Name" required icon={User} error={analystErrors.name} success={!analystErrors.name && analystForm.name.length > 1}>
+                        <IconInput icon={User} placeholder="Your full name" value={analystForm.name} onChange={e => setA('name', e.target.value)} error={!!analystErrors.name} autoComplete="name" />
+                      </FormField>
+                      <FormField label="Email Address" required icon={Mail} error={analystErrors.email} success={!analystErrors.email && /\S+@\S+\.\S+/.test(analystForm.email)}>
+                        <IconInput icon={Mail} type="email" placeholder="your@email.com" value={analystForm.email} onChange={e => setA('email', e.target.value)} error={!!analystErrors.email} autoComplete="email" />
+                      </FormField>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="text-sm font-medium mb-1.5 block">Phone Number <span className="text-destructive">*</span></label>
-                        <Input placeholder="e.g. 08012345678" value={analystForm.phone} onChange={e => setA('phone', e.target.value)} />
-                      </div>
-                      <div>
-                        <label className="text-sm font-medium mb-1.5 block">Institution (optional)</label>
-                        <Input placeholder="Your university or organisation" value={analystForm.institution} onChange={e => setA('institution', e.target.value)} />
-                      </div>
+                      <FormField label="Phone Number" required icon={Phone} error={analystErrors.phone} success={!analystErrors.phone && analystForm.phone.length >= 7}>
+                        <IconInput icon={Phone} placeholder="e.g. 08012345678" value={analystForm.phone} onChange={e => setA('phone', e.target.value.replace(/\D/g, ''))} error={!!analystErrors.phone} autoComplete="tel" />
+                      </FormField>
+                      <FormField label="Institution" icon={Building} hint="Optional">
+                        <IconInput icon={Building} placeholder="Your university or organisation" value={analystForm.institution} onChange={e => setA('institution', e.target.value)} />
+                      </FormField>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="text-sm font-medium mb-1.5 block">Department <span className="text-destructive">*</span></label>
-                        <Input placeholder="e.g. Accounting, Microbiology" value={analystForm.department} onChange={e => setA('department', e.target.value)} />
-                      </div>
-                      <div>
-                        <label className="text-sm font-medium mb-1.5 block">Project Topic (optional)</label>
-                        <Input placeholder="Your research topic" value={analystForm.topic} onChange={e => setA('topic', e.target.value)} />
-                      </div>
+                      <FormField label="Department" required icon={BookOpen} error={analystErrors.department} success={!analystErrors.department && analystForm.department.length > 1}>
+                        <IconInput icon={BookOpen} placeholder="e.g. Accounting, Microbiology" value={analystForm.department} onChange={e => setA('department', e.target.value)} error={!!analystErrors.department} />
+                      </FormField>
+                      <FormField label="Project Topic" icon={FileText} hint="Optional">
+                        <IconInput icon={FileText} placeholder="Your research topic" value={analystForm.topic} onChange={e => setA('topic', e.target.value)} />
+                      </FormField>
                     </div>
+                    <FormField label="Deadline" icon={Clock} hint="Optional">
+                      <IconInput icon={Clock} type="date" value={analystForm.deadline} onChange={e => setA('deadline', e.target.value)} />
+                    </FormField>
                     <div>
-                      <label className="text-sm font-medium mb-1.5 block">Deadline (optional)</label>
-                      <Input type="date" value={analystForm.deadline} onChange={e => setA('deadline', e.target.value)} />
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium mb-2 block">Services Required <span className="text-destructive">*</span></label>
+                      <label className="text-sm font-medium mb-2 flex items-center gap-1.5">
+                        <BarChart3 size={14} className="text-muted-foreground" aria-hidden="true" />
+                        Services Required <span className="text-destructive">*</span>
+                      </label>
+                      {analystErrors.services && <p className="text-xs text-destructive mb-2">{analystErrors.services}</p>}
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                         {analystServices.map(s => (
-                          <label key={s.id} className={`flex items-center gap-3 p-3 border rounded-xl cursor-pointer transition-colors text-sm ${analystForm.selectedServices.includes(s.id) ? 'border-accent bg-accent/5' : 'border-border hover:border-accent/50'}`}>
+                          <label key={s.id} className={`flex items-center gap-3 p-3 border rounded-xl cursor-pointer transition-colors text-sm ${analystForm.selectedServices.includes(s.id) ? 'border-accent bg-accent/5' : analystErrors.services ? 'border-destructive/40' : 'border-border hover:border-accent/50'}`}>
                             <input type="checkbox" checked={analystForm.selectedServices.includes(s.id)} onChange={() => toggleService(s.id)} className="accent-accent" />
                             <s.icon size={15} className="text-accent flex-shrink-0" aria-hidden="true" />
                             {s.label}
@@ -213,15 +233,11 @@ function HirePageContent() {
                         ))}
                       </div>
                     </div>
-                    <div>
-                      <label className="text-sm font-medium mb-1.5 block">Additional Details (optional)</label>
-                      <textarea rows={4} placeholder="Describe your project, data type, specific requirements..." value={analystForm.details} onChange={e => setA('details', e.target.value)}
-                        className="w-full px-4 py-3 bg-input border border-border rounded-xl text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring resize-none clay-inset"
-                      />
-                    </div>
+                    <FormField label="Additional Details" icon={FileText} hint="Optional — describe your project, data type, or specific requirements">
+                      <StyledTextarea rows={4} placeholder="Describe your project, data type, specific requirements..." value={analystForm.details} onChange={e => setA('details', e.target.value)} />
+                    </FormField>
                     <Button type="submit" size="lg" className="w-full">
-                      <BarChart3 size={16} className="mr-2" aria-hidden="true" />
-                      Submit Request
+                      <BarChart3 size={16} className="mr-2" aria-hidden="true" />Submit Request
                     </Button>
                   </form>
                 </div>
@@ -233,42 +249,40 @@ function HirePageContent() {
               researcherSubmitted ? <SuccessCard name={researcherForm.name} email={researcherForm.email} /> : (
                 <div className="clay p-8">
                   <h2 className="text-2xl font-bold mb-6">Submit Your Research Request</h2>
-                  <form onSubmit={handleResearcherSubmit} className="space-y-5">
+                  <form onSubmit={handleResearcherSubmit} className="space-y-5" noValidate>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="text-sm font-medium mb-1.5 block">Full Name <span className="text-destructive">*</span></label>
-                        <Input placeholder="Your full name" value={researcherForm.name} onChange={e => setR('name', e.target.value)} />
-                      </div>
-                      <div>
-                        <label className="text-sm font-medium mb-1.5 block">Email Address <span className="text-destructive">*</span></label>
-                        <Input type="email" placeholder="your@email.com" value={researcherForm.email} onChange={e => setR('email', e.target.value)} />
-                      </div>
+                      <FormField label="Full Name" required icon={User} error={researcherErrors.name} success={!researcherErrors.name && researcherForm.name.length > 1}>
+                        <IconInput icon={User} placeholder="Your full name" value={researcherForm.name} onChange={e => setR('name', e.target.value)} error={!!researcherErrors.name} autoComplete="name" />
+                      </FormField>
+                      <FormField label="Email Address" required icon={Mail} error={researcherErrors.email} success={!researcherErrors.email && /\S+@\S+\.\S+/.test(researcherForm.email)}>
+                        <IconInput icon={Mail} type="email" placeholder="your@email.com" value={researcherForm.email} onChange={e => setR('email', e.target.value)} error={!!researcherErrors.email} autoComplete="email" />
+                      </FormField>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="text-sm font-medium mb-1.5 block">Phone Number <span className="text-destructive">*</span></label>
-                        <Input placeholder="e.g. 08012345678" value={researcherForm.phone} onChange={e => setR('phone', e.target.value)} />
-                      </div>
-                      <div>
-                        <label className="text-sm font-medium mb-1.5 block">Department <span className="text-destructive">*</span></label>
-                        <Input placeholder="e.g. Accounting, Microbiology" value={researcherForm.department} onChange={e => setR('department', e.target.value)} />
-                      </div>
+                      <FormField label="Phone Number" required icon={Phone} error={researcherErrors.phone} success={!researcherErrors.phone && researcherForm.phone.length >= 7}>
+                        <IconInput icon={Phone} placeholder="e.g. 08012345678" value={researcherForm.phone} onChange={e => setR('phone', e.target.value.replace(/\D/g, ''))} error={!!researcherErrors.phone} autoComplete="tel" />
+                      </FormField>
+                      <FormField label="Department" required icon={BookOpen} error={researcherErrors.department} success={!researcherErrors.department && researcherForm.department.length > 1}>
+                        <IconInput icon={BookOpen} placeholder="e.g. Accounting, Microbiology" value={researcherForm.department} onChange={e => setR('department', e.target.value)} error={!!researcherErrors.department} />
+                      </FormField>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="text-sm font-medium mb-1.5 block">Research Topic (optional)</label>
-                        <Input placeholder="Your proposed topic" value={researcherForm.topic} onChange={e => setR('topic', e.target.value)} />
-                      </div>
-                      <div>
-                        <label className="text-sm font-medium mb-1.5 block">Deadline (optional)</label>
-                        <Input type="date" value={researcherForm.deadline} onChange={e => setR('deadline', e.target.value)} />
-                      </div>
+                      <FormField label="Research Topic" icon={FileText} hint="Optional">
+                        <IconInput icon={FileText} placeholder="Your proposed topic" value={researcherForm.topic} onChange={e => setR('topic', e.target.value)} />
+                      </FormField>
+                      <FormField label="Deadline" icon={Clock} hint="Optional">
+                        <IconInput icon={Clock} type="date" value={researcherForm.deadline} onChange={e => setR('deadline', e.target.value)} />
+                      </FormField>
                     </div>
                     <div>
-                      <label className="text-sm font-medium mb-2 block">Research Type <span className="text-destructive">*</span></label>
+                      <label className="text-sm font-medium mb-2 flex items-center gap-1.5">
+                        <GraduationCap size={14} className="text-muted-foreground" aria-hidden="true" />
+                        Research Type <span className="text-destructive">*</span>
+                      </label>
+                      {researcherErrors.researchType && <p className="text-xs text-destructive mb-2">{researcherErrors.researchType}</p>}
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         {researchTypes.map(t => (
-                          <label key={t.id} className={`flex items-center gap-3 p-3 border rounded-xl cursor-pointer transition-colors text-sm ${researcherForm.researchType === t.id ? 'border-accent bg-accent/5' : 'border-border hover:border-accent/50'}`}>
+                          <label key={t.id} className={`flex items-center gap-3 p-3 border rounded-xl cursor-pointer transition-colors text-sm ${researcherForm.researchType === t.id ? 'border-accent bg-accent/5' : researcherErrors.researchType ? 'border-destructive/40' : 'border-border hover:border-accent/50'}`}>
                             <input type="radio" name="researchType" value={t.id} checked={researcherForm.researchType === t.id} onChange={() => setR('researchType', t.id)} className="accent-accent" />
                             <t.icon size={15} className="text-accent flex-shrink-0" aria-hidden="true" />
                             {t.label}
@@ -276,15 +290,11 @@ function HirePageContent() {
                         ))}
                       </div>
                     </div>
-                    <div>
-                      <label className="text-sm font-medium mb-1.5 block">Additional Details (optional)</label>
-                      <textarea rows={4} placeholder="Describe your research needs, scope, specific requirements..." value={researcherForm.details} onChange={e => setR('details', e.target.value)}
-                        className="w-full px-4 py-3 bg-input border border-border rounded-xl text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring resize-none clay-inset"
-                      />
-                    </div>
+                    <FormField label="Additional Details" icon={FileText} hint="Optional — describe your research needs, scope, or specific requirements">
+                      <StyledTextarea rows={4} placeholder="Describe your research needs, scope, specific requirements..." value={researcherForm.details} onChange={e => setR('details', e.target.value)} />
+                    </FormField>
                     <Button type="submit" size="lg" className="w-full">
-                      <UserCheck size={16} className="mr-2" aria-hidden="true" />
-                      Submit Request
+                      <UserCheck size={16} className="mr-2" aria-hidden="true" />Submit Request
                     </Button>
                   </form>
                 </div>

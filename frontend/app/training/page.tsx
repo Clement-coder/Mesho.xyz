@@ -3,8 +3,8 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { CheckCircle, GraduationCap, BookOpen, Users, Clock, Calendar, Wifi, ChevronLeft } from 'lucide-react';
+import { FormField, IconInput } from '@/app/components/form-field';
+import { CheckCircle, GraduationCap, BookOpen, Users, Clock, Calendar, Wifi, ChevronLeft, User, Mail, Phone, Building } from 'lucide-react';
 
 const schedules = [
   { id: 'weekday-morning', label: 'Weekdays — Morning (8am–11am)', icon: Clock },
@@ -24,17 +24,22 @@ const whoIsItFor = [
 
 export default function TrainingPage() {
   const [form, setForm] = useState({ name: '', email: '', phone: '', institution: '', schedule: '' });
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitted, setSubmitted] = useState(false);
-  const [error, setError] = useState('');
   const router = useRouter();
+
+  const set = (k: string, v: string) => { setForm(f => ({ ...f, [k]: v })); setErrors(e => ({ ...e, [k]: '' })); };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.name || !form.email || !form.phone || !form.schedule) {
-      setError('Please fill in all required fields.');
-      return;
-    }
-    setError('');
+    const errs: Record<string, string> = {};
+    if (!form.name.trim()) errs.name = 'Full name is required';
+    if (!form.email.trim()) errs.email = 'Email is required';
+    else if (!/\S+@\S+\.\S+/.test(form.email)) errs.email = 'Enter a valid email address';
+    if (!form.phone.trim()) errs.phone = 'Phone number is required';
+    else if (!/^\d{7,15}$/.test(form.phone.replace(/\s/g, ''))) errs.phone = 'Enter a valid phone number';
+    if (!form.schedule) errs.schedule = 'Please select a preferred schedule';
+    if (Object.keys(errs).length) { setErrors(errs); return; }
     setSubmitted(true);
   };
 
@@ -114,44 +119,39 @@ export default function TrainingPage() {
                 <div className="clay p-8 animate-in fade-in slide-in-from-bottom duration-500">
                   <h2 className="text-2xl font-bold mb-6">Register for Training</h2>
 
-                  {error && (
-                    <div className="bg-destructive/10 text-destructive text-sm p-3 rounded-md mb-4">{error}</div>
+                  {errors.schedule && !Object.keys(errors).filter(k => k !== 'schedule').length && (
+                    <div className="bg-destructive/10 text-destructive text-sm p-3 rounded-xl mb-4">{errors.schedule}</div>
                   )}
 
-                  <form onSubmit={handleSubmit} className="space-y-5">
+                  <form onSubmit={handleSubmit} className="space-y-5" noValidate>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="text-sm font-medium mb-1.5 block">Full Name <span className="text-destructive">*</span></label>
-                        <Input placeholder="Your full name" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} />
-                      </div>
-                      <div>
-                        <label className="text-sm font-medium mb-1.5 block">Email Address <span className="text-destructive">*</span></label>
-                        <Input type="email" placeholder="your@email.com" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} />
-                      </div>
+                      <FormField label="Full Name" required icon={User} error={errors.name} success={!errors.name && form.name.length > 1}>
+                        <IconInput icon={User} placeholder="Your full name" value={form.name} onChange={e => set('name', e.target.value)} error={!!errors.name} autoComplete="name" aria-label="Enter your full name" />
+                      </FormField>
+                      <FormField label="Email Address" required icon={Mail} error={errors.email} success={!errors.email && /\S+@\S+\.\S+/.test(form.email)}>
+                        <IconInput icon={Mail} type="email" placeholder="your@email.com" value={form.email} onChange={e => set('email', e.target.value)} error={!!errors.email} autoComplete="email" aria-label="Enter your email address" />
+                      </FormField>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="text-sm font-medium mb-1.5 block">Phone Number <span className="text-destructive">*</span></label>
-                        <Input placeholder="e.g. 08012345678" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} />
-                      </div>
-                      <div>
-                        <label className="text-sm font-medium mb-1.5 block">Institution (optional)</label>
-                        <Input placeholder="Your university or organisation" value={form.institution} onChange={e => setForm({ ...form, institution: e.target.value })} />
-                      </div>
+                      <FormField label="Phone Number" required icon={Phone} error={errors.phone} success={!errors.phone && form.phone.length >= 7}>
+                        <IconInput icon={Phone} placeholder="e.g. 08012345678" value={form.phone} onChange={e => set('phone', e.target.value.replace(/\D/g, ''))} error={!!errors.phone} autoComplete="tel" aria-label="Enter your phone number" />
+                      </FormField>
+                      <FormField label="Institution" icon={Building} hint="Optional — your university or organisation">
+                        <IconInput icon={Building} placeholder="Your university or organisation" value={form.institution} onChange={e => set('institution', e.target.value)} aria-label="Enter your institution name" />
+                      </FormField>
                     </div>
 
                     <div>
-                      <label className="text-sm font-medium mb-1.5 block">Preferred Schedule <span className="text-destructive">*</span></label>
+                      <label className="text-sm font-medium mb-2 flex items-center gap-1.5">
+                        <Clock size={14} className="text-muted-foreground" aria-hidden="true" />
+                        Preferred Schedule <span className="text-destructive">*</span>
+                      </label>
+                      {errors.schedule && <p className="text-xs text-destructive mb-2 flex items-center gap-1">Please select a schedule</p>}
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                         {schedules.map(s => (
-                          <label
-                            key={s.id}
-                            className={`flex items-center gap-3 p-3 border rounded-xl cursor-pointer transition-colors text-sm ${
-                              form.schedule === s.id ? 'border-accent bg-accent/5' : 'border-border hover:border-accent/50'
-                            }`}
-                          >
-                            <input type="radio" name="schedule" value={s.id} checked={form.schedule === s.id} onChange={() => setForm({ ...form, schedule: s.id })} className="accent-accent" />
+                          <label key={s.id} className={`flex items-center gap-3 p-3 border rounded-xl cursor-pointer transition-colors text-sm ${form.schedule === s.id ? 'border-accent bg-accent/5' : errors.schedule ? 'border-destructive/50' : 'border-border hover:border-accent/50'}`}>
+                            <input type="radio" name="schedule" value={s.id} checked={form.schedule === s.id} onChange={() => set('schedule', s.id)} className="accent-accent" />
                             <s.icon size={15} className="text-accent flex-shrink-0" aria-hidden="true" />
                             {s.label}
                           </label>
@@ -159,9 +159,7 @@ export default function TrainingPage() {
                       </div>
                     </div>
 
-                    <Button type="submit" size="lg" className="w-full">
-                      Submit Registration
-                    </Button>
+                    <Button type="submit" size="lg" className="w-full">Submit Registration</Button>
                   </form>
                 </div>
               )}
