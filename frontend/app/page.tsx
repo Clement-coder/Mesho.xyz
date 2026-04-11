@@ -61,7 +61,7 @@ export default function HomePage() {
               </p>
               <div className="flex flex-col sm:flex-row gap-3 pt-4 w-full sm:w-auto justify-center md:justify-start">
                 <Link href="/departments" className="w-full sm:w-auto">
-                  <Button size="lg" className="w-full sm:w-auto bg-white/90 text-accent hover:bg-white border-0 shadow-none" aria-label="Browse research materials organized by academic department" title="Browse department-specific project topics and full research materials">
+                  <Button size="lg" className="w-full sm:w-auto bg-white/20 text-white hover:bg-white/30 border border-white/30 shadow-none backdrop-blur-sm" aria-label="Browse research materials organized by academic department" title="Browse department-specific project topics and full research materials">
                     <FileText size={18} className="mr-2" aria-hidden="true" />
                     Browse Research Materials
                   </Button>
