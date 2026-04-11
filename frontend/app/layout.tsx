@@ -13,7 +13,7 @@ const _geistMono = Geist_Mono({ subsets: ['latin'] });
 export const metadata: Metadata = {
   title: 'Mesho Data Sciences - Academic Research Support',
   description: 'Access department-specific project materials, hire academic data analysts, and learn SPSS data analysis for your research.',
-  icons: { icon: '/Mesho_logo.png', apple: '/Mesho_logo.png' },
+  icons: { icon: '/mesho_logo.png', apple: '/mesho_logo.png' },
   other: { viewport: 'width=device-width, initial-scale=1, maximum-scale=1' },
 };
 

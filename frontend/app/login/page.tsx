@@ -36,7 +36,7 @@ export default function LoginPage() {
       {/* Left panel — branding */}
       <div className="hidden lg:flex lg:w-1/2 bg-accent flex-col justify-between p-12 text-white">
         <div className="flex items-center gap-3">
-          <Image src="/Mesho_logo.png" alt="Mesho Data Sciences logo" width={36} height={36} className="rounded-xl" />
+          <Image src="/mesho_logo.png" alt="Mesho Data Sciences logo" width={36} height={36} className="rounded-xl" />
           <span className="font-bold text-lg">Mesho Data Sciences</span>
         </div>
         <div>
@@ -57,7 +57,7 @@ export default function LoginPage() {
 
           {/* Mobile logo */}
           <div className="flex items-center gap-2 mb-8 lg:hidden">
-            <Image src="/Mesho_logo.png" alt="Mesho logo" width={32} height={32} className="rounded-xl" />
+            <Image src="/mesho_logo.png" alt="Mesho logo" width={32} height={32} className="rounded-xl" />
             <span className="font-bold">Mesho Data Sciences</span>
           </div>
 
