@@ -73,7 +73,7 @@ export default function HomePage() {
                 </Link>
               </div>
             </div>
-            <div className="relative h-64 md:h-full min-h-80 animate-in fade-in slide-in-from-right duration-500">
+            <div className="relative h-72 md:h-96 animate-in fade-in slide-in-from-right duration-500">
               <HeroCarousel />
             </div>
           </div>

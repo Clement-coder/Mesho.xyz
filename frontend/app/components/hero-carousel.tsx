@@ -40,9 +40,9 @@ export function HeroCarousel() {
   }, [current, paused, go, total]);
 
   return (
-    <div className="relative w-full h-full min-h-80 rounded-2xl overflow-hidden border border-white/20" aria-label="Image carousel" role="region">
+    <div className="relative w-full h-full rounded-2xl overflow-hidden border border-white/20" aria-label="Image carousel" role="region">
       {/* Slides */}
-      <div className="relative w-full h-full min-h-80">
+      <div className="relative w-full h-full">
         {slides.map((slide, i) => (
           <div
             key={i}
@@ -57,8 +57,7 @@ export function HeroCarousel() {
               className="object-cover"
               priority={i === 0}
             />
-            {/* Overlay */}
-            <div className="absolute inset-0" style={{ background: 'rgba(15,23,42,0.45)' }} />
+            <div className="absolute inset-0" style={{ background: 'rgba(15,23,42,0.35)' }} />
           </div>
         ))}
       </div>
