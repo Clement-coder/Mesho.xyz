@@ -67,7 +67,7 @@ export function HeroCarousel() {
             aria-hidden={i !== current}
           >
             {/* Background image */}
-            <Image src={slide.src} alt={slide.alt} fill className="object-contain" priority={i === 0} />
+            <Image src={slide.src} alt={slide.alt} fill className="object-cover" priority={i === 0} />
 
             {/* Dark gradient overlay — stronger at bottom for text legibility */}
             <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(10,15,30,0.92) 0%, rgba(10,15,30,0.45) 50%, rgba(10,15,30,0.15) 100%)' }} />

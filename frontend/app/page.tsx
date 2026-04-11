@@ -45,8 +45,9 @@ export default function HomePage() {
         className="min-h-screen md:min-h-0 py-16 md:py-24 px-4 relative overflow-hidden flex items-center"
         style={{
           backgroundImage: 'linear-gradient(135deg, rgba(15,23,42,0.85) 0%, rgba(30,58,95,0.80) 100%), url(/Herosectionmainimage.jpeg)',
-          backgroundSize: 'cover',
+          backgroundSize: '100% 100%',
           backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
         }}
       >
         <div className="max-w-7xl mx-auto relative z-10">
