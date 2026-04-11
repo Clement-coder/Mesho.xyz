@@ -54,7 +54,7 @@ export function HeroCarousel() {
   }, [current, paused, go]);
 
   return (
-    <div className="relative w-full h-full rounded-2xl overflow-hidden border border-white/20" role="region" aria-label="Feature highlights carousel">
+    <div className="relative w-full h-full rounded-2xl overflow-hidden border border-white/20 bg-[#0a0f1e]" role="region" aria-label="Feature highlights carousel">
 
       {/* Slides */}
       {slides.map((slide, i) => {
@@ -67,7 +67,7 @@ export function HeroCarousel() {
             aria-hidden={i !== current}
           >
             {/* Background image */}
-            <Image src={slide.src} alt={slide.alt} fill className="object-cover" priority={i === 0} />
+            <Image src={slide.src} alt={slide.alt} fill className="object-contain" priority={i === 0} />
 
             {/* Dark gradient overlay — stronger at bottom for text legibility */}
             <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(10,15,30,0.92) 0%, rgba(10,15,30,0.45) 50%, rgba(10,15,30,0.15) 100%)' }} />
