@@ -6,6 +6,8 @@ import Image from 'next/image';
 import { CustomSelect } from '../components/custom-select';
 import { Button } from '@/components/ui/button';
 import { Loader2, Mail, Lock, Eye, EyeOff, User, Phone, BookOpen, CheckCircle, Sparkles, UserPlus } from 'lucide-react';
+import { auth, googleProvider } from '@/lib/firebase';
+import { signInWithPopup } from 'firebase/auth';
 
 const countryCodes = [
   { code: '+234', flag: '🇳🇬', name: 'Nigeria' },
@@ -51,7 +53,35 @@ export default function SignUpPage() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+
+  const handleGoogleSignUp = async () => {
+    setGoogleLoading(true);
+    setError('');
+    try {
+      const result = await signInWithPopup(auth, googleProvider);
+      const user = result.user;
+      const userData = {
+        id: user.uid,
+        name: user.displayName || 'User',
+        email: user.email || '',
+        profilePicture: user.photoURL || '',
+        createdAt: new Date().toISOString(),
+        enrolledCourses: [], wishlist: [], hoursLearned: 0, certificates: 0,
+      };
+      const users = JSON.parse(localStorage.getItem('users') || '[]');
+      const exists = users.findIndex((u: any) => u.email === userData.email);
+      if (exists === -1) users.push(userData);
+      else users[exists] = { ...users[exists], ...userData };
+      localStorage.setItem('users', JSON.stringify(users));
+      localStorage.setItem('currentUser', JSON.stringify(exists === -1 ? userData : users[exists]));
+      window.location.replace('/dashboard');
+    } catch (e: any) {
+      setError('Google sign-in failed. Please try again.');
+      setGoogleLoading(false);
+    }
+  };
 
   const set = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }));
 
@@ -272,6 +302,19 @@ export default function SignUpPage() {
                 <><Loader2 size={16} className="mr-2 animate-spin" aria-hidden="true" />Creating Account...</>
               ) : (
                 <><UserPlus size={16} className="mr-2" aria-hidden="true" />Create Account</>
+              )}
+            </Button>
+
+            <div className="relative my-2">
+              <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-border" /></div>
+              <div className="relative flex justify-center text-xs text-muted-foreground"><span className="bg-card px-2">or</span></div>
+            </div>
+
+            <Button type="button" variant="outline" className="w-full" size="lg" onClick={handleGoogleSignUp} disabled={googleLoading} aria-label="Sign up with Google">
+              {googleLoading ? (
+                <><Loader2 size={16} className="mr-2 animate-spin" />Connecting...</>
+              ) : (
+                <><Image src="/google-icon.svg" alt="Google" width={18} height={18} className="mr-2" />Continue with Google</>
               )}
             </Button>
           </form>
