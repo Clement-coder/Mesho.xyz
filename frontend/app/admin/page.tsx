@@ -5,13 +5,13 @@ import { useRouter } from 'next/navigation';
 import { AdminShell, type AdminTab } from './_components/admin-shell';
 import { AdminOverview } from './_components/tab-overview';
 import { AdminUsers } from './_components/tab-users';
+import { PurchasesContent } from './purchases/page';
 
-// Lazy-load heavier tabs
-const AdminPurchases  = lazy(() => import('./purchases/page').then(m => ({ default: m.default })));
-const AdminProjects   = lazy(() => import('./projects/page').then(m => ({ default: m.default })));
-const AdminHire       = lazy(() => import('./hire-requests/page').then(m => ({ default: m.default })));
-const AdminTraining   = lazy(() => import('./training/page').then(m => ({ default: m.default })));
-const AdminMessages   = lazy(() => import('./messages/page').then(m => ({ default: m.default })));
+// Lazy-load remaining tabs
+const AdminProjects  = lazy(() => import('./projects/page').then(m => ({ default: m.default })));
+const AdminHire      = lazy(() => import('./hire-requests/page').then(m => ({ default: m.default })));
+const AdminTraining  = lazy(() => import('./training/page').then(m => ({ default: m.default })));
+const AdminMessages  = lazy(() => import('./messages/page').then(m => ({ default: m.default })));
 
 const Spinner = () => <div className="flex items-center justify-center py-20"><div className="w-8 h-8 border-4 border-accent border-t-transparent rounded-full animate-spin" /></div>;
 
@@ -32,7 +32,7 @@ export default function AdminPage() {
       <Suspense fallback={<Spinner />}>
         {tab === 'overview'  && <AdminOverview onTab={setTab} />}
         {tab === 'users'     && <AdminUsers />}
-        {tab === 'purchases' && <AdminPurchases />}
+        {tab === 'purchases' && <PurchasesContent />}
         {tab === 'projects'  && <AdminProjects />}
         {tab === 'hire'      && <AdminHire />}
         {tab === 'training'  && <AdminTraining />}

@@ -295,10 +295,25 @@ export default function DashboardPage() {
                     ))}
                   </div>
                   {p.status === 'pending' && (
-                    <div className="flex items-start gap-2 bg-yellow-50 border border-yellow-200 rounded-xl px-3 py-2.5 text-xs text-yellow-700">
-                      <Clock size={13} className="flex-shrink-0 mt-0.5" />
-                      <span><strong>Awaiting verification</strong> — Admin will confirm your bank transfer and send your material shortly.</span>
-                    </div>
+                    <>
+                      <div className="flex items-start gap-2 bg-yellow-50 border border-yellow-200 rounded-xl px-3 py-2.5 text-xs text-yellow-700">
+                        <Clock size={13} className="flex-shrink-0 mt-0.5" />
+                        <span><strong>Awaiting verification</strong> — Admin will confirm your bank transfer and send your material shortly.</span>
+                      </div>
+                      <div className="space-y-1.5">
+                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Bank Transfer Details</p>
+                        {[
+                          { label: 'Bank', value: process.env.NEXT_PUBLIC_BANK_NAME ?? 'First Bank of Nigeria' },
+                          { label: 'Account Number', value: process.env.NEXT_PUBLIC_BANK_ACCOUNT_NUMBER ?? '—' },
+                          { label: 'Account Name', value: process.env.NEXT_PUBLIC_BANK_ACCOUNT_NAME ?? 'Mesho Data Sciences' },
+                        ].map(item => (
+                          <div key={item.label} className="flex items-center justify-between bg-muted/30 rounded-xl px-3 py-2 text-sm">
+                            <span className="text-muted-foreground text-xs">{item.label}</span>
+                            <span className="font-mono font-semibold text-xs">{item.value}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </>
                   )}
                   {p.status === 'confirmed' && (
                     <a href={`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(`Hello! My payment for "${(p as any).projects?.title ?? 'research material'}" was confirmed (Ref: ${p.payment_reference}). Please send my file.`)}`}
