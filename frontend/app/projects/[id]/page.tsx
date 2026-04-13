@@ -11,6 +11,7 @@ import { createClient } from '@/utils/supabase/client';
 import { useAuth } from '@/lib/auth-context';
 import { toast } from 'sonner';
 import type { Project } from '@/lib/types';
+import { ShareButton } from '@/app/components/share-button';
 
 const WA_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? '2348012345678';
 
@@ -130,6 +131,11 @@ export default function ProjectPreviewPage() {
                 >
                   <Heart size={18} fill={inWishlist ? 'currentColor' : 'none'} />
                 </button>
+                <ShareButton
+                  title={project.title}
+                  url={typeof window !== 'undefined' ? window.location.href : ''}
+                  description={project.description}
+                />
                 {alreadyPurchased ? (
                   <Button size="lg" variant="outline" className="border-green-500 text-green-600">
                     ✓ Purchased

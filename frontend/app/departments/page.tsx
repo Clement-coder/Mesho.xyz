@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Search, ChevronLeft } from 'lucide-react';
 import { createClient } from '@/utils/supabase/client';
 import type { Department } from '@/lib/types';
+import { ShareButton } from '../components/share-button';
 
 export default function DepartmentsPage() {
   const router = useRouter();
@@ -34,7 +35,10 @@ export default function DepartmentsPage() {
           <button onClick={() => router.back()} className="flex items-center gap-2 text-accent hover:text-accent/80 transition-colors mb-6 text-sm font-medium">
             <ChevronLeft size={18} /> Back
           </button>
-          <h1 className="text-3xl md:text-4xl font-bold mb-2">Browse Departments</h1>
+          <div className="flex items-center justify-between mb-2">
+            <h1 className="text-3xl md:text-4xl font-bold">Browse Departments</h1>
+            <ShareButton title="Browse Departments — Mesho Data Sciences" url={typeof window !== 'undefined' ? window.location.href : 'https://meshodatasciences.com/departments'} description="Find project topics and research materials for your department." />
+          </div>
           <p className="text-muted-foreground mb-8">Select your department to find project topics and research materials.</p>
           <div className="relative max-w-md">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={20} />

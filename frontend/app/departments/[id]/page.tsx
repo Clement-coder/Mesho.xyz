@@ -8,6 +8,7 @@ import { ChevronLeft } from 'lucide-react';
 import { Icon } from '@/app/components/icon-wrapper';
 import { createClient } from '@/utils/supabase/client';
 import type { Department, Course } from '@/lib/types';
+import { ShareButton } from '@/app/components/share-button';
 
 export default function DepartmentPage() {
   const params = useParams();
@@ -43,10 +44,11 @@ export default function DepartmentPage() {
             <div className="p-4 rounded-lg" style={{ backgroundColor: `${department.color}20` }}>
               <Icon name={department.icon as any} size={32} style={{ color: department.color }} />
             </div>
-            <div>
+            <div className="flex-1 min-w-0">
               <h1 className="text-3xl md:text-4xl font-bold">{department.name}</h1>
               <p className="text-muted-foreground">{courses.length} course{courses.length !== 1 ? 's' : ''}</p>
             </div>
+            <ShareButton title={`${department.name} — Mesho Data Sciences`} url={typeof window !== 'undefined' ? window.location.href : ''} description={department.description} />
           </div>
           <p className="text-muted-foreground max-w-2xl">{department.description}</p>
         </div>
