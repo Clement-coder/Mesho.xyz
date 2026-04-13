@@ -32,6 +32,10 @@ create table if not exists public.notifications (
 alter table public.chat_messages enable row level security;
 alter table public.notifications enable row level security;
 
+-- Enable Realtime on chat_messages and notifications
+alter publication supabase_realtime add table public.chat_messages;
+alter publication supabase_realtime add table public.notifications;
+
 -- Chat: anyone can insert (user sends), all can select (open for Firebase users)
 create policy "Anyone can insert chat message" on public.chat_messages for insert with check (true);
 create policy "Anyone can read chat messages" on public.chat_messages for select using (true);

@@ -12,54 +12,71 @@ import type { ContactMessage, ChatMessage } from '@/lib/types';
 function ChatThread({ userId, userName, onClose }: { userId: string; userName: string; onClose: () => void }) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [text, setText] = useState('');
-  const [sending, setSending] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
-  const supabase = createClient();
+  const inputRef = useRef<HTMLInputElement>(null);
+  const supabase = useRef(createClient()).current;
+
+  const scrollBottom = () => setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 50);
 
   useEffect(() => {
     supabase.from('chat_messages').select('*').eq('user_id', userId).order('created_at')
-      .then(({ data }) => setMessages(data ?? []));
-    supabase.from('chat_messages').update({ read_by_admin: true }).eq('user_id', userId).eq('sender', 'user').eq('read_by_admin', false).then(() => {});
+      .then(({ data }) => { setMessages(data ?? []); scrollBottom(); });
+    supabase.from('chat_messages').update({ read_by_admin: true })
+      .eq('user_id', userId).eq('sender', 'user').eq('read_by_admin', false).then(() => {});
 
-    const channel = supabase.channel(`admin-chat-${userId}`)
+    const channel = supabase.channel(`admin-chat-${userId}`, { config: { broadcast: { self: false } } })
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_messages', filter: `user_id=eq.${userId}` },
-        (p) => setMessages(prev => [...prev, p.new as ChatMessage]))
+        (p) => {
+          const msg = p.new as ChatMessage;
+          if (msg.sender === 'user') { setMessages(prev => [...prev, msg]); scrollBottom(); }
+        })
       .subscribe();
     return () => { supabase.removeChannel(channel); };
   }, [userId]);
 
-  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
-
   const send = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!text.trim() || sending) return;
-    setSending(true);
-    const { error } = await supabase.from('chat_messages').insert({
+    const msg = text.trim();
+    if (!msg) return;
+    const optimistic: ChatMessage = {
+      id: `opt-${Date.now()}`, user_id: userId, user_name: userName, user_email: '',
+      sender: 'admin', message: msg, read_by_admin: true, read_by_user: false,
+      created_at: new Date().toISOString(),
+    };
+    setMessages(prev => [...prev, optimistic]);
+    setText('');
+    scrollBottom();
+    inputRef.current?.focus();
+    const { data, error } = await supabase.from('chat_messages').insert({
       user_id: userId, user_name: userName, user_email: '',
-      sender: 'admin', message: text.trim(),
-      read_by_admin: true, read_by_user: false,
-    });
-    if (error) toast.error('Failed to send');
-    else setText('');
-    setSending(false);
+      sender: 'admin', message: msg, read_by_admin: true, read_by_user: false,
+    }).select().single();
+    if (error) setMessages(prev => prev.filter(m => m.id !== optimistic.id));
+    else if (data) setMessages(prev => prev.map(m => m.id === optimistic.id ? data : m));
   };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
       <div className="bg-background border border-border rounded-2xl w-full max-w-md shadow-2xl flex flex-col" style={{ height: '500px' }}>
-        <div className="flex items-center justify-between px-4 py-3 border-b border-border flex-shrink-0">
-          <div className="flex items-center gap-2">
-            <MessageCircle size={16} className="text-[#25D366]" />
-            <span className="font-semibold text-sm">Chat with {userName}</span>
+        <div className="flex items-center gap-3 px-4 py-3 border-b border-border flex-shrink-0">
+          <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center font-bold text-accent text-sm flex-shrink-0">
+            {userName.charAt(0).toUpperCase()}
+          </div>
+          <div className="flex-1">
+            <p className="font-semibold text-sm">{userName}</p>
+            <p className="text-xs text-muted-foreground">User</p>
           </div>
           <button onClick={onClose} className="p-1.5 hover:bg-muted rounded-lg"><X size={16} /></button>
         </div>
-        <div className="flex-1 overflow-y-auto p-3 space-y-2">
+        <div className="flex-1 overflow-y-auto px-3 py-3 space-y-3 bg-muted/10">
           {messages.map(m => (
-            <div key={m.id} className={`flex ${m.sender === 'admin' ? 'justify-end' : 'justify-start'}`}>
-              <div className={`max-w-[80%] px-3 py-2 rounded-2xl text-sm ${m.sender === 'admin' ? 'bg-accent text-white rounded-br-sm' : 'bg-muted rounded-bl-sm'}`}>
-                <p>{m.message}</p>
-                <p className={`text-[10px] mt-0.5 ${m.sender === 'admin' ? 'text-white/60' : 'text-muted-foreground'}`}>
+            <div key={m.id} className={`flex items-end gap-2 ${m.sender === 'admin' ? 'flex-row-reverse' : 'flex-row'}`}>
+              {m.sender === 'user'
+                ? <div className="w-6 h-6 rounded-full bg-accent/10 flex items-center justify-center text-accent font-bold text-[10px] flex-shrink-0">{userName.charAt(0).toUpperCase()}</div>
+                : <div className="w-6 h-6 rounded-full bg-accent flex items-center justify-center flex-shrink-0"><MessageCircle size={12} className="text-white" /></div>}
+              <div className={`max-w-[75%] px-3 py-2 rounded-2xl text-sm ${m.sender === 'admin' ? 'bg-accent text-white rounded-br-sm' : 'bg-background border border-border rounded-bl-sm shadow-sm'}`}>
+                <p className="break-words">{m.message}</p>
+                <p className={`text-[10px] mt-0.5 ${m.sender === 'admin' ? 'text-white/60 text-right' : 'text-muted-foreground'}`}>
                   {new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 </p>
               </div>
@@ -67,11 +84,11 @@ function ChatThread({ userId, userName, onClose }: { userId: string; userName: s
           ))}
           <div ref={bottomRef} />
         </div>
-        <form onSubmit={send} className="flex gap-2 p-3 border-t border-border flex-shrink-0">
-          <input value={text} onChange={e => setText(e.target.value)} placeholder="Reply to user..."
+        <form onSubmit={send} className="flex gap-2 p-3 border-t border-border bg-background flex-shrink-0">
+          <input ref={inputRef} value={text} onChange={e => setText(e.target.value)} placeholder="Reply to user..." autoFocus
             className="flex-1 h-9 px-3 rounded-xl border border-border bg-input text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
-          <button type="submit" disabled={!text.trim() || sending}
-            className="w-9 h-9 bg-accent hover:bg-accent/90 disabled:opacity-50 text-white rounded-xl flex items-center justify-center">
+          <button type="submit" disabled={!text.trim()}
+            className="w-9 h-9 bg-accent hover:bg-accent/90 disabled:opacity-40 text-white rounded-xl flex items-center justify-center">
             <Send size={14} />
           </button>
         </form>
