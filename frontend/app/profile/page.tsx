@@ -8,13 +8,14 @@ import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { LogoutModal } from '@/components/logout-modal';
-import { User, Mail, Calendar, Save, Camera, FolderOpen, BarChart3, Award } from 'lucide-react';
+import { User, Mail, Calendar, Save, Camera, FolderOpen, BarChart3, Award, Phone } from 'lucide-react';
 import { createClient } from '@/utils/supabase/client';
 import { toast } from 'sonner';
 
 export default function ProfilePage() {
   const { user, logout, refreshUser } = useAuth();
   const [name, setName] = useState('');
+  const [whatsapp, setWhatsapp] = useState('');
   const [profilePicture, setProfilePicture] = useState('');
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [currentPassword, setCurrentPassword] = useState('');
@@ -24,7 +25,11 @@ export default function ProfilePage() {
   const [changingPw, setChangingPw] = useState(false);
 
   useEffect(() => {
-    if (user) { setName(user.name); setProfilePicture(user.profile_picture_url ?? ''); }
+    if (user) {
+      setName(user.name);
+      setWhatsapp(user.whatsapp ?? '');
+      setProfilePicture(user.profile_picture_url ?? '');
+    }
   }, [user]);
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -48,7 +53,7 @@ export default function ProfilePage() {
     if (!user) return;
     setSaving(true);
     const supabase = createClient();
-    const { error } = await supabase.from('profiles').update({ name: name.trim() }).eq('id', user.id);
+    const { error } = await supabase.from('profiles').update({ name: name.trim(), whatsapp: whatsapp.trim() || null }).eq('id', user.id);
     if (error) { toast.error('Update failed'); setSaving(false); return; }
     await refreshUser();
     toast.success('Profile updated successfully!');
@@ -139,6 +144,17 @@ export default function ProfilePage() {
                     <label className="text-sm font-medium mb-1.5 block">Email Address</label>
                     <Input value={user?.email ?? ''} disabled className="opacity-60 cursor-not-allowed" />
                     <p className="text-xs text-muted-foreground mt-1">Email cannot be changed.</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium mb-1.5 block flex items-center gap-1.5">
+                      <Phone size={13} className="text-muted-foreground" /> WhatsApp Number
+                    </label>
+                    <Input
+                      value={whatsapp}
+                      onChange={e => setWhatsapp(e.target.value.replace(/\D/g, ''))}
+                      placeholder="e.g. 2348012345678 (with country code)"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">Used by admin to send your purchased materials.</p>
                   </div>
                   <Button type="submit" disabled={saving}>
                     <Save size={15} className="mr-2" />{saving ? 'Saving...' : 'Save Changes'}

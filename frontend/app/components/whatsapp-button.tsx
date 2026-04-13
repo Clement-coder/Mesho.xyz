@@ -3,6 +3,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { MessageCircle } from 'lucide-react';
 
+const WA_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? '2348012345678';
+
 export const WhatsAppButton = () => {
   const [pos, setPos] = useState({ x: 24, y: 24 }); // bottom-left offset
   const [visible, setVisible] = useState(false);
@@ -86,7 +88,7 @@ export const WhatsAppButton = () => {
       title="Chat with us on WhatsApp — drag to move"
     >
       <a
-        href="https://wa.me/1234567890"
+        href={`https://wa.me/${WA_NUMBER}`}
         target="_blank"
         rel="noopener noreferrer"
         onClick={(e) => { if (hasMoved.current) e.preventDefault(); }}

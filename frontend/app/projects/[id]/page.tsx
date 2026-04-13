@@ -4,13 +4,15 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/app/components/badge';
-import { SlideModal } from '@/app/components/slide-modal';
+import { BankTransferModal } from '@/app/components/bank-transfer-modal';
 import { MessageAlert } from '@/app/components/message-alert';
-import { ChevronLeft, Clock, GraduationCap, FileText, Lock, MessageCircle } from 'lucide-react';
+import { ChevronLeft, Clock, GraduationCap, FileText, Lock, MessageCircle, Heart } from 'lucide-react';
 import { createClient } from '@/utils/supabase/client';
 import { useAuth } from '@/lib/auth-context';
 import { toast } from 'sonner';
 import type { Project } from '@/lib/types';
+
+const WA_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? '2348012345678';
 
 export default function ProjectPreviewPage() {
   const params = useParams();
@@ -18,15 +20,17 @@ export default function ProjectPreviewPage() {
   const { user, refreshUser } = useAuth();
   const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
-  const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false);
+  const [showTransferModal, setShowTransferModal] = useState(false);
   const [showSuccessAlert, setShowSuccessAlert] = useState(false);
-  const [purchasing, setPurchasing] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [alreadyPurchased, setAlreadyPurchased] = useState(false);
+  const [inWishlist, setInWishlist] = useState(false);
+  const [wishlistLoading, setWishlistLoading] = useState(false);
+  const [payRef, setPayRef] = useState('');
 
   useEffect(() => {
     const supabase = createClient();
-    const id = params.id as string;
-    supabase.from('projects').select('*').eq('id', id).single().then(({ data }) => {
+    supabase.from('projects').select('*').eq('id', params.id as string).single().then(({ data }) => {
       setProject(data);
       setLoading(false);
     });
@@ -35,31 +39,50 @@ export default function ProjectPreviewPage() {
   useEffect(() => {
     if (!user || !project) return;
     setAlreadyPurchased(user.enrolled_projects.includes(project.id));
+    setInWishlist(user.wishlist.includes(project.id));
   }, [user, project]);
 
-  const handlePurchase = async () => {
+  const openPayment = () => {
     if (!user) { router.push('/login'); return; }
-    if (!project) return;
-    setPurchasing(true);
+    const ref = `MESHO-${Date.now()}-${Math.random().toString(36).slice(2, 7).toUpperCase()}`;
+    setPayRef(ref);
+    setShowTransferModal(true);
+  };
+
+  const handleIHavePaid = async () => {
+    if (!user || !project) return;
+    setSubmitting(true);
     const supabase = createClient();
-    const ref = `MESHO-${Date.now()}`;
     const { error } = await supabase.from('purchases').insert({
       user_id: user.id,
       project_id: project.id,
       amount: project.price,
-      payment_reference: ref,
-      status: 'confirmed',
+      payment_reference: payRef,
+      status: 'pending',
+      user_name: user.name,
+      user_email: user.email ?? '',
+      user_whatsapp: user.whatsapp ?? user.phone ?? '',
     });
-    if (error) { toast.error('Purchase failed. Please try again.'); setPurchasing(false); return; }
-    // Update profile enrolled_projects
-    await supabase.from('profiles').update({
-      enrolled_projects: [...user.enrolled_projects, project.id],
-    }).eq('id', user.id);
-    await refreshUser();
-    setAlreadyPurchased(true);
-    setIsPurchaseModalOpen(false);
+    if (error) { toast.error('Submission failed. Please try again.'); setSubmitting(false); return; }
+    setSubmitting(false);
+    setShowTransferModal(false);
     setShowSuccessAlert(true);
-    setPurchasing(false);
+  };
+
+  const toggleWishlist = async () => {
+    if (!user) { router.push('/login'); return; }
+    if (!project) return;
+    setWishlistLoading(true);
+    const supabase = createClient();
+    const newWishlist = inWishlist
+      ? user.wishlist.filter(id => id !== project.id)
+      : [...user.wishlist, project.id];
+    const { error } = await supabase.from('profiles').update({ wishlist: newWishlist }).eq('id', user.id);
+    if (error) { toast.error('Failed to update saved list'); setWishlistLoading(false); return; }
+    await refreshUser();
+    setInWishlist(!inWishlist);
+    toast.success(inWishlist ? 'Removed from saved' : 'Saved to wishlist');
+    setWishlistLoading(false);
   };
 
   if (loading) return <div className="min-h-screen flex items-center justify-center"><div className="w-8 h-8 border-4 border-accent border-t-transparent rounded-full animate-spin" /></div>;
@@ -68,8 +91,12 @@ export default function ProjectPreviewPage() {
   return (
     <div className="w-full">
       {showSuccessAlert && (
-        <div className="fixed top-20 left-4 right-4 z-50 max-w-md">
-          <MessageAlert type="success" message="Payment successful! Your research material is ready for download." onClose={() => setShowSuccessAlert(false)} />
+        <div className="fixed top-20 left-4 right-4 z-50 max-w-md mx-auto">
+          <MessageAlert
+            type="success"
+            message="Payment submitted! The admin will verify your transfer and send your material via WhatsApp or email shortly."
+            onClose={() => setShowSuccessAlert(false)}
+          />
         </div>
       )}
 
@@ -84,17 +111,28 @@ export default function ProjectPreviewPage() {
               <h1 className="text-3xl md:text-4xl font-bold mb-2">{project.title}</h1>
               <p className="text-muted-foreground">{project.description}</p>
             </div>
-            <div className="text-right">
-              <div className="text-4xl font-bold text-accent mb-2">₦{project.price.toLocaleString()}</div>
-              {alreadyPurchased ? (
-                <Button size="lg" variant="outline" className="w-full md:w-auto border-green-500 text-green-600">
-                  ✓ Purchased
-                </Button>
-              ) : (
-                <Button size="lg" onClick={() => setIsPurchaseModalOpen(true)} className="w-full md:w-auto">
-                  Get This Material
-                </Button>
-              )}
+            <div className="flex flex-col items-end gap-3">
+              <div className="text-4xl font-bold text-accent">₦{project.price.toLocaleString()}</div>
+              <div className="flex items-center gap-2">
+                {/* Wishlist toggle */}
+                <button
+                  onClick={toggleWishlist}
+                  disabled={wishlistLoading}
+                  title={inWishlist ? 'Remove from saved' : 'Save for later'}
+                  className={`w-10 h-10 rounded-xl border flex items-center justify-center transition-colors disabled:opacity-50 ${inWishlist ? 'bg-red-50 border-red-200 text-red-500' : 'border-border text-muted-foreground hover:border-red-200 hover:text-red-400'}`}
+                >
+                  <Heart size={18} fill={inWishlist ? 'currentColor' : 'none'} />
+                </button>
+                {alreadyPurchased ? (
+                  <Button size="lg" variant="outline" className="border-green-500 text-green-600">
+                    ✓ Purchased
+                  </Button>
+                ) : (
+                  <Button size="lg" onClick={openPayment}>
+                    Get This Material
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -146,23 +184,23 @@ export default function ProjectPreviewPage() {
             </div>
 
             <div className="lg:col-span-1 space-y-6">
-              <div className="bg-gradient-to-br from-accent/5 to-accent/10 border border-accent/20 rounded-lg p-6">
+              <div className="bg-gradient-to-br from-accent/5 to-accent/10 border border-accent/20 rounded-2xl p-6">
                 {alreadyPurchased ? (
                   <>
                     <h3 className="font-bold text-lg mb-2">Material Unlocked</h3>
-                    <p className="text-sm text-muted-foreground mb-4">You have purchased this material. Contact us on WhatsApp to receive your download link.</p>
-                    <a href="https://wa.me/1234567890" target="_blank" rel="noopener noreferrer"
-                      className="w-full flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#20BA5A] text-white py-3 rounded-lg transition-colors font-medium text-sm">
-                      <MessageCircle size={18} /> Get Download Link
+                    <p className="text-sm text-muted-foreground mb-4">Your payment was confirmed. Contact us on WhatsApp to receive your file.</p>
+                    <a href={`https://wa.me/${WA_NUMBER}`} target="_blank" rel="noopener noreferrer"
+                      className="w-full flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#20BA5A] text-white py-3 rounded-xl transition-colors font-medium text-sm">
+                      <MessageCircle size={18} /> Get Download Link on WhatsApp
                     </a>
                   </>
                 ) : (
                   <>
                     <Lock className="w-8 h-8 text-accent mb-4" />
                     <h3 className="font-bold text-lg mb-2">Full Material Locked</h3>
-                    <p className="text-sm text-muted-foreground mb-6">Complete payment to unlock and download the full research material instantly.</p>
-                    <Button size="lg" className="w-full" onClick={() => setIsPurchaseModalOpen(true)}>
-                      Get This Material — ₦{project.price.toLocaleString()}
+                    <p className="text-sm text-muted-foreground mb-6">Make a bank transfer and the admin will send your material after verification.</p>
+                    <Button size="lg" className="w-full" onClick={openPayment}>
+                      Pay ₦{project.price.toLocaleString()} via Bank Transfer
                     </Button>
                   </>
                 )}
@@ -170,8 +208,8 @@ export default function ProjectPreviewPage() {
 
               <div className="clay p-6">
                 <h3 className="font-bold mb-4">Need Help?</h3>
-                <a href="https://wa.me/1234567890" target="_blank" rel="noopener noreferrer"
-                  className="w-full flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#20BA5A] text-white py-3 rounded-lg transition-colors font-medium">
+                <a href={`https://wa.me/${WA_NUMBER}`} target="_blank" rel="noopener noreferrer"
+                  className="w-full flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#20BA5A] text-white py-3 rounded-xl transition-colors font-medium">
                   <MessageCircle size={18} /> Chat on WhatsApp
                 </a>
               </div>
@@ -180,37 +218,15 @@ export default function ProjectPreviewPage() {
         </div>
       </section>
 
-      <SlideModal isOpen={isPurchaseModalOpen} onClose={() => setIsPurchaseModalOpen(false)} title="Purchase Research Material">
-        <div className="space-y-6 py-4">
-          <div>
-            <h3 className="font-bold text-lg mb-2">{project.title}</h3>
-            <p className="text-muted-foreground text-sm mb-4">{project.description}</p>
-            <div className="bg-accent/10 rounded-lg p-4 mb-4">
-              <div className="flex justify-between items-center">
-                <span className="font-medium">Total Amount</span>
-                <span className="text-2xl font-bold text-accent">₦{project.price.toLocaleString()}</span>
-              </div>
-            </div>
-          </div>
-          {[
-            { title: 'Full Research Document', desc: 'Complete chapters, references, and appendices' },
-            { title: 'Instant Access', desc: 'Access your material immediately after payment' },
-            { title: 'SPSS Data & Analysis', desc: 'Includes data file and statistical output where applicable' },
-          ].map((item, i) => (
-            <div key={i} className="flex items-start gap-3 pb-3 border-b border-border last:border-0">
-              <span className="text-accent font-bold mt-0.5">✓</span>
-              <div>
-                <p className="font-medium">{item.title}</p>
-                <p className="text-sm text-muted-foreground">{item.desc}</p>
-              </div>
-            </div>
-          ))}
-          <Button size="lg" className="w-full" onClick={handlePurchase} disabled={purchasing}>
-            {purchasing ? 'Processing...' : `Proceed to Payment — ₦${project.price.toLocaleString()}`}
-          </Button>
-          <p className="text-xs text-muted-foreground text-center">Secure payment. Your material is released immediately after confirmation.</p>
-        </div>
-      </SlideModal>
+      <BankTransferModal
+        isOpen={showTransferModal}
+        onClose={() => setShowTransferModal(false)}
+        projectTitle={project.title}
+        amount={project.price}
+        reference={payRef}
+        onIHavePaid={handleIHavePaid}
+        submitting={submitting}
+      />
     </div>
   );
 }

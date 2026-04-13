@@ -3,6 +3,7 @@ export interface Profile {
   name: string;
   email?: string;
   phone: string | null;
+  whatsapp: string | null;
   profile_picture_url: string | null;
   role: 'user' | 'admin';
   enrolled_projects: string[];
@@ -54,6 +55,10 @@ export interface Purchase {
   amount: number;
   payment_reference: string | null;
   status: 'pending' | 'confirmed' | 'failed';
+  rejection_reason: string | null;
+  user_name: string | null;
+  user_email: string | null;
+  user_whatsapp: string | null;
   created_at: string;
   project?: Project;
   profile?: Profile;

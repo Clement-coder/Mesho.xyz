@@ -5,6 +5,7 @@ import { Analytics } from '@vercel/analytics/next';
 import { AuthProvider } from '@/lib/auth-context';
 import { Navbar } from "./components/navbar";
 import { ConditionalFooter } from "./components/conditional-footer";
+import { WhatsAppButton } from "./components/whatsapp-button";
 import { Toaster } from 'sonner';
 import './globals.css';
 
@@ -45,6 +46,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           <Navbar />
           <main className="min-h-screen">{children}</main>
           <ConditionalFooter />
+          <WhatsAppButton />
         </AuthProvider>
         <Toaster
           position="top-right"
