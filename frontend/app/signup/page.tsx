@@ -145,7 +145,6 @@ export default function SignUpPage() {
 
         {/* Content sits above overlay */}
         <div className="relative z-10">
-        <div className="relative z-10">
           <div className="w-14 h-14 bg-white/15 rounded-2xl flex items-center justify-center mb-6">
             <BookOpen size={28} className="text-white" />
           </div>
