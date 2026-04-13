@@ -1,7 +1,9 @@
+'use client';
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { LogOut, X } from 'lucide-react';
+import { LogOut } from 'lucide-react';
+import { BottomSheet } from '@/components/bottom-sheet';
 
 interface LogoutModalProps {
   isOpen: boolean;
@@ -10,37 +12,23 @@ interface LogoutModalProps {
 }
 
 export function LogoutModal({ isOpen, onClose, onConfirm }: LogoutModalProps) {
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="flex items-center gap-2">
-            <LogOut className="w-5 h-5" />
-            Confirm Logout
-          </CardTitle>
-          <button
-            onClick={onClose}
-            className="p-1 hover:bg-muted rounded-md transition-colors"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <p className="text-muted-foreground">
-            Are you sure you want to logout? You'll need to sign in again to access your account.
-          </p>
-          <div className="flex gap-3 justify-end">
-            <Button variant="outline" onClick={onClose}>
-              Cancel
-            </Button>
-            <Button variant="destructive" onClick={onConfirm}>
-              Logout
-            </Button>
+    <BottomSheet isOpen={isOpen} onClose={onClose} maxHeight="40vh">
+      <div className="px-6 pb-8 pt-2 space-y-5">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-destructive/10 rounded-xl flex items-center justify-center">
+            <LogOut size={18} className="text-destructive" />
           </div>
-        </CardContent>
-      </Card>
-    </div>
+          <div>
+            <h2 className="font-bold text-base">Confirm Logout</h2>
+            <p className="text-xs text-muted-foreground">You'll need to sign in again.</p>
+          </div>
+        </div>
+        <div className="flex gap-3">
+          <Button variant="outline" onClick={onClose} className="flex-1">Cancel</Button>
+          <Button variant="destructive" onClick={onConfirm} className="flex-1">Logout</Button>
+        </div>
+      </div>
+    </BottomSheet>
   );
 }

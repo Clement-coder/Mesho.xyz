@@ -12,6 +12,7 @@ import { LogoutModal } from '@/components/logout-modal';
 import { DashboardSidebar } from '../components/dashboard-sidebar';
 import { BookOpen, BarChart3, Award, FolderOpen, Search, Heart, UserCircle, CreditCard, Clock, CheckCircle, XCircle, ChevronLeft, MessageCircle, ShieldCheck, Eye, X } from 'lucide-react';
 import { PaymentReceipt } from '../components/payment-receipt';
+import { BottomSheet } from '@/components/bottom-sheet';
 
 const WA_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? '2348012345678';
 import { createClient } from '@/utils/supabase/client';
@@ -278,63 +279,58 @@ export default function DashboardPage() {
         const Icon = statusIcon[p.status];
         const borderColor = p.status === 'failed' ? 'border-red-400' : 'border-yellow-400';
         return (
-          <>
-            <div className="fixed inset-0 bg-black/50 z-50" onClick={() => setViewPayment(null)} />
-            <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
-              <div className="bg-background border border-border rounded-t-2xl sm:rounded-2xl w-full max-w-md shadow-2xl animate-in slide-in-from-bottom sm:zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
-                <div className="flex items-center justify-between p-5 border-b border-border">
-                  <h2 className="font-bold text-base">Payment Details</h2>
-                  <button onClick={() => setViewPayment(null)} className="p-1.5 hover:bg-muted rounded-lg"><X size={16} /></button>
-                </div>
-                <div className="p-5 space-y-4">
-                  <div className={`border-l-4 ${borderColor} pl-3`}>
-                    <p className="font-semibold">{(p as any).projects?.title ?? 'Research Material'}</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">{new Date(p.created_at).toLocaleString()}</p>
+          <BottomSheet isOpen onClose={() => setViewPayment(null)}>
+            <div className="flex items-center justify-between px-5 py-4 border-b border-border">
+              <h2 className="font-bold text-base">Payment Details</h2>
+              <button onClick={() => setViewPayment(null)} className="p-1.5 hover:bg-muted rounded-lg"><X size={16} /></button>
+            </div>
+            <div className="p-5 space-y-4">
+              <div className={`border-l-4 ${borderColor} pl-3`}>
+                <p className="font-semibold">{(p as any).projects?.title ?? 'Research Material'}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{new Date(p.created_at).toLocaleString()}</p>
+              </div>
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                {[
+                  { label: 'Amount', value: `₦${p.amount.toLocaleString()}` },
+                  { label: 'Status', value: <span className={`flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium w-fit ${statusColor[p.status]}`}><Icon size={10} />{p.status}</span> },
+                  { label: 'Reference', value: <span className="font-mono text-xs break-all">{p.payment_reference ?? '—'}</span> },
+                  { label: 'Date', value: new Date(p.created_at).toLocaleDateString() },
+                ].map((item, i) => (
+                  <div key={i} className="bg-muted/30 rounded-xl p-3">
+                    <p className="text-xs text-muted-foreground mb-0.5">{item.label}</p>
+                    <p className="font-medium">{item.value}</p>
                   </div>
-                  <div className="grid grid-cols-2 gap-3 text-sm">
+                ))}
+              </div>
+              {p.status === 'pending' && (
+                <>
+                  <div className="flex items-start gap-2 bg-yellow-50 border border-yellow-200 rounded-xl px-3 py-2.5 text-xs text-yellow-700">
+                    <Clock size={13} className="flex-shrink-0 mt-0.5" />
+                    <span><strong>Awaiting verification</strong> — Admin will confirm your bank transfer shortly.</span>
+                  </div>
+                  <div className="space-y-1.5">
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Bank Transfer Details</p>
                     {[
-                      { label: 'Amount', value: `₦${p.amount.toLocaleString()}` },
-                      { label: 'Status', value: <span className={`flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium w-fit ${statusColor[p.status]}`}><Icon size={10} />{p.status}</span> },
-                      { label: 'Reference', value: <span className="font-mono text-xs break-all">{p.payment_reference ?? '—'}</span> },
-                      { label: 'Date', value: new Date(p.created_at).toLocaleDateString() },
-                    ].map((item, i) => (
-                      <div key={i} className="bg-muted/30 rounded-xl p-3">
-                        <p className="text-xs text-muted-foreground mb-0.5">{item.label}</p>
-                        <p className="font-medium">{item.value}</p>
+                      { label: 'Bank', value: process.env.NEXT_PUBLIC_BANK_NAME ?? 'First Bank of Nigeria' },
+                      { label: 'Account Number', value: process.env.NEXT_PUBLIC_BANK_ACCOUNT_NUMBER ?? '—' },
+                      { label: 'Account Name', value: process.env.NEXT_PUBLIC_BANK_ACCOUNT_NAME ?? 'Mesho Data Sciences' },
+                    ].map(item => (
+                      <div key={item.label} className="flex items-center justify-between bg-muted/30 rounded-xl px-3 py-2 text-sm">
+                        <span className="text-muted-foreground text-xs">{item.label}</span>
+                        <span className="font-mono font-semibold text-xs">{item.value}</span>
                       </div>
                     ))}
                   </div>
-                  {p.status === 'pending' && (
-                    <>
-                      <div className="flex items-start gap-2 bg-yellow-50 border border-yellow-200 rounded-xl px-3 py-2.5 text-xs text-yellow-700">
-                        <Clock size={13} className="flex-shrink-0 mt-0.5" />
-                        <span><strong>Awaiting verification</strong> — Admin will confirm your bank transfer shortly.</span>
-                      </div>
-                      <div className="space-y-1.5">
-                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Bank Transfer Details</p>
-                        {[
-                          { label: 'Bank', value: process.env.NEXT_PUBLIC_BANK_NAME ?? 'First Bank of Nigeria' },
-                          { label: 'Account Number', value: process.env.NEXT_PUBLIC_BANK_ACCOUNT_NUMBER ?? '—' },
-                          { label: 'Account Name', value: process.env.NEXT_PUBLIC_BANK_ACCOUNT_NAME ?? 'Mesho Data Sciences' },
-                        ].map(item => (
-                          <div key={item.label} className="flex items-center justify-between bg-muted/30 rounded-xl px-3 py-2 text-sm">
-                            <span className="text-muted-foreground text-xs">{item.label}</span>
-                            <span className="font-mono font-semibold text-xs">{item.value}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </>
-                  )}
-                  {p.status === 'failed' && (
-                    <div className="flex items-start gap-2 bg-red-50 border border-red-200 rounded-xl px-3 py-2.5 text-xs text-red-700">
-                      <XCircle size={13} className="flex-shrink-0 mt-0.5" />
-                      <span><strong>Rejected:</strong> {p.rejection_reason ?? 'Payment could not be verified. Please contact support.'}</span>
-                    </div>
-                  )}
+                </>
+              )}
+              {p.status === 'failed' && (
+                <div className="flex items-start gap-2 bg-red-50 border border-red-200 rounded-xl px-3 py-2.5 text-xs text-red-700">
+                  <XCircle size={13} className="flex-shrink-0 mt-0.5" />
+                  <span><strong>Rejected:</strong> {p.rejection_reason ?? 'Payment could not be verified. Please contact support.'}</span>
                 </div>
-              </div>
+              )}
             </div>
-          </>
+          </BottomSheet>
         );
       })()}
     </ProtectedRoute>

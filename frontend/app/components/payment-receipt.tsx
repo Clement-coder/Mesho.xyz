@@ -2,6 +2,7 @@
 
 import React, { useRef, useState } from 'react';
 import { X, Download, Share2 } from 'lucide-react';
+import { BottomSheet } from '@/components/bottom-sheet';
 
 const WA_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? '2348012345678';
 const ACCENT = '#3b82f6';
@@ -73,17 +74,12 @@ export function PaymentReceipt({ purchase: p, userName, onClose }: ReceiptProps)
   ];
 
   return (
-    <>
-      <div className="fixed inset-0 bg-black/60 z-50" onClick={onClose} />
-      <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto"
-        onClick={e => e.stopPropagation()}>
-        <div className="bg-background border border-border rounded-t-2xl sm:rounded-2xl w-full max-w-sm shadow-2xl animate-in slide-in-from-bottom sm:zoom-in-95 duration-200">
-
-          {/* Modal header */}
-          <div className="flex items-center justify-between px-5 py-4 border-b border-border">
-            <h2 className="font-bold text-base">Payment Receipt</h2>
-            <button onClick={onClose} className="p-1.5 hover:bg-muted rounded-lg"><X size={16} /></button>
-          </div>
+    <BottomSheet isOpen onClose={onClose}>
+      {/* Modal header */}
+      <div className="flex items-center justify-between px-5 py-4 border-b border-border">
+        <h2 className="font-bold text-base">Payment Receipt</h2>
+        <button onClick={onClose} className="p-1.5 hover:bg-muted rounded-lg"><X size={16} /></button>
+      </div>
 
           {/* ── RECEIPT (captured) ── */}
           <div className="p-4">
@@ -187,8 +183,6 @@ export function PaymentReceipt({ purchase: p, userName, onClose }: ReceiptProps)
               <Share2 size={15} />{capturing ? 'Preparing...' : 'Share on WhatsApp'}
             </button>
           </div>
-        </div>
-      </div>
-    </>
+    </BottomSheet>
   );
 }
