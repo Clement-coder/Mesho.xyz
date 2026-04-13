@@ -1,12 +1,14 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { FormField, IconInput } from '@/app/components/form-field';
 import { CheckCircle, GraduationCap, BookOpen, Users, Clock, Calendar, Wifi, ChevronLeft, User, Mail, Phone, Building } from 'lucide-react';
 import { createClient } from '@/utils/supabase/client';
 import { toast } from 'sonner';
+import { useAuthGuard } from '@/lib/use-auth-guard';
+import { useAuth } from '@/lib/auth-context';
 
 const schedules = [
   { id: 'weekday-morning', label: 'Weekdays — Morning (8am–11am)', icon: Clock },
@@ -30,11 +32,18 @@ export default function TrainingPage() {
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const guard = useAuthGuard();
+  const { isAuthenticated, isLoading } = useAuth();
+
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) router.replace('/signup');
+  }, [isLoading, isAuthenticated, router]);
 
   const set = (k: string, v: string) => { setForm(f => ({ ...f, [k]: v })); setErrors(e => ({ ...e, [k]: '' })); };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!guard()) return;
     const errs: Record<string, string> = {};
     if (!form.name.trim()) errs.name = 'Full name is required';
     if (!form.email.trim()) errs.email = 'Email is required';

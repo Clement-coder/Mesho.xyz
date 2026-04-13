@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { ChevronLeft } from 'lucide-react';
 import { createClient } from '@/utils/supabase/client';
 import type { Course, Project } from '@/lib/types';
+import { useAuthGuard } from '@/lib/use-auth-guard';
 
 export default function CourseProjectsPage() {
   const params = useParams();
@@ -14,6 +15,7 @@ export default function CourseProjectsPage() {
   const [course, setCourse] = useState<Course | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
+  const guard = useAuthGuard();
 
   useEffect(() => {
     const supabase = createClient();
@@ -54,7 +56,8 @@ export default function CourseProjectsPage() {
                     description={project.description}
                     difficulty={project.difficulty}
                     price={project.price}
-                    onClick={() => router.push(`/projects/${project.id}`)}
+                    href={`/projects/${project.id}`}
+                    onClick={() => { if (guard()) router.push(`/projects/${project.id}`); }}
                   />
                 </div>
               ))}

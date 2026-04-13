@@ -108,7 +108,7 @@ export default function HomePage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {departments.map((dept, index) => (
               <div key={dept.id} className="animate-in fade-in slide-in-from-bottom duration-500" style={{ animationDelay: `${index * 100}ms` }}>
-                <DepartmentCard name={dept.name} description={dept.description} icon={dept.icon} color={dept.color} onClick={() => router.push(`/departments/${dept.id}`)} />
+                <DepartmentCard name={dept.name} description={dept.description} icon={dept.icon} color={dept.color} onClick={() => router.push(`/departments/${dept.id}`)} href={`/departments/${dept.id}`} />
               </div>
             ))}
           </div>
@@ -127,7 +127,7 @@ export default function HomePage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {projects.map((project, index) => (
               <div key={project.id} className="animate-in fade-in slide-in-from-bottom duration-500" style={{ animationDelay: `${index * 100}ms` }}>
-                <ProjectCard title={project.title} description={project.description} difficulty={project.difficulty} price={project.price} onClick={() => router.push(`/projects/${project.id}`)} />
+                <ProjectCard title={project.title} description={project.description} difficulty={project.difficulty} price={project.price} onClick={() => router.push(`/projects/${project.id}`)} href={`/projects/${project.id}`} />
               </div>
             ))}
           </div>

@@ -71,6 +71,7 @@ export default function DepartmentsPage() {
                     icon={dept.icon}
                     color={dept.color}
                     onClick={() => router.push(`/departments/${dept.id}`)}
+                    href={`${typeof window !== 'undefined' ? window.location.origin : ''}/departments/${dept.id}`}
                   />
                 </div>
               ))}

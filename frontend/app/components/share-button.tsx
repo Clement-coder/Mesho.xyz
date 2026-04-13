@@ -64,16 +64,17 @@ function ShareSheet({ title, url, description, onClose }: ShareSheetProps & { on
   );
 }
 
-export function ShareButton({ title, url, description }: ShareSheetProps) {
+export function ShareButton({ title, url, description, compact }: ShareSheetProps & { compact?: boolean }) {
   const [open, setOpen] = useState(false);
   return (
     <>
       <button
-        onClick={() => setOpen(true)}
-        className="flex items-center gap-1.5 text-sm px-3 py-2 rounded-xl border border-border hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
-        title="Share this page"
+        onClick={e => { e.stopPropagation(); setOpen(true); }}
+        className={`flex items-center gap-1.5 rounded-xl border border-border hover:bg-muted transition-colors text-muted-foreground hover:text-foreground ${compact ? 'p-1.5' : 'text-sm px-3 py-2'}`}
+        title="Share"
       >
-        <Share2 size={15} /> Share
+        <Share2 size={compact ? 13 : 15} />
+        {!compact && 'Share'}
       </button>
       {open && <ShareSheet title={title} url={url} description={description} onClose={() => setOpen(false)} />}
     </>

@@ -1,12 +1,14 @@
 'use client';
 
-import React, { useState, Suspense } from 'react';
+import React, { useState, Suspense, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { CheckCircle, ChevronLeft, User, Mail, Phone, BookOpen, FileText, Clock, GraduationCap, UserCheck, Eraser, BarChart3, FileSearch, Database, Building } from 'lucide-react';
 import { FormField, IconInput, StyledTextarea } from '@/app/components/form-field';
 import { createClient } from '@/utils/supabase/client';
 import { toast } from 'sonner';
+import { useAuthGuard } from '@/lib/use-auth-guard';
+import { useAuth } from '@/lib/auth-context';
 
 const analystServices = [
   { id: 'cleaning', label: 'Data Cleaning & Preparation', icon: Eraser },
@@ -51,6 +53,12 @@ function HirePageContent() {
   const [analystErrors, setAnalystErrors] = useState<Record<string, string>>({});
   const [researcherErrors, setResearcherErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
+  const guard = useAuthGuard();
+  const { isAuthenticated, isLoading } = useAuth();
+
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) router.replace('/signup');
+  }, [isLoading, isAuthenticated, router]);
 
   const setA = (k: string, v: string) => { setAnalystForm(f => ({ ...f, [k]: v })); setAnalystErrors(e => ({ ...e, [k]: '' })); };
   const setR = (k: string, v: string) => { setResearcherForm(f => ({ ...f, [k]: v })); setResearcherErrors(e => ({ ...e, [k]: '' })); };
@@ -84,6 +92,7 @@ function HirePageContent() {
 
   const handleAnalystSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!guard()) return;
     const errs = validateAnalyst();
     if (Object.keys(errs).length) { setAnalystErrors(errs); return; }
     setLoading(true);
@@ -107,6 +116,7 @@ function HirePageContent() {
 
   const handleResearcherSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!guard()) return;
     const errs = validateResearcher();
     if (Object.keys(errs).length) { setResearcherErrors(errs); return; }
     setLoading(true);

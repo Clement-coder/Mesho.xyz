@@ -18,7 +18,7 @@ const WA_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? '2348012345678';
 export default function ProjectPreviewPage() {
   const params = useParams();
   const router = useRouter();
-  const { user, refreshUser } = useAuth();
+  const { user, refreshUser, isAuthenticated, isLoading } = useAuth();
   const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
   const [showTransferModal, setShowTransferModal] = useState(false);
@@ -28,6 +28,11 @@ export default function ProjectPreviewPage() {
   const [inWishlist, setInWishlist] = useState(false);
   const [wishlistLoading, setWishlistLoading] = useState(false);
   const [payRef, setPayRef] = useState('');
+
+  // Redirect to signup if not authenticated
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) router.replace('/signup');
+  }, [isLoading, isAuthenticated, router]);
 
   useEffect(() => {
     const supabase = createClient();

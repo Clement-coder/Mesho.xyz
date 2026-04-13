@@ -2,7 +2,8 @@
 
 import React from 'react';
 import { Icon } from './icon-wrapper';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Share2 } from 'lucide-react';
+import { ShareButton } from './share-button';
 
 interface DepartmentCardProps {
   name: string;
@@ -10,44 +11,36 @@ interface DepartmentCardProps {
   icon: string;
   color: string;
   onClick: () => void;
+  href?: string;
 }
 
-export const DepartmentCard = ({ name, description, icon, color, onClick }: DepartmentCardProps) => (
-  <button
-    onClick={onClick}
-    aria-label={`Browse ${name} — ${description}`}
-    title={`View project topics for ${name}`}
-    className="group w-full h-full text-left clay clay-hover p-5 transition-all duration-300 cursor-pointer"
-  >
-    {/* Icon badge */}
-    <div className="flex items-start justify-between mb-4">
-      <div
-        className="w-12 h-12 rounded-2xl flex items-center justify-center"
-        style={{ backgroundColor: `${color}18` }}
-        aria-hidden="true"
-      >
-        <Icon name={icon as any} size={24} style={{ color }} />
+export const DepartmentCard = ({ name, description, icon, color, onClick, href }: DepartmentCardProps) => (
+  <div className="group w-full h-full clay clay-hover transition-all duration-300 relative">
+    <button
+      onClick={onClick}
+      aria-label={`Browse ${name}`}
+      className="w-full text-left p-5 cursor-pointer block"
+    >
+      <div className="flex items-start justify-between mb-4">
+        <div className="w-12 h-12 rounded-2xl flex items-center justify-center" style={{ backgroundColor: `${color}18` }}>
+          <Icon name={icon as any} size={24} style={{ color }} />
+        </div>
+        <div className="w-6 h-6 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity" style={{ backgroundColor: `${color}18` }}>
+          <ArrowRight size={13} style={{ color }} />
+        </div>
       </div>
-      <div
-        className="w-6 h-6 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-        style={{ backgroundColor: `${color}18` }}
-        aria-hidden="true"
-      >
-        <ArrowRight size={13} style={{ color }} />
-      </div>
+      <h3 className="font-semibold text-sm mb-1 leading-snug">{name}</h3>
+      <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">{description}</p>
+      <div className="mt-4 h-0.5 w-8 rounded-full opacity-60 group-hover:w-full transition-all duration-500" style={{ backgroundColor: color }} />
+    </button>
+    {/* Share button — bottom right */}
+    <div className="absolute bottom-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
+      <ShareButton
+        title={`${name} — Mesho Data Sciences`}
+        url={href ?? (typeof window !== 'undefined' ? window.location.origin + '/departments' : '')}
+        description={description}
+        compact
+      />
     </div>
-
-    {/* Name */}
-    <h3 className="font-semibold text-sm mb-1 leading-snug">{name}</h3>
-
-    {/* Description as icon label */}
-    <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">{description}</p>
-
-    {/* Color accent bar */}
-    <div
-      className="mt-4 h-0.5 w-8 rounded-full opacity-60 group-hover:w-full transition-all duration-500"
-      style={{ backgroundColor: color }}
-      aria-hidden="true"
-    />
-  </button>
+  </div>
 );
