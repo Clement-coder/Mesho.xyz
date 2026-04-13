@@ -62,13 +62,18 @@ export default function SignUpPage() {
   const [showSuccess, setShowSuccess] = useState(false);
   const [bgIndex, setBgIndex] = useState(0);
   const [leaving, setLeaving] = useState(false);
-  const { signupWithEmail, loginWithGoogle } = useAuth();
+  const { signupWithEmail, loginWithGoogle, isAuthenticated } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
     const id = setInterval(() => setBgIndex(i => (i + 1) % BG_IMAGES.length), 5000);
     return () => clearInterval(id);
   }, []);
+
+  // Already logged in → go to dashboard
+  useEffect(() => {
+    if (isAuthenticated) router.replace('/dashboard');
+  }, [isAuthenticated, router]);
 
   const set = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }));
 

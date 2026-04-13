@@ -24,13 +24,18 @@ export default function LoginPage() {
   const [googleLoading, setGoogleLoading] = useState(false);
   const [bgIndex, setBgIndex] = useState(0);
   const [leaving, setLeaving] = useState(false);
-  const { loginWithEmail, loginWithGoogle } = useAuth();
+  const { loginWithEmail, loginWithGoogle, isAuthenticated } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
     const id = setInterval(() => setBgIndex(i => (i + 1) % BG_IMAGES.length), 5000);
     return () => clearInterval(id);
   }, []);
+
+  // Already logged in → go to dashboard
+  useEffect(() => {
+    if (isAuthenticated) router.replace('/dashboard');
+  }, [isAuthenticated, router]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();

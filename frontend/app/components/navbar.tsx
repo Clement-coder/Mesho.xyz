@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation';
 import { Menu, X, Bell, FileText, BarChart3, UserCheck, Home } from 'lucide-react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/lib/auth-context';
 import { LogoutModal } from '@/components/logout-modal';
 
@@ -65,11 +65,12 @@ export const Navbar = () => {
                 <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-accent rounded-full" aria-hidden="true" />
               </button>
               <Link href="/profile" aria-label="Profile Settings" title="Manage your account">
-                <div className="flex items-center gap-2 clay-sm px-3 py-1.5 rounded-xl hover:bg-muted transition-colors cursor-pointer">
-                  <Avatar className="w-7 h-7">
+                <div className="flex items-center gap-2 clay-sm px-2 py-1.5 rounded-xl hover:bg-muted transition-colors cursor-pointer">
+                  <Avatar className="w-7 h-7 flex-shrink-0">
+                    <AvatarImage src={user?.profile_picture_url ?? ''} alt={user?.name} />
                     <AvatarFallback className="bg-accent text-white text-xs font-bold">{user?.name?.charAt(0).toUpperCase()}</AvatarFallback>
                   </Avatar>
-                  <span className="text-sm font-medium hidden sm:inline">{user?.name}</span>
+                  <span className="text-sm font-medium hidden sm:inline max-w-[120px] truncate">{user?.name}</span>
                 </div>
               </Link>
             </div>
@@ -107,11 +108,12 @@ export const Navbar = () => {
             <div className="hidden md:flex items-center gap-2">
               {isAuthenticated ? (
                 <Link href="/dashboard">
-                  <div className="flex items-center gap-2 clay-sm px-3 py-1.5 rounded-xl hover:bg-muted transition-colors cursor-pointer" aria-label="Go to your dashboard">
-                    <Avatar className="w-7 h-7">
+                  <div className="flex items-center gap-2 clay-sm px-2 py-1.5 rounded-xl hover:bg-muted transition-colors cursor-pointer" aria-label="Go to your dashboard">
+                    <Avatar className="w-7 h-7 flex-shrink-0">
+                      <AvatarImage src={user?.profile_picture_url ?? ''} alt={user?.name} />
                       <AvatarFallback className="bg-accent text-white text-xs font-bold">{user?.name?.charAt(0).toUpperCase()}</AvatarFallback>
                     </Avatar>
-                    <span className="text-sm font-medium">{user?.name}</span>
+                    <span className="text-sm font-medium max-w-[120px] truncate">{user?.name}</span>
                   </div>
                 </Link>
               ) : (
@@ -122,9 +124,19 @@ export const Navbar = () => {
               )}
             </div>
 
-            <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="md:hidden p-2 hover:bg-muted rounded-lg transition-colors" aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}>
-              {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
-            </button>
+            <div className="flex items-center gap-2 md:hidden">
+              {isAuthenticated && (
+                <Link href="/dashboard">
+                  <Avatar className="w-8 h-8">
+                    <AvatarImage src={user?.profile_picture_url ?? ''} alt={user?.name} />
+                    <AvatarFallback className="bg-accent text-white text-xs font-bold">{user?.name?.charAt(0).toUpperCase()}</AvatarFallback>
+                  </Avatar>
+                </Link>
+              )}
+              <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="p-2 hover:bg-muted rounded-lg transition-colors" aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}>
+                {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
+              </button>
+            </div>
           </div>
         </nav>
 
