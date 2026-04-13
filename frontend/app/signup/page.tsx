@@ -144,10 +144,7 @@ export default function SignUpPage() {
         <div className="absolute inset-0 bg-gradient-to-br from-black/70 via-black/55 to-accent/60" />
 
         {/* Content sits above overlay */}
-        <div className="relative z-10 flex items-center gap-3">
-          <Image src="/mesho_logo.png" alt="Mesho Data Sciences logo" width={56} height={56} className="rounded-xl object-contain" />
-          <span className="font-bold text-lg">Mesho Data Sciences</span>
-        </div>
+        <div className="relative z-10">
         <div className="relative z-10">
           <div className="w-14 h-14 bg-white/15 rounded-2xl flex items-center justify-center mb-6">
             <BookOpen size={28} className="text-white" />
