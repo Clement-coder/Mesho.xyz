@@ -34,13 +34,14 @@ async function ensureProfile(fbUser: FirebaseUser): Promise<Profile> {
   const supabase = createClient();
   // Try to fetch existing profile
   const { data } = await supabase.from('profiles').select('*').eq('id', fbUser.uid).single();
-  if (data) return { ...data, email: fbUser.email ?? '' };
+  if (data) return { ...data, email: data.email || fbUser.email || '' };
 
   // Profile doesn't exist yet — create it (Google sign-up or race condition)
   const name = fbUser.displayName ?? fbUser.email?.split('@')[0] ?? 'User';
   await supabase.from('profiles').insert({
     id: fbUser.uid,
     name,
+    email: fbUser.email ?? '',
     phone: null,
     whatsapp: null,
     profile_picture_url: fbUser.photoURL ?? null,
@@ -100,6 +101,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await supabase.from('profiles').insert({
       id: fbUser.uid,
       name,
+      email,
       phone: phone || null,
       whatsapp: phone || null,
       profile_picture_url: fbUser.photoURL ?? null,

@@ -1,7 +1,7 @@
 export interface Profile {
   id: string;
   name: string;
-  email?: string;
+  email: string;
   phone: string | null;
   whatsapp: string | null;
   profile_picture_url: string | null;
