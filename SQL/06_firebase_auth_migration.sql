@@ -17,6 +17,9 @@ drop policy if exists "Users can insert own purchases" on public.purchases;
 drop policy if exists "Admins can view all purchases" on public.purchases;
 drop policy if exists "Admins can update purchases" on public.purchases;
 
+-- Drop storage policy that joins on purchases.user_id
+drop policy if exists "Users can download purchased materials" on storage.objects;
+
 -- 2. Drop FK constraints
 alter table public.profiles drop constraint if exists profiles_id_fkey;
 alter table public.purchases drop constraint if exists purchases_user_id_fkey;
