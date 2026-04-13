@@ -37,6 +37,13 @@ alter publication supabase_realtime add table public.chat_messages;
 alter publication supabase_realtime add table public.notifications;
 
 -- Chat: anyone can insert (user sends), all can select (open for Firebase users)
+drop policy if exists "Anyone can insert chat message" on public.chat_messages;
+drop policy if exists "Anyone can read chat messages" on public.chat_messages;
+drop policy if exists "Anyone can update chat messages" on public.chat_messages;
+drop policy if exists "Anyone can read notifications" on public.notifications;
+drop policy if exists "Anyone can update notifications" on public.notifications;
+drop policy if exists "Anyone can insert notifications" on public.notifications;
+
 create policy "Anyone can insert chat message" on public.chat_messages for insert with check (true);
 create policy "Anyone can read chat messages" on public.chat_messages for select using (true);
 create policy "Anyone can update chat messages" on public.chat_messages for update using (true);
