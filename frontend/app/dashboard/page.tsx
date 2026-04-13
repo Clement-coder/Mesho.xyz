@@ -52,7 +52,8 @@ export default function DashboardPage() {
     });
   }, [user]);
 
-  const enrolledProjects = allProjects.filter(p => user?.enrolled_projects.includes(p.id));
+  const confirmedProjectIds = purchases.filter(p => p.status === 'confirmed').map(p => p.project_id);
+  const enrolledProjects = allProjects.filter(p => confirmedProjectIds.includes(p.id));
   const wishlistProjects = allProjects.filter(p => user?.wishlist.includes(p.id));
   const displayedProjects = activeTab === 'enrolled' ? enrolledProjects : activeTab === 'wishlist' ? wishlistProjects : allProjects;
   const pendingCount = purchases.filter(p => p.status === 'pending').length;
@@ -126,7 +127,7 @@ export default function DashboardPage() {
 
           {/* Payments tab */}
           {activeTab === 'payments' && (
-            <div className="space-y-3 max-w-2xl">
+            <div className="space-y-3">
               <div className="flex items-center justify-between mb-2">
                 <h2 className="font-semibold">My Payments</h2>
                 <span className="text-xs text-muted-foreground">{purchases.length} total</span>
@@ -176,12 +177,12 @@ export default function DashboardPage() {
                       <div className="space-y-2">
                         <div className="flex items-start gap-2 bg-green-50 border border-green-200 rounded-xl px-3 py-2 text-xs text-green-700">
                           <CheckCircle size={13} className="flex-shrink-0 mt-0.5" />
-                          <span><strong>Payment confirmed!</strong> Contact us on WhatsApp to receive your file.</span>
+                          <span><strong>Payment confirmed!</strong> Tap below to send your receipt and get your file.</span>
                         </div>
-                        <a href={`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(`Hello! My payment for "${(p as any).projects?.title ?? 'research material'}" was confirmed (Ref: ${p.payment_reference}). Please send my file.`)}`}
+                        <a href={`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(`🧾 *PAYMENT RECEIPT — MESHO DATA SCIENCES*\n\n📚 Course: ${(p as any).projects?.title ?? 'Research Material'}\n💰 Amount: ₦${p.amount.toLocaleString()}\n🔖 Ref: ${p.payment_reference ?? '—'}\n📅 Date: ${new Date(p.created_at).toLocaleString()}\n✅ Status: CONFIRMED\n\nPlease send my file. Thank you!`)}`}
                           target="_blank" rel="noopener noreferrer"
                           className="flex items-center justify-center gap-2 w-full bg-[#25D366] hover:bg-[#20BA5A] text-white py-2 rounded-xl text-xs font-medium transition-colors">
-                          <MessageCircle size={13} /> Get My File on WhatsApp
+                          <MessageCircle size={13} /> Send Receipt & Get My File
                         </a>
                       </div>
                     )}
@@ -315,13 +316,38 @@ export default function DashboardPage() {
                       </div>
                     </>
                   )}
-                  {p.status === 'confirmed' && (
-                    <a href={`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(`Hello! My payment for "${(p as any).projects?.title ?? 'research material'}" was confirmed (Ref: ${p.payment_reference}). Please send my file.`)}`}
-                      target="_blank" rel="noopener noreferrer"
-                      className="flex items-center justify-center gap-2 w-full bg-[#25D366] hover:bg-[#20BA5A] text-white py-2.5 rounded-xl text-sm font-medium transition-colors">
-                      <MessageCircle size={15} /> Get My File on WhatsApp
-                    </a>
-                  )}
+                  {p.status === 'confirmed' && (() => {
+                    const receiptText = [
+                      `🧾 *PAYMENT RECEIPT — MESHO DATA SCIENCES*`,
+                      ``,
+                      `📚 Course: ${(p as any).projects?.title ?? 'Research Material'}`,
+                      `💰 Amount Paid: ₦${p.amount.toLocaleString()}`,
+                      `🔖 Reference: ${p.payment_reference ?? '—'}`,
+                      `📅 Date: ${new Date(p.created_at).toLocaleString()}`,
+                      `✅ Status: CONFIRMED`,
+                      ``,
+                      `Please send my file. Thank you!`,
+                    ].join('\n');
+                    return (
+                      <div className="space-y-3">
+                        <div className="bg-green-50 border border-green-200 rounded-xl p-4 space-y-2">
+                          <p className="text-xs font-semibold text-green-700 uppercase tracking-wide">🧾 Payment Receipt</p>
+                          <div className="space-y-1 text-xs text-green-800 font-mono bg-white/60 rounded-lg p-3">
+                            <p><span className="text-muted-foreground">Course:</span> {(p as any).projects?.title ?? '—'}</p>
+                            <p><span className="text-muted-foreground">Amount:</span> ₦{p.amount.toLocaleString()}</p>
+                            <p><span className="text-muted-foreground">Ref:</span> {p.payment_reference}</p>
+                            <p><span className="text-muted-foreground">Date:</span> {new Date(p.created_at).toLocaleString()}</p>
+                            <p><span className="text-muted-foreground">Status:</span> <span className="text-green-600 font-bold">CONFIRMED ✓</span></p>
+                          </div>
+                        </div>
+                        <a href={`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(receiptText)}`}
+                          target="_blank" rel="noopener noreferrer"
+                          className="flex items-center justify-center gap-2 w-full bg-[#25D366] hover:bg-[#20BA5A] text-white py-2.5 rounded-xl text-sm font-medium transition-colors">
+                          <MessageCircle size={15} /> Send Receipt & Get My File
+                        </a>
+                      </div>
+                    );
+                  })()}
                   {p.status === 'failed' && (
                     <div className="flex items-start gap-2 bg-red-50 border border-red-200 rounded-xl px-3 py-2.5 text-xs text-red-700">
                       <XCircle size={13} className="flex-shrink-0 mt-0.5" />
