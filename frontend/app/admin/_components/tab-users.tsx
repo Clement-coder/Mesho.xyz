@@ -5,6 +5,7 @@ import { Search, ShieldCheck, User, Eye, X, Mail, Phone, Calendar, FolderOpen, H
 import { useAuth } from '@/lib/auth-context';
 import { toast } from 'sonner';
 import type { Profile } from '@/lib/types';
+import { BottomSheet } from '@/components/bottom-sheet';
 
 const WA = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? '2348012345678';
 
@@ -18,15 +19,12 @@ function UserModal({ u, onClose }: { u: Profile; onClose: () => void }) {
   const wa = (u.whatsapp || u.phone || '').replace(/\D/g, '');
 
   return (
-    <>
-      <div className="fixed inset-0 bg-black/50 z-50" onClick={onClose} />
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-        <div className="bg-background border border-border rounded-2xl w-full max-w-lg shadow-2xl animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
-          <div className="flex items-center justify-between p-5 border-b border-border sticky top-0 bg-background">
-            <h2 className="font-bold text-base">User Profile</h2>
-            <button onClick={onClose} className="p-1.5 hover:bg-muted rounded-lg"><X size={16} /></button>
-          </div>
-          <div className="p-5 space-y-5">
+    <BottomSheet isOpen onClose={onClose}>
+      <div className="flex items-center justify-between px-5 py-4 border-b border-border sticky top-0 bg-background">
+        <h2 className="font-bold text-base">User Profile</h2>
+        <button onClick={onClose} className="p-1.5 hover:bg-muted rounded-lg"><X size={16} /></button>
+      </div>
+      <div className="p-5 space-y-5">
             {/* Avatar + name */}
             <div className="flex items-center gap-4">
               {u.profile_picture_url
@@ -92,9 +90,7 @@ function UserModal({ u, onClose }: { u: Profile; onClose: () => void }) {
               )}
             </div>
           </div>
-        </div>
-      </div>
-    </>
+    </BottomSheet>
   );
 }
 

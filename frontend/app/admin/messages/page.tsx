@@ -7,6 +7,7 @@ import { createClient } from '@/utils/supabase/client';
 import { toast } from 'sonner';
 import { Mail, MessageCircle, Send, X } from 'lucide-react';
 import type { ContactMessage, ChatMessage } from '@/lib/types';
+import { BottomSheet } from '@/components/bottom-sheet';
 
 function ChatThread({ userId, userName, avatar, onClose }: { userId: string; userName: string; avatar: string | null; onClose: () => void }) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -55,19 +56,18 @@ function ChatThread({ userId, userName, avatar, onClose }: { userId: string; use
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-      <div className="bg-background border border-border rounded-2xl w-full max-w-md shadow-2xl flex flex-col" style={{ height: '500px' }}>
-        <div className="flex items-center gap-3 px-4 py-3 border-b border-border flex-shrink-0">
-          {avatar
-            ? <img src={avatar} alt={userName} className="w-9 h-9 rounded-full object-cover flex-shrink-0 ring-2 ring-accent/20" />
-            : <div className="w-9 h-9 rounded-full bg-accent/10 flex items-center justify-center font-bold text-accent text-sm flex-shrink-0">{userName.charAt(0).toUpperCase()}</div>}
-          <div className="flex-1">
-            <p className="font-semibold text-sm">{userName}</p>
-            <p className="text-xs text-muted-foreground">User</p>
-          </div>
-          <button onClick={onClose} className="p-1.5 hover:bg-muted rounded-lg"><X size={16} /></button>
+    <BottomSheet isOpen onClose={onClose} maxHeight="90vh">
+      <div className="flex items-center gap-3 px-4 py-3 border-b border-border flex-shrink-0">
+        {avatar
+          ? <img src={avatar} alt={userName} className="w-9 h-9 rounded-full object-cover flex-shrink-0 ring-2 ring-accent/20" />
+          : <div className="w-9 h-9 rounded-full bg-accent/10 flex items-center justify-center font-bold text-accent text-sm flex-shrink-0">{userName.charAt(0).toUpperCase()}</div>}
+        <div className="flex-1">
+          <p className="font-semibold text-sm">{userName}</p>
+          <p className="text-xs text-muted-foreground">User</p>
         </div>
-        <div className="flex-1 overflow-y-auto px-3 py-3 space-y-3 bg-muted/10">
+        <button onClick={onClose} className="p-1.5 hover:bg-muted rounded-lg"><X size={16} /></button>
+      </div>
+      <div className="overflow-y-auto px-3 py-3 space-y-3 bg-muted/10" style={{ height: '340px' }}>
           {messages.map(m => (
             <div key={m.id} className={`flex items-end gap-2 ${m.sender === 'admin' ? 'flex-row-reverse' : 'flex-row'}`}>
               {m.sender === 'user'
@@ -93,8 +93,7 @@ function ChatThread({ userId, userName, avatar, onClose }: { userId: string; use
             <Send size={14} />
           </button>
         </form>
-      </div>
-    </div>
+    </BottomSheet>
   );
 }
 

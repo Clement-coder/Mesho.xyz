@@ -7,6 +7,7 @@ import { createClient } from '@/utils/supabase/client';
 import { toast } from 'sonner';
 import { CheckCircle, XCircle, MessageCircle, Mail, ChevronDown, ChevronUp, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { BottomSheet } from '@/components/bottom-sheet';
 
 const statusColors: Record<string, string> = {
   pending: 'bg-yellow-100 text-yellow-700',
@@ -17,25 +18,22 @@ const statusColors: Record<string, string> = {
 function RejectModal({ onConfirm, onClose }: { onConfirm: (reason: string) => void; onClose: () => void }) {
   const [reason, setReason] = useState('');
   return (
-    <>
-      <div className="fixed inset-0 bg-black/50 z-[60]" onClick={onClose} />
-      <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 pointer-events-none">
-        <div className="bg-background border border-border rounded-2xl w-full max-w-sm shadow-2xl pointer-events-auto p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-bold">Reject Payment</h3>
-            <button onClick={onClose} className="p-1.5 hover:bg-muted rounded-lg"><X size={16} /></button>
-          </div>
-          <textarea value={reason} onChange={e => setReason(e.target.value)} rows={3}
-            placeholder="e.g. Payment not received, wrong amount, wrong reference..."
-            className="w-full px-3 py-2 rounded-xl border border-border bg-input text-sm focus:outline-none focus:ring-2 focus:ring-accent resize-none mb-4" />
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={onClose} className="flex-1">Cancel</Button>
-            <Button size="sm" onClick={() => { if (!reason.trim()) { toast.error('Provide a reason'); return; } onConfirm(reason.trim()); }}
-              className="flex-1 bg-destructive hover:bg-destructive/90 text-white border-0">Reject</Button>
-          </div>
+    <BottomSheet isOpen onClose={onClose} maxHeight="50vh">
+      <div className="px-5 py-4 border-b border-border flex items-center justify-between">
+        <h3 className="font-bold">Reject Payment</h3>
+        <button onClick={onClose} className="p-1.5 hover:bg-muted rounded-lg"><X size={16} /></button>
+      </div>
+      <div className="p-5 space-y-4">
+        <textarea value={reason} onChange={e => setReason(e.target.value)} rows={3}
+          placeholder="e.g. Payment not received, wrong amount, wrong reference..."
+          className="w-full px-3 py-2 rounded-xl border border-border bg-input text-sm focus:outline-none focus:ring-2 focus:ring-accent resize-none" />
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={onClose} className="flex-1">Cancel</Button>
+          <Button size="sm" onClick={() => { if (!reason.trim()) { toast.error('Provide a reason'); return; } onConfirm(reason.trim()); }}
+            className="flex-1 bg-destructive hover:bg-destructive/90 text-white border-0">Reject</Button>
         </div>
       </div>
-    </>
+    </BottomSheet>
   );
 }
 
