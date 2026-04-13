@@ -10,7 +10,9 @@ import { useAuth } from '@/lib/auth-context';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { LogoutModal } from '@/components/logout-modal';
 import { DashboardSidebar } from '../components/dashboard-sidebar';
-import { BookOpen, BarChart3, Award, FolderOpen, Search, Heart, UserCircle, CreditCard, Clock, CheckCircle, XCircle, ChevronLeft } from 'lucide-react';
+import { BookOpen, BarChart3, Award, FolderOpen, Search, Heart, UserCircle, CreditCard, Clock, CheckCircle, XCircle, ChevronLeft, MessageCircle } from 'lucide-react';
+
+const WA_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? '2348012345678';
 import { createClient } from '@/utils/supabase/client';
 import type { Project, Purchase } from '@/lib/types';
 
@@ -123,42 +125,65 @@ export default function DashboardPage() {
 
           {/* Payments tab */}
           {activeTab === 'payments' && (
-            <div className="space-y-3">
+            <div className="space-y-3 max-w-2xl">
+              <div className="flex items-center justify-between mb-2">
+                <h2 className="font-semibold">My Payments</h2>
+                <span className="text-xs text-muted-foreground">{purchases.length} total</span>
+              </div>
               {loading ? (
-                Array.from({ length: 3 }).map((_, i) => <div key={i} className="clay h-20 animate-pulse rounded-2xl" />)
+                Array.from({ length: 3 }).map((_, i) => <div key={i} className="clay h-24 animate-pulse rounded-2xl" />)
               ) : purchases.length === 0 ? (
                 <div className="clay p-10 text-center">
-                  <CreditCard size={32} className="text-accent mx-auto mb-3" />
+                  <CreditCard size={36} className="text-accent mx-auto mb-3 opacity-60" />
                   <p className="font-semibold mb-1">No payments yet</p>
                   <p className="text-muted-foreground text-sm mb-5">Browse research materials and make your first purchase.</p>
                   <Link href="/departments"><Button><BookOpen size={16} className="mr-2" />Browse Materials</Button></Link>
                 </div>
               ) : purchases.map(p => {
                 const Icon = statusIcon[p.status];
+                const borderColor = p.status === 'confirmed' ? 'border-l-green-400' : p.status === 'failed' ? 'border-l-red-400' : 'border-l-yellow-400';
                 return (
-                  <div key={p.id} className="clay p-4">
-                    <div className="flex items-start justify-between gap-3">
+                  <div key={p.id} className={`clay p-4 border-l-4 ${borderColor}`}>
+                    <div className="flex items-start justify-between gap-3 mb-3">
                       <div className="min-w-0 flex-1">
-                        <p className="font-semibold text-sm truncate">{(p as any).projects?.title ?? 'Research Material'}</p>
-                        <p className="text-xs text-muted-foreground mt-0.5">Ref: {p.payment_reference ?? '—'}</p>
-                        <p className="text-xs text-muted-foreground">{new Date(p.created_at).toLocaleString()}</p>
-                        {p.status === 'pending' && (
-                          <p className="text-xs text-yellow-600 mt-1 font-medium">⏳ Awaiting admin payment confirmation</p>
-                        )}
-                        {p.status === 'confirmed' && (
-                          <p className="text-xs text-green-600 mt-1 font-medium">✓ Payment confirmed — contact us on WhatsApp to receive your file</p>
-                        )}
-                        {p.status === 'failed' && p.rejection_reason && (
-                          <p className="text-xs text-red-600 mt-1">Rejected: {p.rejection_reason}</p>
-                        )}
+                        <p className="font-semibold text-sm leading-tight">{(p as any).projects?.title ?? 'Research Material'}</p>
+                        <p className="text-xs text-muted-foreground mt-1">{new Date(p.created_at).toLocaleString()}</p>
                       </div>
-                      <div className="flex flex-col items-end gap-2 flex-shrink-0">
-                        <span className="font-bold text-accent text-sm">₦{p.amount.toLocaleString()}</span>
-                        <span className={`flex items-center gap-1 text-xs px-2 py-1 rounded-full font-medium ${statusColor[p.status]}`}>
-                          <Icon size={11} />{p.status}
+                      <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
+                        <span className="font-bold text-accent">₦{p.amount.toLocaleString()}</span>
+                        <span className={`flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium ${statusColor[p.status]}`}>
+                          <Icon size={10} />{p.status}
                         </span>
                       </div>
                     </div>
+                    <div className="bg-muted/30 rounded-xl px-3 py-2 text-xs text-muted-foreground font-mono mb-3">
+                      Ref: {p.payment_reference ?? '—'}
+                    </div>
+                    {p.status === 'pending' && (
+                      <div className="flex items-start gap-2 bg-yellow-50 border border-yellow-200 rounded-xl px-3 py-2 text-xs text-yellow-700">
+                        <Clock size={13} className="flex-shrink-0 mt-0.5" />
+                        <span><strong>Awaiting verification</strong> — Admin will confirm your bank transfer and send your material shortly.</span>
+                      </div>
+                    )}
+                    {p.status === 'confirmed' && (
+                      <div className="space-y-2">
+                        <div className="flex items-start gap-2 bg-green-50 border border-green-200 rounded-xl px-3 py-2 text-xs text-green-700">
+                          <CheckCircle size={13} className="flex-shrink-0 mt-0.5" />
+                          <span><strong>Payment confirmed!</strong> Contact us on WhatsApp to receive your file.</span>
+                        </div>
+                        <a href={`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(`Hello! My payment for "${(p as any).projects?.title ?? 'research material'}" was confirmed (Ref: ${p.payment_reference}). Please send my file.`)}`}
+                          target="_blank" rel="noopener noreferrer"
+                          className="flex items-center justify-center gap-2 w-full bg-[#25D366] hover:bg-[#20BA5A] text-white py-2 rounded-xl text-xs font-medium transition-colors">
+                          <MessageCircle size={13} /> Get My File on WhatsApp
+                        </a>
+                      </div>
+                    )}
+                    {p.status === 'failed' && (
+                      <div className="flex items-start gap-2 bg-red-50 border border-red-200 rounded-xl px-3 py-2 text-xs text-red-700">
+                        <XCircle size={13} className="flex-shrink-0 mt-0.5" />
+                        <span><strong>Rejected:</strong> {p.rejection_reason ?? 'Payment could not be verified. Please contact support.'}</span>
+                      </div>
+                    )}
                   </div>
                 );
               })}

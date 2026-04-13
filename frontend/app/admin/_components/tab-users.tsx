@@ -1,16 +1,109 @@
 'use client';
 import React, { useEffect, useState } from 'react';
 import { createClient } from '@/utils/supabase/client';
-import { Search, ShieldCheck, User } from 'lucide-react';
+import { Search, ShieldCheck, User, Eye, X, Mail, Phone, Calendar, FolderOpen, Heart, MessageCircle } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { toast } from 'sonner';
 import type { Profile } from '@/lib/types';
+
+const WA = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? '2348012345678';
+
+function UserModal({ u, onClose }: { u: Profile; onClose: () => void }) {
+  const [purchases, setPurchases] = useState<any[]>([]);
+  useEffect(() => {
+    createClient().from('purchases').select('*, projects(title)').eq('user_id', u.id).order('created_at', { ascending: false })
+      .then(({ data }) => setPurchases(data ?? []));
+  }, [u.id]);
+
+  const wa = (u.whatsapp || u.phone || '').replace(/\D/g, '');
+
+  return (
+    <>
+      <div className="fixed inset-0 bg-black/50 z-50" onClick={onClose} />
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="bg-background border border-border rounded-2xl w-full max-w-lg shadow-2xl animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
+          <div className="flex items-center justify-between p-5 border-b border-border sticky top-0 bg-background">
+            <h2 className="font-bold text-base">User Profile</h2>
+            <button onClick={onClose} className="p-1.5 hover:bg-muted rounded-lg"><X size={16} /></button>
+          </div>
+          <div className="p-5 space-y-5">
+            {/* Avatar + name */}
+            <div className="flex items-center gap-4">
+              {u.profile_picture_url
+                ? <img src={u.profile_picture_url} className="w-14 h-14 rounded-full object-cover" alt="" />
+                : <div className="w-14 h-14 bg-accent/10 rounded-full flex items-center justify-center"><User size={24} className="text-accent" /></div>}
+              <div>
+                <p className="font-bold text-lg">{u.name}</p>
+                <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${u.role === 'admin' ? 'bg-accent/10 text-accent' : 'bg-muted text-muted-foreground'}`}>{u.role}</span>
+              </div>
+            </div>
+
+            {/* Info grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+              {[
+                { icon: Mail, label: 'Email', value: u.email || '—' },
+                { icon: Phone, label: 'WhatsApp', value: u.whatsapp || u.phone || '—' },
+                { icon: Calendar, label: 'Joined', value: new Date(u.created_at).toLocaleDateString() },
+                { icon: FolderOpen, label: 'Materials Purchased', value: u.enrolled_projects.length },
+                { icon: Heart, label: 'Saved Topics', value: u.wishlist.length },
+              ].map((item, i) => (
+                <div key={i} className="bg-muted/30 rounded-xl p-3 flex items-center gap-3">
+                  <item.icon size={15} className="text-accent flex-shrink-0" />
+                  <div>
+                    <p className="text-xs text-muted-foreground">{item.label}</p>
+                    <p className="font-medium">{item.value}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Purchases */}
+            <div>
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Purchase History</p>
+              {purchases.length === 0
+                ? <p className="text-sm text-muted-foreground">No purchases yet</p>
+                : <div className="space-y-2">
+                  {purchases.map(p => (
+                    <div key={p.id} className="flex items-center justify-between text-sm bg-muted/20 rounded-xl px-3 py-2">
+                      <span className="truncate flex-1">{p.projects?.title ?? '—'}</span>
+                      <div className="flex items-center gap-2 ml-2 flex-shrink-0">
+                        <span className="font-semibold text-accent text-xs">₦{p.amount?.toLocaleString()}</span>
+                        <span className={`text-xs px-1.5 py-0.5 rounded-full ${p.status === 'confirmed' ? 'bg-green-100 text-green-700' : p.status === 'failed' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'}`}>{p.status}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>}
+            </div>
+
+            {/* Contact buttons */}
+            <div className="flex gap-2 pt-2 border-t border-border">
+              {wa && (
+                <a href={`https://wa.me/${wa}?text=${encodeURIComponent(`Hello ${u.name}, this is Mesho Data Sciences support.`)}`}
+                  target="_blank" rel="noopener noreferrer"
+                  className="flex-1 flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#20BA5A] text-white py-2.5 rounded-xl text-sm font-medium transition-colors">
+                  <MessageCircle size={15} /> WhatsApp
+                </a>
+              )}
+              {u.email && (
+                <a href={`mailto:${u.email}`}
+                  className="flex-1 flex items-center justify-center gap-2 border border-border hover:bg-muted text-foreground py-2.5 rounded-xl text-sm font-medium transition-colors">
+                  <Mail size={15} /> Email
+                </a>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
 
 export function AdminUsers() {
   const { user: me } = useAuth();
   const [users, setUsers] = useState<Profile[]>([]);
   const [search, setSearch] = useState('');
   const [updating, setUpdating] = useState<string | null>(null);
+  const [viewing, setViewing] = useState<Profile | null>(null);
 
   useEffect(() => {
     createClient().from('profiles').select('*').order('created_at', { ascending: false })
@@ -35,6 +128,7 @@ export function AdminUsers() {
 
   return (
     <div>
+      {viewing && <UserModal u={viewing} onClose={() => setViewing(null)} />}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
         <div>
           <h1 className="text-2xl font-bold mb-0.5">Users</h1>
@@ -54,7 +148,7 @@ export function AdminUsers() {
               <th className="text-left px-4 py-3 font-medium text-muted-foreground">Email</th>
               <th className="text-left px-4 py-3 font-medium text-muted-foreground">Role</th>
               <th className="text-left px-4 py-3 font-medium text-muted-foreground">Joined</th>
-              <th className="text-left px-4 py-3 font-medium text-muted-foreground">Action</th>
+              <th className="text-left px-4 py-3 font-medium text-muted-foreground">Actions</th>
             </tr></thead>
             <tbody>
               {filtered.map(u => (
@@ -73,10 +167,16 @@ export function AdminUsers() {
                   </td>
                   <td className="px-4 py-3 text-xs text-muted-foreground">{new Date(u.created_at).toLocaleDateString()}</td>
                   <td className="px-4 py-3">
-                    <button onClick={() => toggleRole(u)} disabled={updating === u.id || u.id === me?.id}
-                      className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border transition-colors disabled:opacity-50 ${u.role === 'admin' ? 'border-destructive/30 text-destructive hover:bg-destructive/10' : 'border-accent/30 text-accent hover:bg-accent/10'}`}>
-                      <ShieldCheck size={12} />{updating === u.id ? '...' : u.role === 'admin' ? 'Remove Admin' : 'Make Admin'}
-                    </button>
+                    <div className="flex items-center gap-1.5">
+                      <button onClick={() => setViewing(u)}
+                        className="flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-lg border border-border hover:bg-muted transition-colors">
+                        <Eye size={12} /> View
+                      </button>
+                      <button onClick={() => toggleRole(u)} disabled={updating === u.id || u.id === me?.id}
+                        className={`flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-lg border transition-colors disabled:opacity-50 ${u.role === 'admin' ? 'border-destructive/30 text-destructive hover:bg-destructive/10' : 'border-accent/30 text-accent hover:bg-accent/10'}`}>
+                        <ShieldCheck size={12} />{updating === u.id ? '...' : u.role === 'admin' ? 'Demote' : 'Admin'}
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}

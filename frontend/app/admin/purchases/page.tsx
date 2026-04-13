@@ -55,7 +55,7 @@ export default function AdminPurchasesPage() {
   const [updating, setUpdating] = useState<string | null>(null);
   const [expanded, setExpanded] = useState<string | null>(null);
   const [rejectTarget, setRejectTarget] = useState<string | null>(null);
-  const [filter, setFilter] = useState<'all' | 'pending' | 'confirmed' | 'failed'>('all');
+  const [filter, setFilter] = useState<'all' | 'pending' | 'confirmed' | 'failed'>('pending');
 
   useEffect(() => {
     if (!isLoading && (!user || user.role !== 'admin')) router.replace('/dashboard');
@@ -65,9 +65,13 @@ export default function AdminPurchasesPage() {
     if (!user || user.role !== 'admin') return;
     const supabase = createClient();
     supabase.from('purchases')
-      .select('*, profiles(name, email, phone, whatsapp), projects(title, price)')
+      .select('*, projects(title, price)')
       .order('created_at', { ascending: false })
-      .then(({ data }) => { setPurchases(data ?? []); setLoading(false); });
+      .then(({ data, error }) => {
+        if (error) console.error('purchases fetch error:', error);
+        setPurchases(data ?? []);
+        setLoading(false);
+      });
   }, [user]);
 
   const confirmPayment = async (p: any) => {
@@ -105,7 +109,7 @@ export default function AdminPurchasesPage() {
   const pendingCount = purchases.filter(p => p.status === 'pending').length;
 
   const whatsappNumber = (p: any): string => {
-    const raw = p.user_whatsapp || p.profiles?.whatsapp || p.profiles?.phone || '';
+    const raw = p.user_whatsapp || '';
     return raw.replace(/\D/g, '');
   };
 
@@ -131,8 +135,8 @@ export default function AdminPurchasesPage() {
 
         {filtered.map((p: any) => {
           const wa = whatsappNumber(p);
-          const userName = p.user_name || p.profiles?.name || 'Unknown';
-          const userEmail = p.user_email || p.profiles?.email || '';
+          const userName = p.user_name || 'Unknown';
+          const userEmail = p.user_email || '';
           const isExpanded = expanded === p.id;
 
           return (
@@ -165,7 +169,7 @@ export default function AdminPurchasesPage() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
                       <div><span className="text-muted-foreground text-xs">Name</span><p className="font-medium">{userName}</p></div>
                       <div><span className="text-muted-foreground text-xs">Email</span><p className="font-medium truncate">{userEmail || '—'}</p></div>
-                      <div><span className="text-muted-foreground text-xs">WhatsApp / Phone</span><p className="font-medium">{p.user_whatsapp || p.profiles?.whatsapp || p.profiles?.phone || '—'}</p></div>
+                      <div><span className="text-muted-foreground text-xs">WhatsApp / Phone</span><p className="font-medium">{p.user_whatsapp || '—'}</p></div>
                       <div><span className="text-muted-foreground text-xs">Reference</span><p className="font-mono text-xs">{p.payment_reference || '—'}</p></div>
                     </div>
                   </div>
