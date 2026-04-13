@@ -30,22 +30,28 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-async function fetchProfile(uid: string, email?: string): Promise<Profile | null> {
+async function ensureProfile(fbUser: FirebaseUser): Promise<Profile> {
   const supabase = createClient();
-  const { data } = await supabase.from('profiles').select('*').eq('id', uid).single();
-  if (!data) return null;
-  return { ...data, email: email ?? '' };
-}
+  // Try to fetch existing profile
+  const { data } = await supabase.from('profiles').select('*').eq('id', fbUser.uid).single();
+  if (data) return { ...data, email: fbUser.email ?? '' };
 
-async function upsertProfile(uid: string, name: string, email: string, phone: string, photoURL?: string) {
-  const supabase = createClient();
-  await supabase.from('profiles').upsert({
-    id: uid,
+  // Profile doesn't exist yet — create it (Google sign-up or race condition)
+  const name = fbUser.displayName ?? fbUser.email?.split('@')[0] ?? 'User';
+  await supabase.from('profiles').insert({
+    id: fbUser.uid,
     name,
-    phone: phone || null,
-    whatsapp: phone || null,
-    profile_picture_url: photoURL ?? null,
-  }, { onConflict: 'id', ignoreDuplicates: true });
+    phone: null,
+    whatsapp: null,
+    profile_picture_url: fbUser.photoURL ?? null,
+    role: 'user',
+    enrolled_projects: [],
+    wishlist: [],
+    hours_learned: 0,
+    certificates: 0,
+  });
+  const { data: created } = await supabase.from('profiles').select('*').eq('id', fbUser.uid).single();
+  return { ...(created ?? { id: fbUser.uid, name, role: 'user', enrolled_projects: [], wishlist: [], hours_learned: 0, certificates: 0, phone: null, whatsapp: null, profile_picture_url: fbUser.photoURL ?? null, created_at: new Date().toISOString(), updated_at: new Date().toISOString() }), email: fbUser.email ?? '' };
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -57,7 +63,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const unsub = onAuthStateChanged(auth, async (fbUser) => {
       setFirebaseUser(fbUser);
       if (fbUser) {
-        const profile = await fetchProfile(fbUser.uid, fbUser.email ?? '');
+        const profile = await ensureProfile(fbUser);
         setUser(profile);
       } else {
         setUser(null);
@@ -67,25 +73,49 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return unsub;
   }, []);
 
+  // Returns after Firebase auth AND profile is loaded in state
+  const waitForUser = (): Promise<void> =>
+    new Promise((resolve) => {
+      const unsub = onAuthStateChanged(auth, async (fbUser) => {
+        unsub();
+        if (fbUser) {
+          const profile = await ensureProfile(fbUser);
+          setFirebaseUser(fbUser);
+          setUser(profile);
+        }
+        resolve();
+      });
+    });
+
   const loginWithEmail = async (email: string, password: string) => {
     await signInWithEmailAndPassword(auth, email, password);
+    await waitForUser();
   };
 
   const signupWithEmail = async (name: string, email: string, password: string, phone: string) => {
     const { user: fbUser } = await createUserWithEmailAndPassword(auth, email, password);
     await sendEmailVerification(fbUser);
-    await upsertProfile(fbUser.uid, name, email, phone, fbUser.photoURL ?? undefined);
+    // Create profile with phone/whatsapp
+    const supabase = createClient();
+    await supabase.from('profiles').insert({
+      id: fbUser.uid,
+      name,
+      phone: phone || null,
+      whatsapp: phone || null,
+      profile_picture_url: fbUser.photoURL ?? null,
+      role: 'user',
+      enrolled_projects: [],
+      wishlist: [],
+      hours_learned: 0,
+      certificates: 0,
+    });
+    // Sign out immediately — user must verify email first
+    await signOut(auth);
   };
 
   const loginWithGoogle = async () => {
-    const { user: fbUser } = await signInWithPopup(auth, googleProvider);
-    await upsertProfile(
-      fbUser.uid,
-      fbUser.displayName ?? fbUser.email?.split('@')[0] ?? 'User',
-      fbUser.email ?? '',
-      '',
-      fbUser.photoURL ?? undefined,
-    );
+    await signInWithPopup(auth, googleProvider);
+    await waitForUser();
   };
 
   const logout = async () => {
@@ -96,7 +126,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const refreshUser = async () => {
     if (!firebaseUser) return;
-    const profile = await fetchProfile(firebaseUser.uid, firebaseUser.email ?? '');
+    const profile = await ensureProfile(firebaseUser);
     setUser(profile);
   };
 
