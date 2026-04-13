@@ -65,6 +65,7 @@ export default function DepartmentPage() {
                     difficulty={course.difficulty}
                     tools={course.tools}
                     icon={course.icon}
+                    href={`/courses/${course.id}`}
                     onClick={() => router.push(`/courses/${course.id}`)}
                   />
                 </div>

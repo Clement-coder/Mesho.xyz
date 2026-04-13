@@ -32,8 +32,8 @@ export const ProjectCard = ({ title, description, difficulty, price, onClick, hr
           <span className="text-sm font-bold text-accent">₦{price.toLocaleString()}</span>
         </div>
       </button>
-      {/* Share button */}
-      <div className="absolute bottom-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
+      {/* Share button — always visible on mobile, hover on desktop */}
+      <div className="absolute bottom-3 right-3 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
         <ShareButton
           title={title}
           url={href ?? (typeof window !== 'undefined' ? window.location.href : '')}

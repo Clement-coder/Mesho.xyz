@@ -212,7 +212,7 @@ export default function DashboardPage() {
                 {displayedProjects.length > 0 ? (
                   displayedProjects.map((project, i) => (
                     <div key={project.id} className="animate-in fade-in slide-in-from-bottom duration-500" style={{ animationDelay: `${i * 50}ms` }}>
-                      <ProjectCard title={project.title} description={project.description} difficulty={project.difficulty} price={project.price} onClick={() => router.push(`/projects/${project.id}`)} />
+                      <ProjectCard title={project.title} description={project.description} difficulty={project.difficulty} price={project.price} href={`/projects/${project.id}`} onClick={() => router.push(`/projects/${project.id}`)} />
                     </div>
                   ))
                 ) : (

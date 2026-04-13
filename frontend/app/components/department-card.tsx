@@ -33,8 +33,8 @@ export const DepartmentCard = ({ name, description, icon, color, onClick, href }
       <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">{description}</p>
       <div className="mt-4 h-0.5 w-8 rounded-full opacity-60 group-hover:w-full transition-all duration-500" style={{ backgroundColor: color }} />
     </button>
-    {/* Share button — bottom right */}
-    <div className="absolute bottom-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
+    {/* Share button — always visible on mobile, hover on desktop */}
+    <div className="absolute bottom-3 right-3 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
       <ShareButton
         title={`${name} — Mesho Data Sciences`}
         url={href ?? (typeof window !== 'undefined' ? window.location.origin + '/departments' : '')}
