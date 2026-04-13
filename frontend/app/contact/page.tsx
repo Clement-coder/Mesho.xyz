@@ -4,16 +4,16 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { FormField, IconInput, StyledTextarea } from '@/app/components/form-field';
 import { MessageCircle, Mail, Phone, CheckCircle, User, FileText } from 'lucide-react';
+import { createClient } from '@/utils/supabase/client';
+import { toast } from 'sonner';
 
 export default function ContactPage() {
   const [form, setForm] = useState({ name: '', email: '', subject: '', message: '' });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const set = (k: string, v: string) => {
-    setForm(f => ({ ...f, [k]: v }));
-    if (errors[k]) setErrors(e => ({ ...e, [k]: '' }));
-  };
+  const set = (k: string, v: string) => { setForm(f => ({ ...f, [k]: v })); if (errors[k]) setErrors(e => ({ ...e, [k]: '' })); };
 
   const validate = () => {
     const e: Record<string, string> = {};
@@ -25,11 +25,21 @@ export default function ContactPage() {
     return e;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const errs = validate();
     if (Object.keys(errs).length) { setErrors(errs); return; }
+    setLoading(true);
+    const supabase = createClient();
+    const { error } = await supabase.from('contact_messages').insert({
+      name: form.name.trim(),
+      email: form.email.trim().toLowerCase(),
+      subject: form.subject.trim() || null,
+      message: form.message.trim(),
+    });
+    if (error) { toast.error('Failed to send message. Please try again.'); setLoading(false); return; }
     setSubmitted(true);
+    setLoading(false);
   };
 
   return (
@@ -43,7 +53,6 @@ export default function ContactPage() {
 
       <section className="py-12 md:py-16 px-4">
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-12">
-
           <div className="space-y-6">
             <div className="clay p-6 space-y-5">
               <h2 className="text-xl font-bold">Get in Touch</h2>
@@ -54,14 +63,15 @@ export default function ContactPage() {
               ].map((item, i) => (
                 <div key={i} className="flex items-start gap-3">
                   <div className="w-10 h-10 bg-accent/10 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <item.icon size={18} className="text-accent" aria-hidden="true" />
+                    <item.icon size={18} className="text-accent" />
                   </div>
                   <div><p className="font-medium text-sm">{item.label}</p>{item.content}</div>
                 </div>
               ))}
             </div>
-            <a href="https://wa.me/1234567890" target="_blank" rel="noopener noreferrer" aria-label="Open WhatsApp chat" className="flex items-center justify-center gap-2 w-full bg-[#25D366] hover:bg-[#20BA5A] text-white py-3 rounded-xl transition-colors font-medium text-sm">
-              <MessageCircle size={18} aria-hidden="true" />Chat on WhatsApp
+            <a href="https://wa.me/1234567890" target="_blank" rel="noopener noreferrer"
+              className="flex items-center justify-center gap-2 w-full bg-[#25D366] hover:bg-[#20BA5A] text-white py-3 rounded-xl transition-colors font-medium text-sm">
+              <MessageCircle size={18} />Chat on WhatsApp
             </a>
           </div>
 
@@ -80,20 +90,20 @@ export default function ContactPage() {
                 <form onSubmit={handleSubmit} className="space-y-5" noValidate>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <FormField label="Full Name" required icon={User} error={errors.name} success={!errors.name && form.name.length > 1}>
-                      <IconInput icon={User} placeholder="Your full name" value={form.name} onChange={e => set('name', e.target.value)} error={!!errors.name} autoComplete="name" aria-label="Enter your full name" />
+                      <IconInput icon={User} placeholder="Your full name" value={form.name} onChange={e => set('name', e.target.value)} error={!!errors.name} autoComplete="name" />
                     </FormField>
                     <FormField label="Email Address" required icon={Mail} error={errors.email} success={!errors.email && /\S+@\S+\.\S+/.test(form.email)}>
-                      <IconInput icon={Mail} type="email" placeholder="your@email.com" value={form.email} onChange={e => set('email', e.target.value)} error={!!errors.email} autoComplete="email" aria-label="Enter your email address" />
+                      <IconInput icon={Mail} type="email" placeholder="your@email.com" value={form.email} onChange={e => set('email', e.target.value)} error={!!errors.email} autoComplete="email" />
                     </FormField>
                   </div>
-                  <FormField label="Subject" icon={FileText} hint="Optional — briefly describe your enquiry">
-                    <IconInput icon={FileText} placeholder="What is this about?" value={form.subject} onChange={e => set('subject', e.target.value)} aria-label="Enter the subject of your message" />
+                  <FormField label="Subject" icon={FileText} hint="Optional">
+                    <IconInput icon={FileText} placeholder="What is this about?" value={form.subject} onChange={e => set('subject', e.target.value)} />
                   </FormField>
                   <FormField label="Message" required icon={MessageCircle} error={errors.message} success={!errors.message && form.message.length >= 10}>
-                    <StyledTextarea rows={5} placeholder="Write your message here..." value={form.message} onChange={e => set('message', e.target.value)} error={!!errors.message} aria-label="Write your message" />
+                    <StyledTextarea rows={5} placeholder="Write your message here..." value={form.message} onChange={e => set('message', e.target.value)} error={!!errors.message} />
                   </FormField>
-                  <Button type="submit" size="lg" className="w-full">
-                    <Mail size={16} className="mr-2" aria-hidden="true" />Send Message
+                  <Button type="submit" size="lg" className="w-full" disabled={loading}>
+                    {loading ? 'Sending...' : <><Mail size={16} className="mr-2" />Send Message</>}
                   </Button>
                 </form>
               </div>

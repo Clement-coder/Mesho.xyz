@@ -5,6 +5,7 @@ import { Analytics } from '@vercel/analytics/next';
 import { AuthProvider } from '@/lib/auth-context';
 import { Navbar } from "./components/navbar";
 import { ConditionalFooter } from "./components/conditional-footer";
+import { Toaster } from 'sonner';
 import './globals.css';
 
 const _geist = Geist({ subsets: ['latin'] });
@@ -45,6 +46,23 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           <main className="min-h-screen">{children}</main>
           <ConditionalFooter />
         </AuthProvider>
+        <Toaster
+          position="top-right"
+          expand={false}
+          richColors
+          closeButton
+          toastOptions={{
+            style: {
+              background: 'var(--card)',
+              border: '1px solid var(--border)',
+              color: 'var(--foreground)',
+              borderRadius: '0.875rem',
+              boxShadow: 'var(--clay-shadow)',
+              fontFamily: 'inherit',
+              fontSize: '0.875rem',
+            },
+          }}
+        />
         <Analytics />
         <script dangerouslySetInnerHTML={{ __html: `if('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js')` }} />
       </body>
