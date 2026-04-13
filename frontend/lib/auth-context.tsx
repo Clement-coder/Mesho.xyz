@@ -1,92 +1,108 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import {
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signInWithPopup,
+  signOut,
+  onAuthStateChanged,
+  sendEmailVerification,
+  updatePassword,
+  type User as FirebaseUser,
+} from 'firebase/auth';
+import { auth, googleProvider } from '@/lib/firebase';
 import { createClient } from '@/utils/supabase/client';
 import type { Profile } from '@/lib/types';
 
 interface AuthContextType {
   user: Profile | null;
+  firebaseUser: FirebaseUser | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   loginWithEmail: (email: string, password: string) => Promise<void>;
-  signupWithEmail: (name: string, email: string, password: string) => Promise<void>;
+  signupWithEmail: (name: string, email: string, password: string, phone: string) => Promise<void>;
   loginWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
+  changePassword: (newPassword: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+async function fetchProfile(uid: string, email?: string): Promise<Profile | null> {
+  const supabase = createClient();
+  const { data } = await supabase.from('profiles').select('*').eq('id', uid).single();
+  if (!data) return null;
+  return { ...data, email: email ?? '' };
+}
+
+async function upsertProfile(uid: string, name: string, email: string, phone: string, photoURL?: string) {
+  const supabase = createClient();
+  await supabase.from('profiles').upsert({
+    id: uid,
+    name,
+    phone: phone || null,
+    whatsapp: phone || null,
+    profile_picture_url: photoURL ?? null,
+  }, { onConflict: 'id', ignoreDuplicates: true });
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<Profile | null>(null);
+  const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const supabase = createClient();
-
-  const fetchProfile = async (userId: string, email?: string): Promise<Profile | null> => {
-    const { data } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .single();
-    if (!data) return null;
-    return { ...data, email: email ?? '' };
-  };
 
   useEffect(() => {
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (session?.user) {
-        const profile = await fetchProfile(session.user.id, session.user.email);
-        setUser(profile);
-      }
-      setIsLoading(false);
-    });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (session?.user) {
-        const profile = await fetchProfile(session.user.id, session.user.email);
+    const unsub = onAuthStateChanged(auth, async (fbUser) => {
+      setFirebaseUser(fbUser);
+      if (fbUser) {
+        const profile = await fetchProfile(fbUser.uid, fbUser.email ?? '');
         setUser(profile);
       } else {
         setUser(null);
       }
       setIsLoading(false);
     });
-
-    return () => subscription.unsubscribe();
+    return unsub;
   }, []);
 
   const loginWithEmail = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) throw error;
+    await signInWithEmailAndPassword(auth, email, password);
   };
 
-  const signupWithEmail = async (name: string, email: string, password: string) => {
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: { data: { name } },
-    });
-    if (error) throw error;
+  const signupWithEmail = async (name: string, email: string, password: string, phone: string) => {
+    const { user: fbUser } = await createUserWithEmailAndPassword(auth, email, password);
+    await sendEmailVerification(fbUser);
+    await upsertProfile(fbUser.uid, name, email, phone, fbUser.photoURL ?? undefined);
   };
 
   const loginWithGoogle = async () => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: { redirectTo: `${window.location.origin}/dashboard` },
-    });
-    if (error) throw error;
+    const { user: fbUser } = await signInWithPopup(auth, googleProvider);
+    await upsertProfile(
+      fbUser.uid,
+      fbUser.displayName ?? fbUser.email?.split('@')[0] ?? 'User',
+      fbUser.email ?? '',
+      '',
+      fbUser.photoURL ?? undefined,
+    );
   };
 
   const logout = async () => {
-    await supabase.auth.signOut();
+    await signOut(auth);
     setUser(null);
+    setFirebaseUser(null);
   };
 
   const refreshUser = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (session?.user) {
-      const profile = await fetchProfile(session.user.id, session.user.email);
-      setUser(profile);
-    }
+    if (!firebaseUser) return;
+    const profile = await fetchProfile(firebaseUser.uid, firebaseUser.email ?? '');
+    setUser(profile);
+  };
+
+  const changePassword = async (newPassword: string) => {
+    if (!firebaseUser) throw new Error('Not authenticated');
+    await updatePassword(firebaseUser, newPassword);
   };
 
   if (isLoading) {
@@ -98,7 +114,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated: !!user, isLoading, loginWithEmail, signupWithEmail, loginWithGoogle, logout, refreshUser }}>
+    <AuthContext.Provider value={{ user, firebaseUser, isAuthenticated: !!user, isLoading, loginWithEmail, signupWithEmail, loginWithGoogle, logout, refreshUser, changePassword }}>
       {children}
     </AuthContext.Provider>
   );

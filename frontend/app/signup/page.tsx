@@ -77,18 +77,19 @@ export default function SignUpPage() {
     setError('');
     if (!form.name.trim()) { setError('Full name is required'); return; }
     if (!form.email.trim() || !/\S+@\S+\.\S+/.test(form.email)) { setError('Please enter a valid email address'); return; }
+    if (!form.phone.trim()) { setError('WhatsApp number is required'); return; }
     if (!form.password) { setError('Password is required'); return; }
     if (form.password.length < 6) { setError('Password must be at least 6 characters'); return; }
     if (form.password !== form.confirmPassword) { setError('Passwords do not match'); return; }
     if (!agreedToTerms) { setError('Please accept the Terms & Conditions to continue'); return; }
     setIsLoading(true);
     try {
-      await signupWithEmail(form.name.trim(), form.email.trim().toLowerCase(), form.password);
+      await signupWithEmail(form.name.trim(), form.email.trim().toLowerCase(), form.password, `${form.countryCode}${form.phone}`);
       setShowSuccess(true);
     } catch (e: any) {
-      const msg = e.message?.includes('already registered') || e.message?.includes('already been registered')
+      const msg = e.code === 'auth/email-already-in-use'
         ? 'An account with this email already exists'
-        : e.message?.includes('weak') ? 'Password is too weak'
+        : e.code === 'auth/weak-password' ? 'Password is too weak'
         : 'Sign up failed. Please try again.';
       setError(msg);
       setIsLoading(false);
@@ -120,9 +121,13 @@ export default function SignUpPage() {
               <CheckCircle size={14} className="text-white" />
             </div>
           </div>
-          <h2 className="text-2xl font-bold mb-2">Account Created!</h2>
-          <p className="text-muted-foreground text-sm mb-1">Welcome to Mesho Data Sciences, <span className="font-semibold text-foreground">{form.name}</span>!</p>
-          <p className="text-muted-foreground text-sm mb-7">Check your email to confirm your account, then sign in.</p>
+          <h2 className="text-2xl font-bold mb-2">Check Your Email!</h2>
+          <p className="text-muted-foreground text-sm mb-1">Welcome, <span className="font-semibold text-foreground">{form.name}</span>!</p>
+          <div className="bg-accent/10 border border-accent/20 rounded-xl p-4 mb-5 text-sm text-left space-y-1.5">
+            <p className="font-semibold text-foreground">⚠️ You must confirm your email before signing in.</p>
+            <p className="text-muted-foreground">We sent a confirmation link to <span className="font-medium text-foreground">{form.email}</span>. Click it to activate your account.</p>
+            <p className="text-muted-foreground text-xs">Check your spam/junk folder if you don't see it.</p>
+          </div>
           <Link href="/login"><Button size="lg" className="w-full">Sign In Now</Button></Link>
         </div>
       </div>
@@ -204,7 +209,7 @@ export default function SignUpPage() {
               </div>
               <div>
                 <label className="text-sm font-medium mb-1.5 block" htmlFor="phone">
-                  WhatsApp Number <span className="text-muted-foreground font-normal">(optional)</span>
+                  WhatsApp Number <span className="text-destructive">*</span>
                 </label>
                 <div className="flex gap-2">
                   <CustomSelect

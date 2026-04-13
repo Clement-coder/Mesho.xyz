@@ -13,7 +13,7 @@ import { createClient } from '@/utils/supabase/client';
 import { toast } from 'sonner';
 
 export default function ProfilePage() {
-  const { user, logout, refreshUser } = useAuth();
+  const { user, logout, refreshUser, changePassword } = useAuth();
   const [name, setName] = useState('');
   const [whatsapp, setWhatsapp] = useState('');
   const [profilePicture, setProfilePicture] = useState('');
@@ -62,15 +62,17 @@ export default function ProfilePage() {
 
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!currentPassword || !newPassword || !confirmPassword) { toast.error('All password fields are required'); return; }
+    if (!newPassword || !confirmPassword) { toast.error('All password fields are required'); return; }
     if (newPassword !== confirmPassword) { toast.error('New passwords do not match'); return; }
     if (newPassword.length < 6) { toast.error('Password must be at least 6 characters'); return; }
     setChangingPw(true);
-    const supabase = createClient();
-    const { error } = await supabase.auth.updateUser({ password: newPassword });
-    if (error) { toast.error('Password change failed. Please try again.'); setChangingPw(false); return; }
-    setCurrentPassword(''); setNewPassword(''); setConfirmPassword('');
-    toast.success('Password changed successfully!');
+    try {
+      await changePassword(newPassword);
+      setCurrentPassword(''); setNewPassword(''); setConfirmPassword('');
+      toast.success('Password changed successfully!');
+    } catch {
+      toast.error('Password change failed. Please sign out and sign in again first.');
+    }
     setChangingPw(false);
   };
 

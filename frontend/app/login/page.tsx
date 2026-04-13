@@ -43,10 +43,10 @@ export default function LoginPage() {
       toast.success('Welcome back!');
       router.replace('/dashboard');
     } catch (e: any) {
-      const msg = e.message?.includes('Invalid login credentials')
+      const msg = e.code === 'auth/invalid-credential' || e.code === 'auth/wrong-password' || e.code === 'auth/user-not-found'
         ? 'Invalid email or password'
-        : e.message?.includes('Email not confirmed')
-        ? 'Please confirm your email before signing in.'
+        : e.code === 'auth/too-many-requests'
+        ? 'Too many attempts. Please try again later.'
         : 'Sign in failed. Please try again.';
       toast.error(msg);
       setIsLoading(false);
