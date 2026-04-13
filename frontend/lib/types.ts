@@ -101,3 +101,26 @@ export interface ContactMessage {
   read: boolean;
   created_at: string;
 }
+
+export interface ChatMessage {
+  id: string;
+  user_id: string;
+  user_name: string;
+  user_email: string;
+  sender: 'user' | 'admin';
+  message: string;
+  read_by_admin: boolean;
+  read_by_user: boolean;
+  created_at: string;
+}
+
+export interface Notification {
+  id: string;
+  user_id: string;
+  type: string;
+  title: string;
+  body: string;
+  read: boolean;
+  link: string | null;
+  created_at: string;
+}

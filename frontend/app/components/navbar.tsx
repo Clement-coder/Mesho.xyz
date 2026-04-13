@@ -1,21 +1,55 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { Menu, X, Bell, FileText, BarChart3, UserCheck, Home } from 'lucide-react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/lib/auth-context';
 import { LogoutModal } from '@/components/logout-modal';
+import { createClient } from '@/utils/supabase/client';
+import type { Notification } from '@/lib/types';
 
 export const Navbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
   const { user, logout, isAuthenticated } = useAuth();
   const pathname = usePathname();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!user) return;
+    const supabase = createClient();
+    supabase.from('notifications').select('*').eq('user_id', user.id).order('created_at', { ascending: false }).limit(20)
+      .then(({ data }) => setNotifications(data ?? []));
+
+    const channel = supabase.channel(`notif-${user.id}`)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${user.id}` },
+        (payload) => setNotifications(prev => [payload.new as Notification, ...prev]))
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [user?.id]);
+
+  const unreadCount = notifications.filter(n => !n.read).length;
+
+  const markAllRead = async () => {
+    if (!user || unreadCount === 0) return;
+    await createClient().from('notifications').update({ read: true }).eq('user_id', user.id).eq('read', false);
+    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+  };
+
+  const handleNotifClick = async (n: Notification) => {
+    if (!n.read) {
+      await createClient().from('notifications').update({ read: true }).eq('id', n.id);
+      setNotifications(prev => prev.map(x => x.id === n.id ? { ...x, read: true } : x));
+    }
+    if (n.link) router.push(n.link);
+    setNotifOpen(false);
+  };
 
   const isDashboard = pathname?.startsWith('/dashboard');
   const handleLogout = async () => { await logout(); setShowLogoutModal(false); setMobileMenuOpen(false); };
@@ -37,19 +71,41 @@ export const Navbar = () => {
         <div className={`fixed top-0 right-0 h-full w-80 bg-card border-l border-border z-50 flex flex-col transition-transform duration-300 ${notifOpen ? 'translate-x-0' : 'translate-x-full'}`} style={{ boxShadow: '-8px 0 32px rgba(0,0,0,0.10)' }} role="dialog" aria-label="Notifications panel">
           <div className="flex items-center justify-between p-5 border-b border-border">
             <div className="flex items-center gap-2">
-              <Bell size={18} className="text-accent" aria-hidden="true" />
+              <Bell size={18} className="text-accent" />
               <h2 className="font-semibold text-base">Notifications</h2>
+              {unreadCount > 0 && <span className="text-xs bg-accent text-white px-1.5 py-0.5 rounded-full font-bold">{unreadCount}</span>}
             </div>
-            <button onClick={() => setNotifOpen(false)} aria-label="Close notifications" className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-muted transition-colors">
-              <X size={18} />
-            </button>
+            <div className="flex items-center gap-2">
+              {unreadCount > 0 && <button onClick={markAllRead} className="text-xs text-accent hover:underline">Mark all read</button>}
+              <button onClick={() => setNotifOpen(false)} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-muted transition-colors"><X size={18} /></button>
+            </div>
           </div>
-          <div className="flex-1 p-5 text-center py-12">
-            <div className="w-12 h-12 bg-accent/10 rounded-2xl flex items-center justify-center mx-auto mb-3">
-              <Bell size={22} className="text-accent" />
-            </div>
-            <p className="text-sm font-medium mb-1">No notifications yet</p>
-            <p className="text-xs text-muted-foreground">We'll notify you about your orders and updates here.</p>
+          <div className="flex-1 overflow-y-auto">
+            {notifications.length === 0 ? (
+              <div className="p-5 text-center py-12">
+                <div className="w-12 h-12 bg-accent/10 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                  <Bell size={22} className="text-accent" />
+                </div>
+                <p className="text-sm font-medium mb-1">No notifications yet</p>
+                <p className="text-xs text-muted-foreground">We'll notify you about payments, messages and updates.</p>
+              </div>
+            ) : (
+              <div className="divide-y divide-border">
+                {notifications.map(n => (
+                  <button key={n.id} onClick={() => handleNotifClick(n)}
+                    className={`w-full text-left px-4 py-3.5 hover:bg-muted/50 transition-colors ${!n.read ? 'bg-accent/5' : ''}`}>
+                    <div className="flex items-start gap-3">
+                      <div className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${!n.read ? 'bg-accent' : 'bg-transparent'}`} />
+                      <div className="min-w-0 flex-1">
+                        <p className={`text-sm font-medium leading-tight ${!n.read ? 'text-foreground' : 'text-muted-foreground'}`}>{n.title}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5 leading-snug">{n.body}</p>
+                        <p className="text-[10px] text-muted-foreground/60 mt-1">{new Date(n.created_at).toLocaleString()}</p>
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
@@ -60,9 +116,13 @@ export const Navbar = () => {
               <span className="hidden sm:inline text-base">Mesho Data Sciences</span>
             </Link>
             <div className="flex items-center gap-2">
-              <button onClick={() => setNotifOpen(true)} aria-label="Open notifications — view your orders and updates" title="Notifications" className="relative w-9 h-9 clay-sm rounded-xl flex items-center justify-center hover:bg-muted transition-colors">
-                <Bell size={18} aria-hidden="true" />
-                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-accent rounded-full" aria-hidden="true" />
+              <button onClick={() => setNotifOpen(true)} aria-label="Notifications" className="relative w-9 h-9 clay-sm rounded-xl flex items-center justify-center hover:bg-muted transition-colors">
+                <Bell size={18} />
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-accent text-white text-[9px] font-bold rounded-full flex items-center justify-center">
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </span>
+                )}
               </button>
               <Link href="/profile" aria-label="Profile Settings" title="Manage your account">
                 <div className="flex items-center gap-2 clay-sm px-2 py-1.5 rounded-xl hover:bg-muted transition-colors cursor-pointer">
