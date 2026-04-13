@@ -145,25 +145,26 @@ export default function DashboardPage() {
                 const Icon = statusIcon[p.status];
                 const borderColor = p.status === 'confirmed' ? 'border-l-green-400' : p.status === 'failed' ? 'border-l-red-400' : 'border-l-yellow-400';
                 return (
-                  <div key={p.id} className={`clay p-4 border-l-4 ${borderColor}`}>
-                    <div className="flex items-start justify-between gap-3 mb-3">
-                      <div className="min-w-0 flex-1">
-                        <p className="font-semibold text-sm leading-tight">{(p as any).projects?.title ?? 'Research Material'}</p>
-                        <p className="text-xs text-muted-foreground mt-1">{new Date(p.created_at).toLocaleString()}</p>
-                      </div>
-                      <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
-                        <span className="font-bold text-accent">₦{p.amount.toLocaleString()}</span>
-                        <span className={`flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium ${statusColor[p.status]}`}>
-                          <Icon size={10} />{p.status}
-                        </span>
-                      </div>
+                  <div key={p.id} className={`clay p-3 sm:p-4 border-l-4 ${borderColor}`}>
+                    {/* Top row: title + amount */}
+                    <div className="flex items-start justify-between gap-2 mb-2">
+                      <p className="font-semibold text-sm leading-tight min-w-0 flex-1 pr-2">{(p as any).projects?.title ?? 'Research Material'}</p>
+                      <span className="font-bold text-accent text-sm flex-shrink-0">₦{p.amount.toLocaleString()}</span>
                     </div>
-                    <div className="flex items-center justify-between gap-2 mb-3">
-                      <div className="bg-muted/30 rounded-xl px-3 py-2 text-xs text-muted-foreground font-mono flex-1 truncate">
-                        Ref: {p.payment_reference ?? '—'}
-                      </div>
+                    {/* Date + status */}
+                    <div className="flex items-center justify-between gap-2 mb-2">
+                      <p className="text-xs text-muted-foreground">{new Date(p.created_at).toLocaleString()}</p>
+                      <span className={`flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium flex-shrink-0 ${statusColor[p.status]}`}>
+                        <Icon size={10} />{p.status}
+                      </span>
+                    </div>
+                    {/* Ref + View */}
+                    <div className="flex items-center gap-2 mb-3">
+                      <p className="bg-muted/30 rounded-lg px-2 py-1.5 text-xs text-muted-foreground font-mono flex-1 truncate min-w-0">
+                        {p.payment_reference ?? '—'}
+                      </p>
                       <button onClick={() => setViewPayment(p)}
-                        className="flex items-center gap-1 text-xs px-3 py-2 rounded-xl border border-border hover:bg-muted transition-colors flex-shrink-0">
+                        className="flex items-center gap-1 text-xs px-3 py-1.5 rounded-lg border border-border hover:bg-muted transition-colors flex-shrink-0">
                         <Eye size={12} /> View
                       </button>
                     </div>
@@ -271,8 +272,8 @@ export default function DashboardPage() {
         return (
           <>
             <div className="fixed inset-0 bg-black/50 z-50" onClick={() => setViewPayment(null)} />
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-              <div className="bg-background border border-border rounded-2xl w-full max-w-md shadow-2xl animate-in zoom-in-95 duration-200">
+            <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+              <div className="bg-background border border-border rounded-t-2xl sm:rounded-2xl w-full max-w-md shadow-2xl animate-in slide-in-from-bottom sm:zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
                 <div className="flex items-center justify-between p-5 border-b border-border">
                   <h2 className="font-bold text-base">Payment Details</h2>
                   <button onClick={() => setViewPayment(null)} className="p-1.5 hover:bg-muted rounded-lg"><X size={16} /></button>
