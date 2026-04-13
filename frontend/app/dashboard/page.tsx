@@ -10,7 +10,7 @@ import { useAuth } from '@/lib/auth-context';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { LogoutModal } from '@/components/logout-modal';
 import { DashboardSidebar } from '../components/dashboard-sidebar';
-import { BookOpen, BarChart3, Award, FolderOpen, Search, Heart, UserCircle, CreditCard, Clock, CheckCircle, XCircle, ChevronLeft, MessageCircle } from 'lucide-react';
+import { BookOpen, BarChart3, Award, FolderOpen, Search, Heart, UserCircle, CreditCard, Clock, CheckCircle, XCircle, ChevronLeft, MessageCircle, ShieldCheck } from 'lucide-react';
 
 const WA_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? '2348012345678';
 import { createClient } from '@/utils/supabase/client';
@@ -108,8 +108,8 @@ export default function DashboardPage() {
             ))}
           </div>
 
-          {/* Tabs */}
-          <div className="clay p-1 flex gap-1 mb-5 w-full overflow-x-auto">
+          {/* Tabs — hidden on mobile (use bottom nav instead) */}
+          <div className="hidden sm:flex clay p-1 gap-1 mb-5 w-full overflow-x-auto">
             {tabs.map(tab => (
               <button key={tab.id} onClick={() => setActiveTab(tab.id as any)}
                 className={`relative flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all duration-200 ${activeTab === tab.id ? 'bg-accent text-white shadow-md' : 'text-muted-foreground hover:text-foreground hover:bg-muted'}`}>
@@ -238,11 +238,19 @@ export default function DashboardPage() {
             )}
           </button>
         ))}
-        <Link href="/profile">
-          <button className="flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-xl text-muted-foreground text-xs">
-            <UserCircle size={20} /><span>Profile</span>
-          </button>
-        </Link>
+        {user?.role === 'admin' ? (
+          <Link href="/admin" className="flex-1 px-2">
+            <button className="w-full flex flex-col items-center gap-0.5 py-1.5 rounded-xl bg-accent text-white text-xs font-medium">
+              <ShieldCheck size={20} /><span>Admin</span>
+            </button>
+          </Link>
+        ) : (
+          <Link href="/profile">
+            <button className="flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-xl text-muted-foreground text-xs">
+              <UserCircle size={20} /><span>Profile</span>
+            </button>
+          </Link>
+        )}
       </div>
 
       <LogoutModal isOpen={showLogoutModal} onClose={() => setShowLogoutModal(false)} onConfirm={handleLogout} />
