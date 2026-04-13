@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { CustomSelect } from '../components/custom-select';
@@ -8,6 +8,12 @@ import { Button } from '@/components/ui/button';
 import { Loader2, Mail, Lock, Eye, EyeOff, User, Phone, BookOpen, CheckCircle, Sparkles, UserPlus } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { useRouter } from 'next/navigation';
+
+const BG_IMAGES = [
+  '/research-material-acces.jpg',
+  '/data-anylyst-traning.jpg',
+  '/Hire-Data-anylyst.jpg',
+];
 
 const countryCodes = [
   { code: '+234', flag: '🇳🇬', name: 'Nigeria' },
@@ -53,8 +59,14 @@ export default function SignUpPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [bgIndex, setBgIndex] = useState(0);
   const { signupWithEmail, loginWithGoogle } = useAuth();
   const router = useRouter();
+
+  useEffect(() => {
+    const id = setInterval(() => setBgIndex(i => (i + 1) % BG_IMAGES.length), 5000);
+    return () => clearInterval(id);
+  }, []);
 
   const set = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }));
 
@@ -115,12 +127,28 @@ export default function SignUpPage() {
 
   return (
     <div className="min-h-screen flex">
-      <div className="hidden lg:flex lg:w-1/2 bg-accent flex-col justify-between p-12 text-white">
-        <div className="flex items-center gap-3">
+      <div className="hidden lg:flex lg:w-1/2 flex-col justify-between p-12 text-white relative overflow-hidden">
+        {/* Cycling background images */}
+        {BG_IMAGES.map((src, i) => (
+          <Image
+            key={src}
+            src={src}
+            alt=""
+            fill
+            className="object-cover transition-opacity duration-1000"
+            style={{ opacity: i === bgIndex ? 1 : 0 }}
+            priority={i === 0}
+          />
+        ))}
+        {/* Dark overlay */}
+        <div className="absolute inset-0 bg-gradient-to-br from-black/70 via-black/55 to-accent/60" />
+
+        {/* Content sits above overlay */}
+        <div className="relative z-10 flex items-center gap-3">
           <Image src="/mesho_logo.png" alt="Mesho Data Sciences logo" width={56} height={56} className="rounded-xl object-contain" />
           <span className="font-bold text-lg">Mesho Data Sciences</span>
         </div>
-        <div>
+        <div className="relative z-10">
           <div className="w-14 h-14 bg-white/15 rounded-2xl flex items-center justify-center mb-6">
             <BookOpen size={28} className="text-white" />
           </div>
@@ -136,7 +164,7 @@ export default function SignUpPage() {
             ))}
           </div>
         </div>
-        <p className="text-white/40 text-xs">© 2026 Mesho Data Sciences</p>
+        <p className="relative z-10 text-white/40 text-xs">© 2026 Mesho Data Sciences</p>
       </div>
 
       <div className="flex-1 flex items-center justify-center px-4 py-10 bg-background overflow-y-auto">
