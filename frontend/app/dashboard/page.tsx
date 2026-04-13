@@ -11,6 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { LogoutModal } from '@/components/logout-modal';
 import { DashboardSidebar } from '../components/dashboard-sidebar';
 import { BookOpen, BarChart3, Award, FolderOpen, Search, Heart, UserCircle, CreditCard, Clock, CheckCircle, XCircle, ChevronLeft, MessageCircle, ShieldCheck, Eye, X } from 'lucide-react';
+import { PaymentReceipt } from '../components/payment-receipt';
 
 const WA_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? '2348012345678';
 import { createClient } from '@/utils/supabase/client';
@@ -264,11 +265,18 @@ export default function DashboardPage() {
 
       <LogoutModal isOpen={showLogoutModal} onClose={() => setShowLogoutModal(false)} onConfirm={handleLogout} />
 
-      {/* Payment detail modal */}
-      {viewPayment && (() => {
+      {/* Payment modal — receipt for confirmed, details for others */}
+      {viewPayment && viewPayment.status === 'confirmed' && (
+        <PaymentReceipt
+          purchase={viewPayment as any}
+          userName={user?.name ?? 'Customer'}
+          onClose={() => setViewPayment(null)}
+        />
+      )}
+      {viewPayment && viewPayment.status !== 'confirmed' && (() => {
         const p = viewPayment;
         const Icon = statusIcon[p.status];
-        const borderColor = p.status === 'confirmed' ? 'border-green-400' : p.status === 'failed' ? 'border-red-400' : 'border-yellow-400';
+        const borderColor = p.status === 'failed' ? 'border-red-400' : 'border-yellow-400';
         return (
           <>
             <div className="fixed inset-0 bg-black/50 z-50" onClick={() => setViewPayment(null)} />
@@ -287,7 +295,7 @@ export default function DashboardPage() {
                     {[
                       { label: 'Amount', value: `₦${p.amount.toLocaleString()}` },
                       { label: 'Status', value: <span className={`flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium w-fit ${statusColor[p.status]}`}><Icon size={10} />{p.status}</span> },
-                      { label: 'Reference', value: <span className="font-mono text-xs">{p.payment_reference ?? '—'}</span> },
+                      { label: 'Reference', value: <span className="font-mono text-xs break-all">{p.payment_reference ?? '—'}</span> },
                       { label: 'Date', value: new Date(p.created_at).toLocaleDateString() },
                     ].map((item, i) => (
                       <div key={i} className="bg-muted/30 rounded-xl p-3">
@@ -300,7 +308,7 @@ export default function DashboardPage() {
                     <>
                       <div className="flex items-start gap-2 bg-yellow-50 border border-yellow-200 rounded-xl px-3 py-2.5 text-xs text-yellow-700">
                         <Clock size={13} className="flex-shrink-0 mt-0.5" />
-                        <span><strong>Awaiting verification</strong> — Admin will confirm your bank transfer and send your material shortly.</span>
+                        <span><strong>Awaiting verification</strong> — Admin will confirm your bank transfer shortly.</span>
                       </div>
                       <div className="space-y-1.5">
                         <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Bank Transfer Details</p>
@@ -317,38 +325,6 @@ export default function DashboardPage() {
                       </div>
                     </>
                   )}
-                  {p.status === 'confirmed' && (() => {
-                    const receiptText = [
-                      `🧾 *PAYMENT RECEIPT — MESHO DATA SCIENCES*`,
-                      ``,
-                      `📚 Course: ${(p as any).projects?.title ?? 'Research Material'}`,
-                      `💰 Amount Paid: ₦${p.amount.toLocaleString()}`,
-                      `🔖 Reference: ${p.payment_reference ?? '—'}`,
-                      `📅 Date: ${new Date(p.created_at).toLocaleString()}`,
-                      `✅ Status: CONFIRMED`,
-                      ``,
-                      `Please send my file. Thank you!`,
-                    ].join('\n');
-                    return (
-                      <div className="space-y-3">
-                        <div className="bg-green-50 border border-green-200 rounded-xl p-4 space-y-2">
-                          <p className="text-xs font-semibold text-green-700 uppercase tracking-wide">🧾 Payment Receipt</p>
-                          <div className="space-y-1 text-xs text-green-800 font-mono bg-white/60 rounded-lg p-3">
-                            <p><span className="text-muted-foreground">Course:</span> {(p as any).projects?.title ?? '—'}</p>
-                            <p><span className="text-muted-foreground">Amount:</span> ₦{p.amount.toLocaleString()}</p>
-                            <p><span className="text-muted-foreground">Ref:</span> {p.payment_reference}</p>
-                            <p><span className="text-muted-foreground">Date:</span> {new Date(p.created_at).toLocaleString()}</p>
-                            <p><span className="text-muted-foreground">Status:</span> <span className="text-green-600 font-bold">CONFIRMED ✓</span></p>
-                          </div>
-                        </div>
-                        <a href={`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(receiptText)}`}
-                          target="_blank" rel="noopener noreferrer"
-                          className="flex items-center justify-center gap-2 w-full bg-[#25D366] hover:bg-[#20BA5A] text-white py-2.5 rounded-xl text-sm font-medium transition-colors">
-                          <MessageCircle size={15} /> Send Receipt & Get My File
-                        </a>
-                      </div>
-                    );
-                  })()}
                   {p.status === 'failed' && (
                     <div className="flex items-start gap-2 bg-red-50 border border-red-200 rounded-xl px-3 py-2.5 text-xs text-red-700">
                       <XCircle size={13} className="flex-shrink-0 mt-0.5" />
