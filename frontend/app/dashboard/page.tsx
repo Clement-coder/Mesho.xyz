@@ -10,40 +10,51 @@ import { useAuth } from '@/lib/auth-context';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { LogoutModal } from '@/components/logout-modal';
 import { DashboardSidebar } from '../components/dashboard-sidebar';
-import { BookOpen, BarChart3, Award, FolderOpen, Search, Heart, UserCircle } from 'lucide-react';
+import { BookOpen, BarChart3, Award, FolderOpen, Search, Heart, UserCircle, CreditCard, Clock, CheckCircle, XCircle, ChevronLeft } from 'lucide-react';
 import { createClient } from '@/utils/supabase/client';
-import type { Project } from '@/lib/types';
+import type { Project, Purchase } from '@/lib/types';
+
+const statusIcon = { pending: Clock, confirmed: CheckCircle, failed: XCircle };
+const statusColor = { pending: 'text-yellow-600 bg-yellow-50', confirmed: 'text-green-600 bg-green-50', failed: 'text-red-600 bg-red-50' };
 
 export default function DashboardPage() {
-  const [activeTab, setActiveTab] = useState<'all' | 'enrolled' | 'wishlist'>('enrolled');
+  const [activeTab, setActiveTab] = useState<'enrolled' | 'all' | 'wishlist' | 'payments'>('enrolled');
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [allProjects, setAllProjects] = useState<Project[]>([]);
+  const [purchases, setPurchases] = useState<(Purchase & { projects?: Project })[]>([]);
   const [loading, setLoading] = useState(true);
   const { user, logout } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
+    if (!user) return;
     const supabase = createClient();
-    supabase.from('projects').select('*').order('title').then(({ data }) => {
-      setAllProjects(data ?? []);
+    Promise.all([
+      supabase.from('projects').select('*').order('title'),
+      supabase.from('purchases').select('*, projects(*)').eq('user_id', user.id).order('created_at', { ascending: false }),
+    ]).then(([{ data: projs }, { data: purch }]) => {
+      setAllProjects(projs ?? []);
+      setPurchases(purch ?? []);
       setLoading(false);
     });
-  }, []);
+  }, [user]);
 
   const enrolledProjects = allProjects.filter(p => user?.enrolled_projects.includes(p.id));
   const wishlistProjects = allProjects.filter(p => user?.wishlist.includes(p.id));
   const displayedProjects = activeTab === 'enrolled' ? enrolledProjects : activeTab === 'wishlist' ? wishlistProjects : allProjects;
+  const pendingCount = purchases.filter(p => p.status === 'pending').length;
 
   const handleLogout = () => { logout(); setShowLogoutModal(false); };
 
   const stats = [
     { icon: FolderOpen, label: 'Purchased Materials', value: enrolledProjects.length, desc: 'Research materials you own' },
-    { icon: BarChart3, label: 'Training Sessions', value: user?.hours_learned ?? 0, desc: 'SPSS training sessions attended' },
+    { icon: CreditCard, label: 'Pending Payments', value: pendingCount, desc: 'Awaiting admin confirmation' },
     { icon: Award, label: 'Completed Projects', value: user?.certificates ?? 0, desc: 'Projects fully completed' },
   ];
 
   const tabs = [
     { id: 'enrolled', label: 'My Materials', icon: FolderOpen },
+    { id: 'payments', label: 'Payments', icon: CreditCard, badge: pendingCount },
     { id: 'all', label: 'All Topics', icon: Search },
     { id: 'wishlist', label: 'Saved', icon: Heart },
   ];
@@ -54,6 +65,7 @@ export default function DashboardPage() {
         <DashboardSidebar activeTab={activeTab} onTabChange={(t) => setActiveTab(t as any)} onLogout={() => setShowLogoutModal(true)} />
 
         <main className="flex-1 md:ml-64 px-4 sm:px-6 py-6 pb-24 md:pb-6">
+          {/* Welcome header */}
           <div className="clay p-4 mb-6">
             <div className="flex items-center gap-3">
               <Avatar className="w-10 h-10 flex-shrink-0">
@@ -67,9 +79,11 @@ export default function DashboardPage() {
             </div>
           </div>
 
+          {/* Stats */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
             {stats.map((stat, i) => (
-              <div key={i} className="clay p-4 sm:p-5" title={stat.desc}>
+              <div key={i} className="clay p-4 sm:p-5 cursor-pointer" title={stat.desc}
+                onClick={() => i === 1 ? setActiveTab('payments') : undefined}>
                 <div className="flex items-center justify-between mb-2">
                   <div className="w-9 h-9 bg-accent/10 rounded-xl flex items-center justify-center">
                     <stat.icon size={18} className="text-accent" />
@@ -82,55 +96,115 @@ export default function DashboardPage() {
             ))}
           </div>
 
-          <div className="clay p-1 flex gap-1 mb-5 w-full sm:w-fit overflow-x-auto">
+          {/* Tabs */}
+          <div className="clay p-1 flex gap-1 mb-5 w-full overflow-x-auto">
             {tabs.map(tab => (
               <button key={tab.id} onClick={() => setActiveTab(tab.id as any)}
-                className={`flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all duration-200 ${activeTab === tab.id ? 'bg-accent text-white shadow-md' : 'text-muted-foreground hover:text-foreground hover:bg-muted'}`}>
+                className={`relative flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all duration-200 ${activeTab === tab.id ? 'bg-accent text-white shadow-md' : 'text-muted-foreground hover:text-foreground hover:bg-muted'}`}>
                 <tab.icon size={15} />{tab.label}
+                {(tab as any).badge > 0 && (
+                  <span className={`text-xs px-1.5 py-0.5 rounded-full font-bold ${activeTab === tab.id ? 'bg-white text-accent' : 'bg-yellow-500 text-white'}`}>
+                    {(tab as any).badge}
+                  </span>
+                )}
               </button>
             ))}
           </div>
 
-          {loading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {Array.from({ length: 6 }).map((_, i) => <div key={i} className="clay h-40 animate-pulse rounded-2xl" />)}
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {displayedProjects.length > 0 ? (
-                displayedProjects.map((project, i) => (
-                  <div key={project.id} className="animate-in fade-in slide-in-from-bottom duration-500" style={{ animationDelay: `${i * 50}ms` }}>
-                    <ProjectCard title={project.title} description={project.description} difficulty={project.difficulty} price={project.price} onClick={() => router.push(`/projects/${project.id}`)} />
-                  </div>
-                ))
-              ) : (
-                <div className="col-span-full clay p-10 text-center">
-                  <div className="w-14 h-14 bg-accent/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                    <BookOpen size={28} className="text-accent" />
-                  </div>
-                  <p className="font-semibold mb-1">
-                    {activeTab === 'enrolled' ? 'No purchased materials yet' : activeTab === 'wishlist' ? 'Nothing saved yet' : 'No topics available'}
-                  </p>
-                  <p className="text-muted-foreground text-sm mb-5">
-                    {activeTab === 'enrolled' ? 'Browse research materials and make your first purchase.' : activeTab === 'wishlist' ? 'Save topics you are interested in for later.' : 'Check back soon for new topics.'}
-                  </p>
-                  <Link href="/departments"><Button><BookOpen size={16} className="mr-2" />Browse Research Materials</Button></Link>
+          {/* Payments tab */}
+          {activeTab === 'payments' && (
+            <div className="space-y-3">
+              {loading ? (
+                Array.from({ length: 3 }).map((_, i) => <div key={i} className="clay h-20 animate-pulse rounded-2xl" />)
+              ) : purchases.length === 0 ? (
+                <div className="clay p-10 text-center">
+                  <CreditCard size={32} className="text-accent mx-auto mb-3" />
+                  <p className="font-semibold mb-1">No payments yet</p>
+                  <p className="text-muted-foreground text-sm mb-5">Browse research materials and make your first purchase.</p>
+                  <Link href="/departments"><Button><BookOpen size={16} className="mr-2" />Browse Materials</Button></Link>
                 </div>
-              )}
+              ) : purchases.map(p => {
+                const Icon = statusIcon[p.status];
+                return (
+                  <div key={p.id} className="clay p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0 flex-1">
+                        <p className="font-semibold text-sm truncate">{(p as any).projects?.title ?? 'Research Material'}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">Ref: {p.payment_reference ?? '—'}</p>
+                        <p className="text-xs text-muted-foreground">{new Date(p.created_at).toLocaleString()}</p>
+                        {p.status === 'pending' && (
+                          <p className="text-xs text-yellow-600 mt-1 font-medium">⏳ Awaiting admin payment confirmation</p>
+                        )}
+                        {p.status === 'confirmed' && (
+                          <p className="text-xs text-green-600 mt-1 font-medium">✓ Payment confirmed — contact us on WhatsApp to receive your file</p>
+                        )}
+                        {p.status === 'failed' && p.rejection_reason && (
+                          <p className="text-xs text-red-600 mt-1">Rejected: {p.rejection_reason}</p>
+                        )}
+                      </div>
+                      <div className="flex flex-col items-end gap-2 flex-shrink-0">
+                        <span className="font-bold text-accent text-sm">₦{p.amount.toLocaleString()}</span>
+                        <span className={`flex items-center gap-1 text-xs px-2 py-1 rounded-full font-medium ${statusColor[p.status]}`}>
+                          <Icon size={11} />{p.status}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
+          )}
+
+          {/* Projects tabs */}
+          {activeTab !== 'payments' && (
+            loading ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {Array.from({ length: 6 }).map((_, i) => <div key={i} className="clay h-40 animate-pulse rounded-2xl" />)}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {displayedProjects.length > 0 ? (
+                  displayedProjects.map((project, i) => (
+                    <div key={project.id} className="animate-in fade-in slide-in-from-bottom duration-500" style={{ animationDelay: `${i * 50}ms` }}>
+                      <ProjectCard title={project.title} description={project.description} difficulty={project.difficulty} price={project.price} onClick={() => router.push(`/projects/${project.id}`)} />
+                    </div>
+                  ))
+                ) : (
+                  <div className="col-span-full clay p-10 text-center">
+                    <div className="w-14 h-14 bg-accent/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                      <BookOpen size={28} className="text-accent" />
+                    </div>
+                    <p className="font-semibold mb-1">
+                      {activeTab === 'enrolled' ? 'No purchased materials yet' : activeTab === 'wishlist' ? 'Nothing saved yet' : 'No topics available'}
+                    </p>
+                    <p className="text-muted-foreground text-sm mb-5">
+                      {activeTab === 'enrolled' ? 'Browse research materials and make your first purchase.' : activeTab === 'wishlist' ? 'Save topics you are interested in for later.' : 'Check back soon for new topics.'}
+                    </p>
+                    <Link href="/departments"><Button><BookOpen size={16} className="mr-2" />Browse Research Materials</Button></Link>
+                  </div>
+                )}
+              </div>
+            )
           )}
         </main>
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 md:hidden bg-card border-t border-border px-2 py-2 flex justify-around z-30">
+      {/* Mobile bottom nav */}
+      <div className="fixed bottom-0 left-0 right-0 md:hidden bg-card border-t border-border px-1 py-2 flex justify-around z-30">
         {tabs.map(item => (
           <button key={item.id} onClick={() => setActiveTab(item.id as any)}
-            className={`flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-all text-xs ${activeTab === item.id ? 'text-accent' : 'text-muted-foreground'}`}>
-            <item.icon size={20} /><span>{item.label}</span>
+            className={`relative flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-xl transition-all text-xs ${activeTab === item.id ? 'text-accent' : 'text-muted-foreground'}`}>
+            <item.icon size={20} />
+            <span>{item.label}</span>
+            {(item as any).badge > 0 && (
+              <span className="absolute -top-0.5 right-0.5 w-4 h-4 bg-yellow-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center">
+                {(item as any).badge}
+              </span>
+            )}
           </button>
         ))}
         <Link href="/profile">
-          <button className="flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl text-muted-foreground text-xs">
+          <button className="flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-xl text-muted-foreground text-xs">
             <UserCircle size={20} /><span>Profile</span>
           </button>
         </Link>

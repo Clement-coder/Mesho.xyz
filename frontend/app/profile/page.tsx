@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { LogoutModal } from '@/components/logout-modal';
-import { User, Mail, Calendar, Save, Camera, FolderOpen, BarChart3, Award, Phone } from 'lucide-react';
+import { User, Mail, Calendar, Save, Camera, FolderOpen, BarChart3, Award, Phone, ChevronLeft } from 'lucide-react';
 import { createClient } from '@/utils/supabase/client';
 import { toast } from 'sonner';
 
@@ -87,7 +87,9 @@ export default function ProfilePage() {
               <h1 className="text-2xl sm:text-3xl font-bold mb-1">Profile Settings</h1>
               <p className="text-muted-foreground text-sm">Manage your account settings and preferences.</p>
             </div>
-            <a href="/dashboard" className="flex items-center gap-2 text-sm text-accent hover:text-accent/80 transition-colors font-medium">← Dashboard</a>
+            <a href="/dashboard" className="flex items-center gap-1.5 text-sm text-accent hover:text-accent/80 transition-colors font-medium">
+              <ChevronLeft size={16} />Dashboard
+            </a>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
