@@ -116,7 +116,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const loginWithGoogle = async () => {
-    await signInWithPopup(auth, googleProvider);
+    const { user: fbUser } = await signInWithPopup(auth, googleProvider);
+    // Merge: if a profile with same email already exists under a different UID, adopt it
+    const supabase = createClient();
+    const { data: existing } = await supabase.from('profiles').select('id').eq('email', fbUser.email ?? '').neq('id', fbUser.uid).single();
+    if (existing) {
+      // Update the old profile's id to the new Firebase UID
+      await supabase.from('profiles').update({ id: fbUser.uid, profile_picture_url: fbUser.photoURL ?? null }).eq('id', existing.id);
+    }
     await waitForUser();
   };
 
