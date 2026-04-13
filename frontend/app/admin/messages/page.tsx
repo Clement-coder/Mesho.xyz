@@ -9,7 +9,7 @@ import { toast } from 'sonner';
 import { Mail, MessageCircle, Send, X } from 'lucide-react';
 import type { ContactMessage, ChatMessage } from '@/lib/types';
 
-function ChatThread({ userId, userName, onClose }: { userId: string; userName: string; onClose: () => void }) {
+function ChatThread({ userId, userName, avatar, onClose }: { userId: string; userName: string; avatar: string | null; onClose: () => void }) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [text, setText] = useState('');
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -59,9 +59,9 @@ function ChatThread({ userId, userName, onClose }: { userId: string; userName: s
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
       <div className="bg-background border border-border rounded-2xl w-full max-w-md shadow-2xl flex flex-col" style={{ height: '500px' }}>
         <div className="flex items-center gap-3 px-4 py-3 border-b border-border flex-shrink-0">
-          <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center font-bold text-accent text-sm flex-shrink-0">
-            {userName.charAt(0).toUpperCase()}
-          </div>
+          {avatar
+            ? <img src={avatar} alt={userName} className="w-9 h-9 rounded-full object-cover flex-shrink-0 ring-2 ring-accent/20" />
+            : <div className="w-9 h-9 rounded-full bg-accent/10 flex items-center justify-center font-bold text-accent text-sm flex-shrink-0">{userName.charAt(0).toUpperCase()}</div>}
           <div className="flex-1">
             <p className="font-semibold text-sm">{userName}</p>
             <p className="text-xs text-muted-foreground">User</p>
@@ -72,7 +72,9 @@ function ChatThread({ userId, userName, onClose }: { userId: string; userName: s
           {messages.map(m => (
             <div key={m.id} className={`flex items-end gap-2 ${m.sender === 'admin' ? 'flex-row-reverse' : 'flex-row'}`}>
               {m.sender === 'user'
-                ? <div className="w-6 h-6 rounded-full bg-accent/10 flex items-center justify-center text-accent font-bold text-[10px] flex-shrink-0">{userName.charAt(0).toUpperCase()}</div>
+                ? avatar
+                  ? <img src={avatar} alt={userName} className="w-6 h-6 rounded-full object-cover flex-shrink-0" />
+                  : <div className="w-6 h-6 rounded-full bg-accent/10 flex items-center justify-center text-accent font-bold text-[10px] flex-shrink-0">{userName.charAt(0).toUpperCase()}</div>
                 : <div className="w-6 h-6 rounded-full bg-accent flex items-center justify-center flex-shrink-0"><MessageCircle size={12} className="text-white" /></div>}
               <div className={`max-w-[75%] px-3 py-2 rounded-2xl text-sm ${m.sender === 'admin' ? 'bg-accent text-white rounded-br-sm' : 'bg-background border border-border rounded-bl-sm shadow-sm'}`}>
                 <p className="break-words">{m.message}</p>
@@ -102,10 +104,10 @@ export default function AdminMessagesPage() {
   const router = useRouter();
   const [tab, setTab] = useState<'contact' | 'chat'>('chat');
   const [messages, setMessages] = useState<ContactMessage[]>([]);
-  const [chatUsers, setChatUsers] = useState<{ user_id: string; user_name: string; user_email: string; unread: number; last: string; lastMsg: string }[]>([]);
+  const [chatUsers, setChatUsers] = useState<{ user_id: string; user_name: string; user_email: string; avatar: string | null; unread: number; last: string; lastMsg: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState<string | null>(null);
-  const [chatThread, setChatThread] = useState<{ userId: string; userName: string } | null>(null);
+  const [chatThread, setChatThread] = useState<{ userId: string; userName: string; avatar: string | null } | null>(null);
 
   useEffect(() => {
     if (!isLoading && (!user || user.role !== 'admin')) router.replace('/dashboard');
@@ -117,12 +119,15 @@ export default function AdminMessagesPage() {
     Promise.all([
       supabase.from('contact_messages').select('*').order('created_at', { ascending: false }),
       supabase.from('chat_messages').select('*').order('created_at', { ascending: false }),
-    ]).then(([cm, chat]) => {
+      supabase.from('profiles').select('id, profile_picture_url'),
+    ]).then(([cm, chat, profiles]) => {
       setMessages(cm.data ?? []);
-      // Group chat messages by user
+      const profileMap: Record<string, string | null> = {};
+      for (const p of (profiles.data ?? [])) profileMap[p.id] = p.profile_picture_url;
+
       const byUser: Record<string, any> = {};
       for (const m of (chat.data ?? [])) {
-        if (!byUser[m.user_id]) byUser[m.user_id] = { user_id: m.user_id, user_name: m.user_name, user_email: m.user_email, unread: 0, last: m.created_at, lastMsg: m.message };
+        if (!byUser[m.user_id]) byUser[m.user_id] = { user_id: m.user_id, user_name: m.user_name, user_email: m.user_email, avatar: profileMap[m.user_id] ?? null, unread: 0, last: m.created_at, lastMsg: m.message };
         if (m.sender === 'user' && !m.read_by_admin) byUser[m.user_id].unread++;
         if (m.created_at > byUser[m.user_id].last) { byUser[m.user_id].last = m.created_at; byUser[m.user_id].lastMsg = m.message; }
       }
@@ -150,7 +155,7 @@ export default function AdminMessagesPage() {
 
   return (
     <AdminLayout title="Messages" subtitle="Contact forms and live chat">
-      {chatThread && <ChatThread userId={chatThread.userId} userName={chatThread.userName} onClose={() => setChatThread(null)} />}
+      {chatThread && <ChatThread userId={chatThread.userId} userName={chatThread.userName} avatar={chatThread.avatar} onClose={() => setChatThread(null)} />}
 
       {/* Tab switcher */}
       <div className="clay p-1 flex gap-1 mb-5 w-fit">
@@ -171,7 +176,10 @@ export default function AdminMessagesPage() {
         <div className="space-y-2">
           {chatUsers.length === 0 && <div className="clay p-8 text-center text-muted-foreground text-sm"><MessageCircle size={28} className="mx-auto mb-2 opacity-30" />No chat messages yet</div>}
           {chatUsers.map(u => (
-            <div key={u.user_id} className={`clay p-4 flex items-center justify-between gap-3 ${u.unread > 0 ? 'border-l-4 border-l-accent' : ''}`}>
+            <div key={u.user_id} className={`clay p-4 flex items-center gap-3 ${u.unread > 0 ? 'border-l-4 border-l-accent' : ''}`}>
+              {u.avatar
+                ? <img src={u.avatar} alt={u.user_name} className="w-10 h-10 rounded-full object-cover flex-shrink-0 ring-2 ring-border" />
+                : <div className="w-10 h-10 rounded-full bg-accent/10 flex items-center justify-center font-bold text-accent flex-shrink-0">{u.user_name.charAt(0).toUpperCase()}</div>}
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2 mb-0.5">
                   <p className="font-semibold text-sm">{u.user_name}</p>
@@ -180,7 +188,7 @@ export default function AdminMessagesPage() {
                 <p className="text-xs text-muted-foreground truncate">{u.lastMsg}</p>
                 <p className="text-xs text-muted-foreground/60 mt-0.5">{new Date(u.last).toLocaleString()}</p>
               </div>
-              <button onClick={() => setChatThread({ userId: u.user_id, userName: u.user_name })}
+              <button onClick={() => setChatThread({ userId: u.user_id, userName: u.user_name, avatar: u.avatar })}
                 className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-[#25D366] hover:bg-[#20BA5A] text-white transition-colors flex-shrink-0">
                 <MessageCircle size={13} /> Reply
               </button>
