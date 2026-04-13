@@ -44,6 +44,13 @@ export default function ProjectPreviewPage() {
 
   const openPayment = () => {
     if (!user) { router.push('/login'); return; }
+    if (!user.whatsapp && !user.phone) {
+      toast.error('Please add your WhatsApp number in your profile before purchasing.', {
+        action: { label: 'Go to Profile', onClick: () => router.push('/profile') },
+        duration: 6000,
+      });
+      return;
+    }
     const ref = `MESHO-${Date.now()}-${Math.random().toString(36).slice(2, 7).toUpperCase()}`;
     setPayRef(ref);
     setShowTransferModal(true);

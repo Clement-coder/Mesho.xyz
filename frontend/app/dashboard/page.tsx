@@ -10,7 +10,7 @@ import { useAuth } from '@/lib/auth-context';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { LogoutModal } from '@/components/logout-modal';
 import { DashboardSidebar } from '../components/dashboard-sidebar';
-import { BookOpen, BarChart3, Award, FolderOpen, Search, Heart, UserCircle, CreditCard, Clock, CheckCircle, XCircle, ChevronLeft, MessageCircle, ShieldCheck } from 'lucide-react';
+import { BookOpen, BarChart3, Award, FolderOpen, Search, Heart, UserCircle, CreditCard, Clock, CheckCircle, XCircle, ChevronLeft, MessageCircle, ShieldCheck, Eye, X } from 'lucide-react';
 
 const WA_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? '2348012345678';
 import { createClient } from '@/utils/supabase/client';
@@ -25,6 +25,7 @@ export default function DashboardPage() {
   const [allProjects, setAllProjects] = useState<Project[]>([]);
   const [purchases, setPurchases] = useState<(Purchase & { projects?: Project })[]>([]);
   const [loading, setLoading] = useState(true);
+  const [viewPayment, setViewPayment] = useState<(Purchase & { projects?: Project }) | null>(null);
   const { user, logout, refreshUser } = useAuth();
   const router = useRouter();
 
@@ -156,8 +157,14 @@ export default function DashboardPage() {
                         </span>
                       </div>
                     </div>
-                    <div className="bg-muted/30 rounded-xl px-3 py-2 text-xs text-muted-foreground font-mono mb-3">
-                      Ref: {p.payment_reference ?? '—'}
+                    <div className="flex items-center justify-between gap-2 mb-3">
+                      <div className="bg-muted/30 rounded-xl px-3 py-2 text-xs text-muted-foreground font-mono flex-1 truncate">
+                        Ref: {p.payment_reference ?? '—'}
+                      </div>
+                      <button onClick={() => setViewPayment(p)}
+                        className="flex items-center gap-1 text-xs px-3 py-2 rounded-xl border border-border hover:bg-muted transition-colors flex-shrink-0">
+                        <Eye size={12} /> View
+                      </button>
                     </div>
                     {p.status === 'pending' && (
                       <div className="flex items-start gap-2 bg-yellow-50 border border-yellow-200 rounded-xl px-3 py-2 text-xs text-yellow-700">
@@ -254,6 +261,64 @@ export default function DashboardPage() {
       </div>
 
       <LogoutModal isOpen={showLogoutModal} onClose={() => setShowLogoutModal(false)} onConfirm={handleLogout} />
+
+      {/* Payment detail modal */}
+      {viewPayment && (() => {
+        const p = viewPayment;
+        const Icon = statusIcon[p.status];
+        const borderColor = p.status === 'confirmed' ? 'border-green-400' : p.status === 'failed' ? 'border-red-400' : 'border-yellow-400';
+        return (
+          <>
+            <div className="fixed inset-0 bg-black/50 z-50" onClick={() => setViewPayment(null)} />
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+              <div className="bg-background border border-border rounded-2xl w-full max-w-md shadow-2xl animate-in zoom-in-95 duration-200">
+                <div className="flex items-center justify-between p-5 border-b border-border">
+                  <h2 className="font-bold text-base">Payment Details</h2>
+                  <button onClick={() => setViewPayment(null)} className="p-1.5 hover:bg-muted rounded-lg"><X size={16} /></button>
+                </div>
+                <div className="p-5 space-y-4">
+                  <div className={`border-l-4 ${borderColor} pl-3`}>
+                    <p className="font-semibold">{(p as any).projects?.title ?? 'Research Material'}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{new Date(p.created_at).toLocaleString()}</p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    {[
+                      { label: 'Amount', value: `₦${p.amount.toLocaleString()}` },
+                      { label: 'Status', value: <span className={`flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium w-fit ${statusColor[p.status]}`}><Icon size={10} />{p.status}</span> },
+                      { label: 'Reference', value: <span className="font-mono text-xs">{p.payment_reference ?? '—'}</span> },
+                      { label: 'Date', value: new Date(p.created_at).toLocaleDateString() },
+                    ].map((item, i) => (
+                      <div key={i} className="bg-muted/30 rounded-xl p-3">
+                        <p className="text-xs text-muted-foreground mb-0.5">{item.label}</p>
+                        <p className="font-medium">{item.value}</p>
+                      </div>
+                    ))}
+                  </div>
+                  {p.status === 'pending' && (
+                    <div className="flex items-start gap-2 bg-yellow-50 border border-yellow-200 rounded-xl px-3 py-2.5 text-xs text-yellow-700">
+                      <Clock size={13} className="flex-shrink-0 mt-0.5" />
+                      <span><strong>Awaiting verification</strong> — Admin will confirm your bank transfer and send your material shortly.</span>
+                    </div>
+                  )}
+                  {p.status === 'confirmed' && (
+                    <a href={`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(`Hello! My payment for "${(p as any).projects?.title ?? 'research material'}" was confirmed (Ref: ${p.payment_reference}). Please send my file.`)}`}
+                      target="_blank" rel="noopener noreferrer"
+                      className="flex items-center justify-center gap-2 w-full bg-[#25D366] hover:bg-[#20BA5A] text-white py-2.5 rounded-xl text-sm font-medium transition-colors">
+                      <MessageCircle size={15} /> Get My File on WhatsApp
+                    </a>
+                  )}
+                  {p.status === 'failed' && (
+                    <div className="flex items-start gap-2 bg-red-50 border border-red-200 rounded-xl px-3 py-2.5 text-xs text-red-700">
+                      <XCircle size={13} className="flex-shrink-0 mt-0.5" />
+                      <span><strong>Rejected:</strong> {p.rejection_reason ?? 'Payment could not be verified. Please contact support.'}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </>
+        );
+      })()}
     </ProtectedRoute>
   );
 }

@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { LogoutModal } from '@/components/logout-modal';
-import { User, Mail, Calendar, Save, Camera, FolderOpen, BarChart3, Award, Phone, ChevronLeft } from 'lucide-react';
+import { User, Mail, Calendar, Save, Camera, FolderOpen, BarChart3, Award, Phone, ChevronLeft, AlertCircle } from 'lucide-react';
 import { createClient } from '@/utils/supabase/client';
 import { toast } from 'sonner';
 
@@ -16,6 +16,7 @@ export default function ProfilePage() {
   const { user, logout, refreshUser, changePassword } = useAuth();
   const [name, setName] = useState('');
   const [whatsapp, setWhatsapp] = useState('');
+  const [whatsappError, setWhatsappError] = useState('');
   const [profilePicture, setProfilePicture] = useState('');
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [currentPassword, setCurrentPassword] = useState('');
@@ -50,6 +51,8 @@ export default function ProfilePage() {
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) { toast.error('Name is required'); return; }
+    if (!whatsapp.trim()) { setWhatsappError('WhatsApp number is required to receive your materials'); return; }
+    if (whatsapp.length < 7) { setWhatsappError('Enter a valid WhatsApp number with country code'); return; }
     if (!user) return;
     setSaving(true);
     const supabase = createClient();
@@ -139,26 +142,46 @@ export default function ProfilePage() {
                   <User size={18} className="text-accent" />
                   <h2 className="font-semibold text-base">Profile Information</h2>
                 </div>
+                {!user?.whatsapp && !user?.phone && (
+                  <div className="flex items-start gap-2 bg-yellow-50 border border-yellow-200 rounded-xl px-3 py-2.5 text-xs text-yellow-700 mb-4">
+                    <AlertCircle size={14} className="flex-shrink-0 mt-0.5" />
+                    <span><strong>WhatsApp number required</strong> — You must add your WhatsApp number to purchase research materials.</span>
+                  </div>
+                )}
                 <form onSubmit={handleUpdateProfile} className="space-y-4">
                   <div>
-                    <label className="text-sm font-medium mb-1.5 block">Full Name</label>
-                    <Input value={name} onChange={e => setName(e.target.value)} placeholder="Your full name" />
+                    <label className="text-sm font-medium mb-1.5 block">Full Name <span className="text-destructive">*</span></label>
+                    <div className="relative">
+                      <User size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                      <input value={name} onChange={e => setName(e.target.value)} placeholder="Your full name"
+                        className="w-full pl-9 pr-4 h-10 rounded-xl border border-border bg-input text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
+                    </div>
                   </div>
                   <div>
                     <label className="text-sm font-medium mb-1.5 block">Email Address</label>
-                    <Input value={user?.email ?? ''} disabled className="opacity-60 cursor-not-allowed" />
+                    <div className="relative">
+                      <Mail size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                      <input value={user?.email ?? ''} disabled
+                        className="w-full pl-9 pr-4 h-10 rounded-xl border border-border bg-input text-sm opacity-60 cursor-not-allowed" />
+                    </div>
                     <p className="text-xs text-muted-foreground mt-1">Email cannot be changed.</p>
                   </div>
                   <div>
-                    <label className="text-sm font-medium mb-1.5 block flex items-center gap-1.5">
-                      <Phone size={13} className="text-muted-foreground" /> WhatsApp Number
+                    <label className="text-sm font-medium mb-1.5 block">
+                      WhatsApp Number <span className="text-destructive">*</span>
                     </label>
-                    <Input
-                      value={whatsapp}
-                      onChange={e => setWhatsapp(e.target.value.replace(/\D/g, ''))}
-                      placeholder="e.g. 2348012345678 (with country code)"
-                    />
-                    <p className="text-xs text-muted-foreground mt-1">Used by admin to send your purchased materials.</p>
+                    <div className="relative">
+                      <Phone size={15} className={`absolute left-3 top-1/2 -translate-y-1/2 ${whatsappError ? 'text-destructive' : 'text-muted-foreground'}`} />
+                      <input
+                        value={whatsapp}
+                        onChange={e => { setWhatsapp(e.target.value.replace(/\D/g, '')); setWhatsappError(''); }}
+                        placeholder="e.g. 2348012345678 (with country code)"
+                        className={`w-full pl-9 pr-4 h-10 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-accent bg-input ${whatsappError ? 'border-destructive focus:ring-destructive' : 'border-border'}`}
+                      />
+                    </div>
+                    {whatsappError
+                      ? <p className="text-xs text-destructive mt-1">{whatsappError}</p>
+                      : <p className="text-xs text-muted-foreground mt-1">Used by admin to send your purchased materials via WhatsApp.</p>}
                   </div>
                   <Button type="submit" disabled={saving}>
                     <Save size={15} className="mr-2" />{saving ? 'Saving...' : 'Save Changes'}
