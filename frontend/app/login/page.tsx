@@ -55,8 +55,13 @@ export default function LoginPage() {
 
   const handleGoogleSignIn = async () => {
     setGoogleLoading(true);
-    try { await loginWithGoogle(); }
-    catch { toast.error('Google sign-in failed. Please try again.'); setGoogleLoading(false); }
+    try {
+      await loginWithGoogle();
+      router.replace('/dashboard');
+    } catch {
+      toast.error('Google sign-in failed. Please try again.');
+      setGoogleLoading(false);
+    }
   };
 
   const goToSignup = (e: React.MouseEvent) => {

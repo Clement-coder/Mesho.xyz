@@ -99,8 +99,13 @@ export default function SignUpPage() {
   const handleGoogleSignUp = async () => {
     setGoogleLoading(true);
     setError('');
-    try { await loginWithGoogle(); }
-    catch { setError('Google sign-in failed. Please try again.'); setGoogleLoading(false); }
+    try {
+      await loginWithGoogle();
+      router.replace('/dashboard');
+    } catch {
+      setError('Google sign-in failed. Please try again.');
+      setGoogleLoading(false);
+    }
   };
 
   const goToLogin = (e: React.MouseEvent) => {
