@@ -77,7 +77,7 @@ export default function ProfilePage() {
     const supabase = createClient();
     const fullWhatsapp = `${countryCode}${whatsapp.trim()}`;
     const { error } = await supabase.from('profiles').update({ name: name.trim(), whatsapp: fullWhatsapp }).eq('id', user.id);
-    if (error) { toast.error('Update failed'); setSaving(false); return; }
+    if (error) { toast.error(`Update failed: ${error.message}`); setSaving(false); return; }
     await refreshUser();
     toast.success('Profile updated successfully!');
     setSaving(false);
