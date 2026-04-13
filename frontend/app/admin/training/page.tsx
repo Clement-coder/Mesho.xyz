@@ -4,7 +4,6 @@ import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/utils/supabase/client';
-import { AdminLayout } from '../_components/admin-layout';
 import { toast } from 'sonner';
 import type { TrainingRegistration } from '@/lib/types';
 
@@ -48,7 +47,7 @@ export default function AdminTrainingPage() {
   if (!user || user.role !== 'admin') return null;
 
   return (
-    <AdminLayout title="Training Registrations" subtitle={`${registrations.length} total registrations`}>
+    <div>
       <div className="clay overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
@@ -94,6 +93,6 @@ export default function AdminTrainingPage() {
           {registrations.length === 0 && <p className="text-center text-muted-foreground py-8 text-sm">No registrations yet</p>}
         </div>
       </div>
-    </AdminLayout>
+    </div>
   );
 }

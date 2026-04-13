@@ -4,7 +4,6 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/utils/supabase/client';
-import { AdminLayout } from '../_components/admin-layout';
 import { toast } from 'sonner';
 import { Mail, MessageCircle, Send, X } from 'lucide-react';
 import type { ContactMessage, ChatMessage } from '@/lib/types';
@@ -154,7 +153,7 @@ export default function AdminMessagesPage() {
   const unreadChat = chatUsers.reduce((a, u) => a + u.unread, 0);
 
   return (
-    <AdminLayout title="Messages" subtitle="Contact forms and live chat">
+    <div>
       {chatThread && <ChatThread userId={chatThread.userId} userName={chatThread.userName} avatar={chatThread.avatar} onClose={() => setChatThread(null)} />}
 
       {/* Tab switcher */}
@@ -231,6 +230,6 @@ export default function AdminMessagesPage() {
           ))}
         </div>
       )}
-    </AdminLayout>
+    </div>
   );
 }

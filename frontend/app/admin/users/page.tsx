@@ -5,7 +5,6 @@ import { useAuth } from '@/lib/auth-context';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/utils/supabase/client';
 import { Search, ShieldCheck, User } from 'lucide-react';
-import { AdminLayout } from '../_components/admin-layout';
 import { toast } from 'sonner';
 import type { Profile } from '@/lib/types';
 
@@ -51,7 +50,7 @@ export default function AdminUsersPage() {
   if (!user || user.role !== 'admin') return null;
 
   return (
-    <AdminLayout title="Users" subtitle={`${users.length} total users`}>
+    <div>
       <div className="relative mb-4 max-w-sm">
         <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
         <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by name or email..."
@@ -109,6 +108,6 @@ export default function AdminUsersPage() {
           {filtered.length === 0 && <p className="text-center text-muted-foreground py-8 text-sm">No users found</p>}
         </div>
       </div>
-    </AdminLayout>
+    </div>
   );
 }

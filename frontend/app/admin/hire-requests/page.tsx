@@ -4,7 +4,6 @@ import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/utils/supabase/client';
-import { AdminLayout } from '../_components/admin-layout';
 import { toast } from 'sonner';
 import type { HireRequest } from '@/lib/types';
 
@@ -50,7 +49,7 @@ export default function AdminHireRequestsPage() {
   if (!user || user.role !== 'admin') return null;
 
   return (
-    <AdminLayout title="Hire Requests" subtitle={`${requests.length} total requests`}>
+    <div>
       <div className="space-y-3">
         {requests.length === 0 && <div className="clay p-8 text-center text-muted-foreground text-sm">No hire requests yet</div>}
         {requests.map(r => (
@@ -92,6 +91,6 @@ export default function AdminHireRequestsPage() {
           </div>
         ))}
       </div>
-    </AdminLayout>
+    </div>
   );
 }

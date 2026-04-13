@@ -4,7 +4,6 @@ import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/utils/supabase/client';
-import { AdminLayout } from '../_components/admin-layout';
 import { toast } from 'sonner';
 import { Plus, Pencil, Trash2, X, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -87,7 +86,7 @@ export default function AdminProjectsPage() {
   if (!user || user.role !== 'admin') return null;
 
   return (
-    <AdminLayout title="Projects" subtitle={`${projects.length} total projects`}>
+    <div>
       <div className="flex justify-end mb-4">
         <Button onClick={() => setShowAdd(!showAdd)} size="sm">
           <Plus size={15} className="mr-1.5" />{showAdd ? 'Cancel' : 'Add Project'}
@@ -210,6 +209,6 @@ export default function AdminProjectsPage() {
           {projects.length === 0 && <p className="text-center text-muted-foreground py-8 text-sm">No projects found</p>}
         </div>
       </div>
-    </AdminLayout>
+    </div>
   );
 }
