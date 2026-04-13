@@ -11,11 +11,22 @@ import { LogoutModal } from '@/components/logout-modal';
 import { User, Mail, Calendar, Save, Camera, FolderOpen, BarChart3, Award, Phone, ChevronLeft, AlertCircle } from 'lucide-react';
 import { createClient } from '@/utils/supabase/client';
 import { toast } from 'sonner';
+import { CustomSelect } from '@/app/components/custom-select';
+
+const countryCodes = [
+  { code: '+234', flag: '🇳🇬', name: 'Nigeria' },
+  { code: '+1',   flag: '🇺🇸', name: 'USA' },
+  { code: '+44',  flag: '🇬🇧', name: 'UK' },
+  { code: '+233', flag: '🇬🇭', name: 'Ghana' },
+  { code: '+254', flag: '🇰🇪', name: 'Kenya' },
+  { code: '+27',  flag: '🇿🇦', name: 'South Africa' },
+];
 
 export default function ProfilePage() {
   const { user, logout, refreshUser, changePassword } = useAuth();
   const [name, setName] = useState('');
   const [whatsapp, setWhatsapp] = useState('');
+  const [countryCode, setCountryCode] = useState('+234');
   const [whatsappError, setWhatsappError] = useState('');
   const [profilePicture, setProfilePicture] = useState('');
   const [showLogoutModal, setShowLogoutModal] = useState(false);
@@ -28,8 +39,16 @@ export default function ProfilePage() {
   useEffect(() => {
     if (user) {
       setName(user.name);
-      setWhatsapp(user.whatsapp ?? '');
       setProfilePicture(user.profile_picture_url ?? '');
+      const stored = user.whatsapp ?? '';
+      // Try to match a known country code prefix
+      const matched = countryCodes.find(c => stored.startsWith(c.code));
+      if (matched) {
+        setCountryCode(matched.code);
+        setWhatsapp(stored.slice(matched.code.length));
+      } else {
+        setWhatsapp(stored.replace(/\D/g, ''));
+      }
     }
   }, [user]);
 
@@ -52,11 +71,12 @@ export default function ProfilePage() {
     e.preventDefault();
     if (!name.trim()) { toast.error('Name is required'); return; }
     if (!whatsapp.trim()) { setWhatsappError('WhatsApp number is required to receive your materials'); return; }
-    if (whatsapp.length < 7) { setWhatsappError('Enter a valid WhatsApp number with country code'); return; }
+    if (whatsapp.length < 7) { setWhatsappError('Enter a valid WhatsApp number'); return; }
     if (!user) return;
     setSaving(true);
     const supabase = createClient();
-    const { error } = await supabase.from('profiles').update({ name: name.trim(), whatsapp: whatsapp.trim() || null }).eq('id', user.id);
+    const fullWhatsapp = `${countryCode}${whatsapp.trim()}`;
+    const { error } = await supabase.from('profiles').update({ name: name.trim(), whatsapp: fullWhatsapp }).eq('id', user.id);
     if (error) { toast.error('Update failed'); setSaving(false); return; }
     await refreshUser();
     toast.success('Profile updated successfully!');
@@ -170,14 +190,22 @@ export default function ProfilePage() {
                     <label className="text-sm font-medium mb-1.5 block">
                       WhatsApp Number <span className="text-destructive">*</span>
                     </label>
-                    <div className="relative">
-                      <Phone size={15} className={`absolute left-3 top-1/2 -translate-y-1/2 ${whatsappError ? 'text-destructive' : 'text-muted-foreground'}`} />
-                      <input
-                        value={whatsapp}
-                        onChange={e => { setWhatsapp(e.target.value.replace(/\D/g, '')); setWhatsappError(''); }}
-                        placeholder="e.g. 2348012345678 (with country code)"
-                        className={`w-full pl-9 pr-4 h-10 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-accent bg-input ${whatsappError ? 'border-destructive focus:ring-destructive' : 'border-border'}`}
+                    <div className="flex gap-2">
+                      <CustomSelect
+                        options={countryCodes.map(c => ({ value: c.code, label: c.code, prefix: c.flag }))}
+                        value={countryCode}
+                        onChange={v => { setCountryCode(v); setWhatsappError(''); }}
+                        className="w-28 flex-shrink-0"
                       />
+                      <div className="relative flex-1">
+                        <Phone size={15} className={`absolute left-3 top-1/2 -translate-y-1/2 ${whatsappError ? 'text-destructive' : 'text-muted-foreground'}`} />
+                        <input
+                          value={whatsapp}
+                          onChange={e => { setWhatsapp(e.target.value.replace(/\D/g, '')); setWhatsappError(''); }}
+                          placeholder="8012345678"
+                          className={`w-full pl-9 pr-4 h-10 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-accent bg-input ${whatsappError ? 'border-destructive' : 'border-border'}`}
+                        />
+                      </div>
                     </div>
                     {whatsappError
                       ? <p className="text-xs text-destructive mt-1">{whatsappError}</p>
