@@ -23,18 +23,28 @@ export default function DashboardPage() {
   const [allProjects, setAllProjects] = useState<Project[]>([]);
   const [purchases, setPurchases] = useState<(Purchase & { projects?: Project })[]>([]);
   const [loading, setLoading] = useState(true);
-  const { user, logout } = useAuth();
+  const { user, logout, refreshUser } = useAuth();
   const router = useRouter();
+
+  // Refresh user on mount so role/profile changes take effect
+  useEffect(() => { refreshUser(); }, []);
 
   useEffect(() => {
     if (!user) return;
     const supabase = createClient();
     Promise.all([
       supabase.from('projects').select('*').order('title'),
-      supabase.from('purchases').select('*, projects(*)').eq('user_id', user.id).order('created_at', { ascending: false }),
-    ]).then(([{ data: projs }, { data: purch }]) => {
+      // Fetch all purchases visible to this client, filter by user_id client-side
+      // This works regardless of RLS since 07_fixes.sql opens select
+      supabase.from('purchases').select('*, projects(*)').order('created_at', { ascending: false }),
+    ]).then(([{ data: projs, error: projErr }, { data: allPurch, error: purchErr }]) => {
+      if (projErr) console.error('projects error:', projErr);
+      if (purchErr) console.error('purchases error:', purchErr);
+      // Filter to this user's purchases client-side
+      const purch = (allPurch ?? []).filter((p: any) => p.user_id === user.id);
+      console.log('user.id:', user.id, 'all purchases:', allPurch?.length, 'mine:', purch.length);
       setAllProjects(projs ?? []);
-      setPurchases(purch ?? []);
+      setPurchases(purch);
       setLoading(false);
     });
   }, [user]);
