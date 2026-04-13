@@ -95,3 +95,4 @@ drop trigger if exists on_admin_chat_message on public.chat_messages;
 create trigger on_admin_chat_message
   after insert on public.chat_messages
   for each row execute procedure public.notify_on_admin_chat();
+  
