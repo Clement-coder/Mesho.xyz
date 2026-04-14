@@ -29,18 +29,14 @@ export const ProjectCard = ({ title, description, difficulty, price, onClick, hr
         </div>
         <div className="flex items-center justify-between gap-2 mt-3">
           <Badge variant={difficultyColor[difficulty as keyof typeof difficultyColor] ?? 'info'}>{difficulty}</Badge>
-          <span className="text-sm font-bold text-accent">₦{price.toLocaleString()}</span>
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-bold text-accent">₦{price.toLocaleString()}</span>
+            <div onClick={e => e.stopPropagation()} className="md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+              <ShareButton title={title} url={href ?? (typeof window !== 'undefined' ? window.location.href : '')} description={description} compact />
+            </div>
+          </div>
         </div>
       </button>
-      {/* Share button — always visible on mobile, hover on desktop */}
-      <div className="absolute bottom-3 right-3 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
-        <ShareButton
-          title={title}
-          url={href ?? (typeof window !== 'undefined' ? window.location.href : '')}
-          description={description}
-          compact
-        />
-      </div>
     </div>
   );
 };
