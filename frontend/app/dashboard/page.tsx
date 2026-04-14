@@ -10,9 +10,10 @@ import { useAuth } from '@/lib/auth-context';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { LogoutModal } from '@/components/logout-modal';
 import { DashboardSidebar } from '../components/dashboard-sidebar';
-import { BookOpen, BarChart3, Award, FolderOpen, Search, Heart, UserCircle, CreditCard, Clock, CheckCircle, XCircle, ChevronLeft, MessageCircle, ShieldCheck, Eye, X } from 'lucide-react';
+import { BookOpen, BarChart3, Award, FolderOpen, Search, Heart, UserCircle, CreditCard, Clock, CheckCircle, XCircle, ChevronLeft, MessageCircle, ShieldCheck, Eye, X, Copy } from 'lucide-react';
 import { PaymentReceipt } from '../components/payment-receipt';
 import { BottomSheet } from '@/components/bottom-sheet';
+import { toast } from 'sonner';
 
 const WA_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? '2348012345678';
 import { createClient } from '@/utils/supabase/client';
@@ -305,14 +306,22 @@ export default function DashboardPage() {
               </div>
               <div className="grid grid-cols-2 gap-3 text-sm">
                 {[
-                  { label: 'Amount', value: `₦${p.amount.toLocaleString()}` },
-                  { label: 'Status', value: <span className={`flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium w-fit ${(statusColor as any)[p.status] ?? statusColor.pending}`}><Icon size={10} />{p.status === 'awaiting_confirmation' ? 'initiated' : p.status}</span> },
-                  { label: 'Reference', value: <span className="font-mono text-xs break-all">{p.payment_reference ?? '—'}</span> },
-                  { label: 'Date', value: new Date(p.created_at).toLocaleDateString() },
+                  { label: 'Amount', value: `₦${p.amount.toLocaleString()}`, copy: null },
+                  { label: 'Status', value: <span className={`flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium w-fit ${(statusColor as any)[p.status] ?? statusColor.pending}`}><Icon size={10} />{p.status === 'awaiting_confirmation' ? 'initiated' : p.status}</span>, copy: null },
+                  { label: 'Reference', value: <span className="font-mono text-xs break-all">{p.payment_reference ?? '—'}</span>, copy: p.payment_reference },
+                  { label: 'Date', value: new Date(p.created_at).toLocaleDateString(), copy: null },
                 ].map((item, i) => (
-                  <div key={i} className="bg-muted/30 rounded-xl p-3">
-                    <p className="text-xs text-muted-foreground mb-0.5">{item.label}</p>
-                    <p className="font-medium">{item.value}</p>
+                  <div key={i} className="bg-muted/30 rounded-xl p-3 flex items-start justify-between gap-1">
+                    <div className="min-w-0">
+                      <p className="text-xs text-muted-foreground mb-0.5">{item.label}</p>
+                      <p className="font-medium">{item.value}</p>
+                    </div>
+                    {item.copy && (
+                      <button onClick={() => navigator.clipboard.writeText(item.copy!).then(() => toast.success(`${item.label} copied!`))}
+                        className="flex-shrink-0 p-1 hover:bg-muted rounded-lg text-muted-foreground hover:text-foreground mt-0.5">
+                        <Copy size={12} />
+                      </button>
+                    )}
                   </div>
                 ))}
               </div>
@@ -329,13 +338,21 @@ export default function DashboardPage() {
                   <div className="space-y-1.5">
                     <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Bank Transfer Details</p>
                     {[
-                      { label: 'Bank', value: process.env.NEXT_PUBLIC_BANK_NAME ?? 'First Bank of Nigeria' },
-                      { label: 'Account Number', value: process.env.NEXT_PUBLIC_BANK_ACCOUNT_NUMBER ?? '—' },
-                      { label: 'Account Name', value: process.env.NEXT_PUBLIC_BANK_ACCOUNT_NAME ?? 'Mesho Data Sciences' },
+                      { label: 'Bank', value: process.env.NEXT_PUBLIC_BANK_NAME ?? 'First Bank of Nigeria', copy: false },
+                      { label: 'Account Number', value: process.env.NEXT_PUBLIC_BANK_ACCOUNT_NUMBER ?? '—', copy: true },
+                      { label: 'Account Name', value: process.env.NEXT_PUBLIC_BANK_ACCOUNT_NAME ?? 'Mesho Data Sciences', copy: false },
                     ].map(item => (
-                      <div key={item.label} className="flex items-center justify-between bg-muted/30 rounded-xl px-3 py-2 text-sm">
+                      <div key={item.label} className="flex items-center justify-between bg-muted/30 rounded-xl px-3 py-2 text-sm gap-2">
                         <span className="text-muted-foreground text-xs">{item.label}</span>
-                        <span className="font-mono font-semibold text-xs">{item.value}</span>
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-mono font-semibold text-xs">{item.value}</span>
+                          {item.copy && (
+                            <button onClick={() => navigator.clipboard.writeText(item.value).then(() => toast.success(`${item.label} copied!`))}
+                              className="p-1 hover:bg-muted rounded-lg text-muted-foreground hover:text-foreground flex-shrink-0">
+                              <Copy size={12} />
+                            </button>
+                          )}
+                        </div>
                       </div>
                     ))}
                   </div>
