@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Share2, Copy, Check, MessageCircle, X } from 'lucide-react';
 import { BottomSheet } from '@/components/bottom-sheet';
 import { toast } from 'sonner';
@@ -33,7 +34,7 @@ function ShareSheet({ title, url, description, onClose }: ShareButtonProps & { o
     copy();
   };
 
-  return (
+  const sheet = (
     <BottomSheet isOpen onClose={onClose} maxHeight="45vh">
       <div className="flex items-center justify-between px-5 py-4 border-b border-border">
         <h2 className="font-bold text-base">Share</h2>
@@ -61,6 +62,9 @@ function ShareSheet({ title, url, description, onClose }: ShareButtonProps & { o
       </div>
     </BottomSheet>
   );
+
+  if (typeof document === 'undefined') return null;
+  return createPortal(sheet, document.body);
 }
 
 export function ShareButton({ title, url, description, compact, gridRef }: ShareButtonProps) {
