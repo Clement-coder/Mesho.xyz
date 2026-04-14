@@ -1,82 +1,80 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Share2, Copy, Check, MessageCircle, X } from 'lucide-react';
-import { BottomSheet } from '@/components/bottom-sheet';
+import React, { useState, useRef, useEffect } from 'react';
+import { Share2, Copy, Check, MessageCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
-const WA = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? '2348012345678';
-
-interface ShareSheetProps {
+interface ShareButtonProps {
   title: string;
   url: string;
   description?: string;
+  compact?: boolean;
 }
 
-function ShareSheet({ title, url, description, onClose }: ShareSheetProps & { onClose: () => void }) {
+export function ShareButton({ title, url, description, compact }: ShareButtonProps) {
+  const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
 
-  const copy = async () => {
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [open]);
+
+  const copy = async (e: React.MouseEvent) => {
+    e.stopPropagation();
     await navigator.clipboard.writeText(url);
     setCopied(true);
     toast.success('Link copied!');
-    setTimeout(() => setCopied(false), 2000);
+    setTimeout(() => { setCopied(false); setOpen(false); }, 1500);
   };
 
   const waText = `Check out "${title}" on Mesho Data Sciences!\n${url}`;
   const waUrl = `https://wa.me/?text=${encodeURIComponent(waText)}`;
 
-  const nativeShare = async () => {
+  const nativeShare = async (e: React.MouseEvent) => {
+    e.stopPropagation();
     if (navigator.share) {
-      try { await navigator.share({ title, text: description ?? title, url }); return; } catch { /* fallback */ }
+      try { await navigator.share({ title, text: description ?? title, url }); setOpen(false); return; } catch { /* fallback */ }
     }
-    copy();
+    copy(e);
   };
 
   return (
-    <BottomSheet isOpen onClose={onClose} maxHeight="45vh">
-      <div className="flex items-center justify-between px-5 py-4 border-b border-border">
-        <h2 className="font-bold text-base">Share</h2>
-        <button onClick={onClose} className="p-1.5 hover:bg-muted rounded-lg"><X size={16} /></button>
-      </div>
-      <div className="p-5 space-y-4">
-        <div className="bg-muted/30 rounded-xl px-4 py-3">
-          <p className="font-semibold text-sm truncate">{title}</p>
-          <p className="text-xs text-muted-foreground truncate mt-0.5">{url}</p>
-        </div>
-        <div className="grid grid-cols-2 gap-3">
-          <button onClick={copy}
-            className="flex items-center justify-center gap-2 py-3 rounded-xl border border-border hover:bg-muted transition-colors text-sm font-medium">
-            {copied ? <Check size={16} className="text-green-500" /> : <Copy size={16} />}
-            {copied ? 'Copied!' : 'Copy Link'}
-          </button>
-          <a href={waUrl} target="_blank" rel="noopener noreferrer"
-            className="flex items-center justify-center gap-2 py-3 rounded-xl bg-[#25D366] hover:bg-[#20BA5A] text-white text-sm font-medium transition-colors">
-            <MessageCircle size={16} /> WhatsApp
-          </a>
-        </div>
-        <button onClick={nativeShare}
-          className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-accent hover:bg-accent/90 text-white text-sm font-medium transition-colors">
-          <Share2 size={16} /> Share via...
-        </button>
-      </div>
-    </BottomSheet>
-  );
-}
-
-export function ShareButton({ title, url, description, compact }: ShareSheetProps & { compact?: boolean }) {
-  const [open, setOpen] = useState(false);
-  return (
-    <>
+    <div ref={ref} className="relative" onClick={e => e.stopPropagation()}>
       <button
-        onClick={e => { e.stopPropagation(); setOpen(true); }}
+        onClick={e => { e.stopPropagation(); setOpen(o => !o); }}
         className={`relative z-10 flex items-center gap-1.5 rounded-xl border border-border hover:bg-muted transition-colors text-muted-foreground hover:text-foreground ${compact ? 'p-1.5' : 'text-sm px-3 py-2'}`}
         title="Share"
       >
         <Share2 size={compact ? 13 : 15} />
         {!compact && 'Share'}
       </button>
-      {open && <ShareSheet title={title} url={url} description={description} onClose={() => setOpen(false)} />}
-    </>
+
+      {open && (
+        <div className="absolute bottom-full right-0 mb-2 z-50 w-52 bg-card border border-border rounded-2xl shadow-xl p-3 space-y-2 animate-in fade-in slide-in-from-bottom-2 duration-150">
+          <p className="text-xs font-semibold truncate px-1">{title}</p>
+          <div className="grid grid-cols-2 gap-2">
+            <button onClick={copy}
+              className="flex items-center justify-center gap-1.5 py-2 rounded-xl border border-border hover:bg-muted transition-colors text-xs font-medium">
+              {copied ? <Check size={13} className="text-green-500" /> : <Copy size={13} />}
+              {copied ? 'Copied!' : 'Copy'}
+            </button>
+            <a href={waUrl} target="_blank" rel="noopener noreferrer" onClick={() => setOpen(false)}
+              className="flex items-center justify-center gap-1.5 py-2 rounded-xl bg-[#25D366] hover:bg-[#20BA5A] text-white text-xs font-medium transition-colors">
+              <MessageCircle size={13} /> WhatsApp
+            </a>
+          </div>
+          <button onClick={nativeShare}
+            className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl bg-accent hover:bg-accent/90 text-white text-xs font-medium transition-colors">
+            <Share2 size={13} /> Share via…
+          </button>
+        </div>
+      )}
+    </div>
   );
 }
