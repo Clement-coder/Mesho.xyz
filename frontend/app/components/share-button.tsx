@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
-import { createPortal } from 'react-dom';
+import React, { useState } from 'react';
 import { Share2, Copy, Check, MessageCircle, X } from 'lucide-react';
+import { BottomSheet } from '@/components/bottom-sheet';
 import { toast } from 'sonner';
 
 interface ShareButtonProps {
@@ -10,61 +10,36 @@ interface ShareButtonProps {
   url: string;
   description?: string;
   compact?: boolean;
-  /** Ref to the grid/section container this sheet should cover */
   gridRef?: React.RefObject<HTMLElement | null>;
 }
 
-function ShareSheet({ title, url, description, onClose, gridRef }: ShareButtonProps & { onClose: () => void }) {
+function ShareSheet({ title, url, description, onClose }: ShareButtonProps & { onClose: () => void }) {
   const [copied, setCopied] = useState(false);
-  const [dragY, setDragY] = useState(0);
-  const startY = useRef(0);
-  const dragging = useRef(false);
 
-  const copy = async (e: React.MouseEvent) => {
-    e.stopPropagation();
+  const copy = async () => {
     await navigator.clipboard.writeText(url);
     setCopied(true);
     toast.success('Link copied!');
-    setTimeout(() => { setCopied(false); onClose(); }, 1500);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   const waText = `Check out "${title}" on Mesho Data Sciences!\n${url}`;
   const waUrl = `https://wa.me/?text=${encodeURIComponent(waText)}`;
 
-  const nativeShare = async (e: React.MouseEvent) => {
-    e.stopPropagation();
+  const nativeShare = async () => {
     if (navigator.share) {
-      try { await navigator.share({ title, text: description ?? title, url }); onClose(); return; } catch { /* fallback */ }
+      try { await navigator.share({ title, text: description ?? title, url }); return; } catch { /* fallback */ }
     }
-    copy(e);
+    copy();
   };
 
-  // Get bounding rect of grid container, fall back to full viewport
-  const rect = gridRef?.current?.getBoundingClientRect();
-  const overlayStyle: React.CSSProperties = rect
-    ? { position: 'fixed', top: rect.top, left: rect.left, width: rect.width, height: rect.height, zIndex: 40, overflow: 'hidden', borderRadius: 'inherit' }
-    : { position: 'fixed', inset: 0, zIndex: 40 };
-
-  const sheet = (
-    <div style={overlayStyle} onClick={e => { e.stopPropagation(); onClose(); }}>
-      {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/40 rounded-[inherit]" />
-      {/* Sheet slides up from bottom of the container */}
-      <div
-        className="absolute inset-x-0 bottom-0 bg-background rounded-t-2xl shadow-2xl p-5 space-y-4 animate-in slide-in-from-bottom duration-300"
-        style={{ transform: `translateY(${dragY}px)`, transition: dragging.current ? 'none' : 'transform 0.3s ease' }}
-        onClick={e => e.stopPropagation()}
-        onTouchStart={e => { dragging.current = true; startY.current = e.touches[0].clientY; setDragY(0); }}
-        onTouchMove={e => { if (!dragging.current) return; const dy = e.touches[0].clientY - startY.current; if (dy > 0) setDragY(dy); }}
-        onTouchEnd={() => { dragging.current = false; if (dragY > 80) onClose(); else setDragY(0); }}
-      >
-        <div className="flex justify-center -mt-1 mb-1 cursor-grab">
-          <div className="w-10 h-1 rounded-full bg-border" />
-        </div>
-        <div className="flex items-center justify-between">
-          <h2 className="font-bold text-base">Share</h2>
-          <button onClick={e => { e.stopPropagation(); onClose(); }} className="p-1.5 hover:bg-muted rounded-lg"><X size={16} /></button>
-        </div>
+  return (
+    <BottomSheet isOpen onClose={onClose} maxHeight="45vh">
+      <div className="flex items-center justify-between px-5 py-4 border-b border-border">
+        <h2 className="font-bold text-base">Share</h2>
+        <button onClick={onClose} className="p-1.5 hover:bg-muted rounded-lg"><X size={16} /></button>
+      </div>
+      <div className="p-5 space-y-4">
         <div className="bg-muted/30 rounded-xl px-4 py-3">
           <p className="font-semibold text-sm truncate">{title}</p>
         </div>
@@ -74,7 +49,7 @@ function ShareSheet({ title, url, description, onClose, gridRef }: ShareButtonPr
             {copied ? <Check size={16} className="text-green-500" /> : <Copy size={16} />}
             {copied ? 'Copied!' : 'Copy Link'}
           </button>
-          <a href={waUrl} target="_blank" rel="noopener noreferrer" onClick={() => onClose()}
+          <a href={waUrl} target="_blank" rel="noopener noreferrer"
             className="flex items-center justify-center gap-2 py-3 rounded-xl bg-[#25D366] hover:bg-[#20BA5A] text-white text-sm font-medium transition-colors">
             <MessageCircle size={16} /> WhatsApp
           </a>
@@ -84,11 +59,8 @@ function ShareSheet({ title, url, description, onClose, gridRef }: ShareButtonPr
           <Share2 size={16} /> Share via...
         </button>
       </div>
-    </div>
+    </BottomSheet>
   );
-
-  if (typeof document === 'undefined') return null;
-  return createPortal(sheet, document.body);
 }
 
 export function ShareButton({ title, url, description, compact, gridRef }: ShareButtonProps) {
@@ -103,7 +75,7 @@ export function ShareButton({ title, url, description, compact, gridRef }: Share
         <Share2 size={compact ? 13 : 15} />
         {!compact && 'Share'}
       </button>
-      {open && <ShareSheet title={title} url={url} description={description} gridRef={gridRef} onClose={() => setOpen(false)} />}
+      {open && <ShareSheet title={title} url={url} description={description} onClose={() => setOpen(false)} />}
     </>
   );
 }
