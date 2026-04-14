@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { ProjectCard } from '../components/project-card';
@@ -30,6 +30,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [viewPayment, setViewPayment] = useState<(Purchase & { projects?: Project }) | null>(null);
   const [search, setSearch] = useState('');
+  const gridRef = useRef<HTMLDivElement>(null);
   const { user, logout, refreshUser } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -253,11 +254,11 @@ export default function DashboardPage() {
                 {Array.from({ length: 6 }).map((_, i) => <div key={i} className="clay h-40 animate-pulse rounded-2xl" />)}
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div ref={gridRef} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {displayedProjects.length > 0 ? (
                   displayedProjects.map((project, i) => (
                     <div key={project.id} className="animate-in fade-in slide-in-from-bottom duration-500" style={{ animationDelay: `${i * 50}ms` }}>
-                      <ProjectCard title={project.title} description={project.description} difficulty={project.difficulty} price={project.price} href={`/projects/${project.id}`} onClick={() => router.push(`/projects/${project.id}`)} />
+                      <ProjectCard title={project.title} description={project.description} difficulty={project.difficulty} price={project.price} href={`/projects/${project.id}`} onClick={() => router.push(`/projects/${project.id}`)} gridRef={gridRef} />
                     </div>
                   ))
                 ) : (

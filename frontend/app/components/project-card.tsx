@@ -12,9 +12,10 @@ interface ProjectCardProps {
   price: number;
   onClick: () => void;
   href?: string;
+  gridRef?: React.RefObject<HTMLElement | null>;
 }
 
-export const ProjectCard = ({ title, description, difficulty, price, onClick, href }: ProjectCardProps) => {
+export const ProjectCard = ({ title, description, difficulty, price, onClick, href, gridRef }: ProjectCardProps) => {
   const difficultyColor = { Beginner: 'success', Intermediate: 'info', Advanced: 'warning', Undergraduate: 'info', Postgraduate: 'warning' } as const;
 
   return (
@@ -32,7 +33,7 @@ export const ProjectCard = ({ title, description, difficulty, price, onClick, hr
           <div className="flex items-center gap-2">
             <span className="text-sm font-bold text-accent">₦{price.toLocaleString()}</span>
             <div onClick={e => e.stopPropagation()} className="md:opacity-0 md:group-hover:opacity-100 transition-opacity">
-              <ShareButton title={title} url={href ?? (typeof window !== 'undefined' ? window.location.href : '')} description={description} compact />
+              <ShareButton title={title} url={href ?? (typeof window !== 'undefined' ? window.location.href : '')} description={description} compact gridRef={gridRef} />
             </div>
           </div>
         </div>

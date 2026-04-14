@@ -12,9 +12,10 @@ interface DepartmentCardProps {
   color: string;
   onClick: () => void;
   href?: string;
+  gridRef?: React.RefObject<HTMLElement | null>;
 }
 
-export const DepartmentCard = ({ name, description, icon, color, onClick, href }: DepartmentCardProps) => (
+export const DepartmentCard = ({ name, description, icon, color, onClick, href, gridRef }: DepartmentCardProps) => (
   <div className="group w-full h-full clay clay-hover transition-all duration-300 relative">
     <button
       onClick={onClick}
@@ -40,6 +41,7 @@ export const DepartmentCard = ({ name, description, icon, color, onClick, href }
         url={href ?? (typeof window !== 'undefined' ? window.location.origin + '/departments' : '')}
         description={description}
         compact
+        gridRef={gridRef}
       />
     </div>
   </div>

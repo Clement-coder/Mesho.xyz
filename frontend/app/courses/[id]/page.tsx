@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { ProjectCard } from '@/app/components/project-card';
 import { Button } from '@/components/ui/button';
@@ -15,6 +15,7 @@ export default function CourseProjectsPage() {
   const [course, setCourse] = useState<Course | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
+  const gridRef = useRef<HTMLDivElement>(null);
   const guard = useAuthGuard();
 
   useEffect(() => {
@@ -48,7 +49,7 @@ export default function CourseProjectsPage() {
       <section className="py-12 md:py-16 px-4">
         <div className="max-w-7xl mx-auto">
           {projects.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div ref={gridRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {projects.map((project, index) => (
                 <div key={project.id} className="animate-in fade-in slide-in-from-bottom duration-500" style={{ animationDelay: `${index * 50}ms` }}>
                   <ProjectCard
@@ -58,6 +59,7 @@ export default function CourseProjectsPage() {
                     price={project.price}
                     href={`/projects/${project.id}`}
                     onClick={() => { if (guard()) router.push(`/projects/${project.id}`); }}
+                    gridRef={gridRef}
                   />
                 </div>
               ))}

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { DepartmentCard } from '../components/department-card';
 import { Button } from '@/components/ui/button';
@@ -13,6 +13,7 @@ export default function DepartmentsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [departments, setDepartments] = useState<Department[]>([]);
   const [loading, setLoading] = useState(true);
+  const gridRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const supabase = createClient();
@@ -58,7 +59,7 @@ export default function DepartmentsPage() {
               ))}
             </div>
           ) : filtered.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div ref={gridRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {filtered.map((dept, index) => (
                 <div key={dept.id} className="animate-in fade-in slide-in-from-bottom duration-500" style={{ animationDelay: `${index * 50}ms` }}>
                   <DepartmentCard
@@ -68,6 +69,7 @@ export default function DepartmentsPage() {
                     color={dept.color}
                     onClick={() => router.push(`/departments/${dept.id}`)}
                     href={`${typeof window !== 'undefined' ? window.location.origin : ''}/departments/${dept.id}`}
+                    gridRef={gridRef}
                   />
                 </div>
               ))}
