@@ -30,6 +30,7 @@ export default function ProjectPreviewPage() {
   const [inWishlist, setInWishlist] = useState(false);
   const [wishlistLoading, setWishlistLoading] = useState(false);
   const [payRef, setPayRef] = useState('');
+  const [draftPurchaseId, setDraftPurchaseId] = useState<string | null>(null);
 
   // Redirect to signup if not authenticated
   useEffect(() => {
@@ -62,30 +63,47 @@ export default function ProjectPreviewPage() {
     setShowConfirmPurchase(true);
   };
 
-  const confirmAndOpenPayment = () => {
+  const confirmAndOpenPayment = async () => {
+    if (!user || !project) return;
     setShowConfirmPurchase(false);
     const ref = `MESHO-${Date.now()}-${Math.random().toString(36).slice(2, 7).toUpperCase()}`;
     setPayRef(ref);
-    setShowTransferModal(true);
-  };
-
-  const handleIHavePaid = async () => {
-    if (!user || !project) return;
-    setSubmitting(true);
+    // Create draft purchase immediately so it shows in payments tab
     const supabase = createClient();
-    const { error } = await supabase.from('purchases').insert({
+    const { data, error } = await supabase.from('purchases').insert({
       user_id: user.id,
       project_id: project.id,
       amount: project.price,
-      payment_reference: payRef,
-      status: 'pending',
+      payment_reference: ref,
+      status: 'awaiting_confirmation',
       user_name: user.name,
       user_email: user.email ?? '',
       user_whatsapp: user.whatsapp ?? user.phone ?? '',
-    });
+    }).select('id').single();
+    if (error) { toast.error('Could not initiate payment. Please try again.'); return; }
+    setDraftPurchaseId(data.id);
+    setShowTransferModal(true);
+  };
+
+  const handleCancelPayment = async () => {
+    setShowTransferModal(false);
+    if (draftPurchaseId) {
+      const supabase = createClient();
+      await supabase.from('purchases').delete().eq('id', draftPurchaseId);
+      setDraftPurchaseId(null);
+    }
+    setPayRef('');
+  };
+
+  const handleIHavePaid = async () => {
+    if (!user || !project || !draftPurchaseId) return;
+    setSubmitting(true);
+    const supabase = createClient();
+    const { error } = await supabase.from('purchases').update({ status: 'pending' }).eq('id', draftPurchaseId);
     if (error) { toast.error('Submission failed. Please try again.'); setSubmitting(false); return; }
     setSubmitting(false);
     setShowTransferModal(false);
+    setDraftPurchaseId(null);
     setShowSuccessAlert(true);
   };
 
@@ -251,7 +269,7 @@ export default function ProjectPreviewPage() {
 
       <BankTransferModal
         isOpen={showTransferModal}
-        onClose={() => setShowTransferModal(false)}
+        onClose={handleCancelPayment}
         projectTitle={project.title}
         amount={project.price}
         reference={payRef}

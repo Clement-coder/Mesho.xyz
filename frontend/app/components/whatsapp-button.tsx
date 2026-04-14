@@ -175,7 +175,9 @@ export const WhatsAppButton = () => {
     const onMouseMove = (e: MouseEvent) => {
       if (!dragging.current) return;
       hasMoved.current = true;
-      setPos({ x: Math.max(8, Math.min(window.innerWidth - 64, e.clientX - offset.current.x)), y: Math.max(8, Math.min(window.innerHeight - 64, window.innerHeight - e.clientY - (56 - offset.current.y))) });
+      const right = window.innerWidth - e.clientX - (56 - offset.current.x);
+      const bottom = window.innerHeight - e.clientY - (56 - offset.current.y);
+      setPos({ x: Math.max(8, Math.min(window.innerWidth - 64, right)), y: Math.max(8, Math.min(window.innerHeight - 64, bottom)) });
     };
     const onMouseUp = () => { dragging.current = false; };
     const onTouchMove = (e: TouchEvent) => {
@@ -183,7 +185,9 @@ export const WhatsAppButton = () => {
       e.preventDefault();
       hasMoved.current = true;
       const t = e.touches[0];
-      setPos({ x: Math.max(8, Math.min(window.innerWidth - 64, t.clientX - offset.current.x)), y: Math.max(8, Math.min(window.innerHeight - 64, window.innerHeight - t.clientY - (56 - offset.current.y))) });
+      const right = window.innerWidth - t.clientX - (56 - offset.current.x);
+      const bottom = window.innerHeight - t.clientY - (56 - offset.current.y);
+      setPos({ x: Math.max(8, Math.min(window.innerWidth - 64, right)), y: Math.max(8, Math.min(window.innerHeight - 64, bottom)) });
     };
     const onTouchEnd = () => { dragging.current = false; };
     window.addEventListener('mousemove', onMouseMove);

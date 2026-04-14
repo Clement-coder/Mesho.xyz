@@ -18,8 +18,8 @@ const WA_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? '2348012345678';
 import { createClient } from '@/utils/supabase/client';
 import type { Project, Purchase } from '@/lib/types';
 
-const statusIcon = { pending: Clock, confirmed: CheckCircle, failed: XCircle };
-const statusColor = { pending: 'text-yellow-600 bg-yellow-50', confirmed: 'text-green-600 bg-green-50', failed: 'text-red-600 bg-red-50' };
+const statusIcon = { awaiting_confirmation: Clock, pending: Clock, confirmed: CheckCircle, failed: XCircle };
+const statusColor = { awaiting_confirmation: 'text-blue-600 bg-blue-50', pending: 'text-yellow-600 bg-yellow-50', confirmed: 'text-green-600 bg-green-50', failed: 'text-red-600 bg-red-50' };
 
 export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState<'enrolled' | 'all' | 'wishlist' | 'payments'>('enrolled');
@@ -144,8 +144,8 @@ export default function DashboardPage() {
                   <Link href="/departments"><Button><BookOpen size={16} className="mr-2" />Browse Materials</Button></Link>
                 </div>
               ) : purchases.map(p => {
-                const Icon = statusIcon[p.status];
-                const borderColor = p.status === 'confirmed' ? 'border-l-green-400' : p.status === 'failed' ? 'border-l-red-400' : 'border-l-yellow-400';
+                const Icon = statusIcon[p.status as keyof typeof statusIcon] ?? Clock;
+                const borderColor = p.status === 'confirmed' ? 'border-l-green-400' : p.status === 'failed' ? 'border-l-red-400' : p.status === 'awaiting_confirmation' ? 'border-l-blue-400' : 'border-l-yellow-400';
                 return (
                   <div key={p.id} className={`clay p-3 sm:p-4 border-l-4 ${borderColor}`}>
                     {/* Top row: title + amount */}
@@ -156,8 +156,9 @@ export default function DashboardPage() {
                     {/* Date + status */}
                     <div className="flex items-center justify-between gap-2 mb-2">
                       <p className="text-xs text-muted-foreground">{new Date(p.created_at).toLocaleString()}</p>
-                      <span className={`flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium flex-shrink-0 ${statusColor[p.status]}`}>
-                        <Icon size={10} />{p.status}
+                      <span className={`flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium flex-shrink-0 ${(statusColor as any)[p.status] ?? statusColor.pending}`}>
+                        <Icon size={10} />
+                        {p.status === 'awaiting_confirmation' ? 'initiated' : p.status}
                       </span>
                     </div>
                     {/* Ref + View */}
@@ -170,6 +171,12 @@ export default function DashboardPage() {
                         <Eye size={12} /> View
                       </button>
                     </div>
+                    {p.status === 'awaiting_confirmation' && (
+                      <div className="flex items-start gap-2 bg-blue-50 border border-blue-200 rounded-xl px-3 py-2 text-xs text-blue-700">
+                        <Clock size={13} className="flex-shrink-0 mt-0.5" />
+                        <span><strong>Payment initiated</strong> — Please complete your bank transfer using the reference above, then tap "I Have Paid" on the payment screen.</span>
+                      </div>
+                    )}
                     {p.status === 'pending' && (
                       <div className="flex items-start gap-2 bg-yellow-50 border border-yellow-200 rounded-xl px-3 py-2 text-xs text-yellow-700">
                         <Clock size={13} className="flex-shrink-0 mt-0.5" />
@@ -276,8 +283,8 @@ export default function DashboardPage() {
       )}
       {viewPayment && viewPayment.status !== 'confirmed' && (() => {
         const p = viewPayment;
-        const Icon = statusIcon[p.status];
-        const borderColor = p.status === 'failed' ? 'border-red-400' : 'border-yellow-400';
+        const Icon = (statusIcon as any)[p.status] ?? Clock;
+        const borderColor = p.status === 'failed' ? 'border-red-400' : p.status === 'awaiting_confirmation' ? 'border-blue-400' : 'border-yellow-400';
         return (
           <BottomSheet isOpen onClose={() => setViewPayment(null)}>
             <div className="flex items-center justify-between px-5 py-4 border-b border-border">
@@ -292,7 +299,7 @@ export default function DashboardPage() {
               <div className="grid grid-cols-2 gap-3 text-sm">
                 {[
                   { label: 'Amount', value: `₦${p.amount.toLocaleString()}` },
-                  { label: 'Status', value: <span className={`flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium w-fit ${statusColor[p.status]}`}><Icon size={10} />{p.status}</span> },
+                  { label: 'Status', value: <span className={`flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium w-fit ${(statusColor as any)[p.status] ?? statusColor.pending}`}><Icon size={10} />{p.status === 'awaiting_confirmation' ? 'initiated' : p.status}</span> },
                   { label: 'Reference', value: <span className="font-mono text-xs break-all">{p.payment_reference ?? '—'}</span> },
                   { label: 'Date', value: new Date(p.created_at).toLocaleDateString() },
                 ].map((item, i) => (
@@ -302,11 +309,15 @@ export default function DashboardPage() {
                   </div>
                 ))}
               </div>
-              {p.status === 'pending' && (
+              {(p.status === 'awaiting_confirmation' || p.status === 'pending') && (
                 <>
-                  <div className="flex items-start gap-2 bg-yellow-50 border border-yellow-200 rounded-xl px-3 py-2.5 text-xs text-yellow-700">
+                  <div className={`flex items-start gap-2 rounded-xl px-3 py-2.5 text-xs ${p.status === 'awaiting_confirmation' ? 'bg-blue-50 border border-blue-200 text-blue-700' : 'bg-yellow-50 border border-yellow-200 text-yellow-700'}`}>
                     <Clock size={13} className="flex-shrink-0 mt-0.5" />
-                    <span><strong>Awaiting verification</strong> — Admin will confirm your bank transfer shortly.</span>
+                    <span>
+                      {p.status === 'awaiting_confirmation'
+                        ? <><strong>Payment initiated</strong> — Complete your bank transfer using the reference above, then tap "I Have Paid".</>
+                        : <><strong>Awaiting verification</strong> — Admin will confirm your bank transfer shortly.</>}
+                    </span>
                   </div>
                   <div className="space-y-1.5">
                     <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Bank Transfer Details</p>

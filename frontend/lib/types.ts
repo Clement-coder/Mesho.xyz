@@ -54,7 +54,7 @@ export interface Purchase {
   project_id: string;
   amount: number;
   payment_reference: string | null;
-  status: 'pending' | 'confirmed' | 'failed';
+  status: 'awaiting_confirmation' | 'pending' | 'confirmed' | 'failed';
   rejection_reason: string | null;
   user_name: string | null;
   user_email: string | null;
