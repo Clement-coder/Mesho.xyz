@@ -17,6 +17,16 @@ export function BottomSheet({ isOpen, onClose, children, maxHeight = '85vh' }: B
   const dragging = useRef(false);
   const sheetRef = useRef<HTMLDivElement>(null);
 
+  // Lock body scroll when open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => { document.body.style.overflow = ''; };
+  }, [isOpen]);
+
   // Mount/unmount with animation
   useEffect(() => {
     if (isOpen) {

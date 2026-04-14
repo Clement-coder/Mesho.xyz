@@ -172,15 +172,30 @@ export const WhatsAppButton = () => {
   }, []);
 
   useEffect(() => {
-    const onMove = (e: MouseEvent) => {
+    const onMouseMove = (e: MouseEvent) => {
       if (!dragging.current) return;
       hasMoved.current = true;
       setPos({ x: Math.max(8, Math.min(window.innerWidth - 64, e.clientX - offset.current.x)), y: Math.max(8, Math.min(window.innerHeight - 64, window.innerHeight - e.clientY - (56 - offset.current.y))) });
     };
-    const onUp = () => { dragging.current = false; };
-    window.addEventListener('mousemove', onMove);
-    window.addEventListener('mouseup', onUp);
-    return () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp); };
+    const onMouseUp = () => { dragging.current = false; };
+    const onTouchMove = (e: TouchEvent) => {
+      if (!dragging.current) return;
+      e.preventDefault();
+      hasMoved.current = true;
+      const t = e.touches[0];
+      setPos({ x: Math.max(8, Math.min(window.innerWidth - 64, t.clientX - offset.current.x)), y: Math.max(8, Math.min(window.innerHeight - 64, window.innerHeight - t.clientY - (56 - offset.current.y))) });
+    };
+    const onTouchEnd = () => { dragging.current = false; };
+    window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('mouseup', onMouseUp);
+    window.addEventListener('touchmove', onTouchMove, { passive: false });
+    window.addEventListener('touchend', onTouchEnd);
+    return () => {
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mouseup', onMouseUp);
+      window.removeEventListener('touchmove', onTouchMove);
+      window.removeEventListener('touchend', onTouchEnd);
+    };
   }, []);
 
   if (!visible) return null;
@@ -190,8 +205,10 @@ export const WhatsAppButton = () => {
       {open && <ChatWidget onClose={() => setOpen(false)} />}
       <div ref={btnRef}
         onMouseDown={e => { dragging.current = true; hasMoved.current = false; const r = btnRef.current!.getBoundingClientRect(); offset.current = { x: e.clientX - r.left, y: e.clientY - r.top }; e.preventDefault(); }}
+        onTouchStart={e => { dragging.current = true; hasMoved.current = false; const r = btnRef.current!.getBoundingClientRect(); const t = e.touches[0]; offset.current = { x: t.clientX - r.left, y: t.clientY - r.top }; }}
         style={{ position: 'fixed', bottom: pos.y, right: pos.x, zIndex: 50 }}>
         <button onClick={() => { if (!hasMoved.current) setOpen(o => !o); }}
+          onTouchEnd={e => { if (hasMoved.current) e.preventDefault(); }}
           className="w-14 h-14 bg-[#25D366] hover:bg-[#20BA5A] text-white rounded-full flex items-center justify-center shadow-lg hover:shadow-xl transition-all duration-200 select-none">
           {open ? <X size={24} /> : <MessageCircle size={26} />}
         </button>
