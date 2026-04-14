@@ -29,6 +29,7 @@ export default function DashboardPage() {
   const [purchases, setPurchases] = useState<(Purchase & { projects?: Project })[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewPayment, setViewPayment] = useState<(Purchase & { projects?: Project }) | null>(null);
+  const [search, setSearch] = useState('');
   const { user, logout, refreshUser } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -38,6 +39,9 @@ export default function DashboardPage() {
     const tab = searchParams.get('tab');
     if (tab === 'payments') setActiveTab('payments');
   }, [searchParams]);
+
+  // Reset search on tab change
+  useEffect(() => { setSearch(''); }, [activeTab]);
 
   // Refresh user on mount so role/profile changes take effect
   useEffect(() => { refreshUser(); }, []);
@@ -65,7 +69,10 @@ export default function DashboardPage() {
   const confirmedProjectIds = purchases.filter(p => p.status === 'confirmed').map(p => p.project_id);
   const enrolledProjects = allProjects.filter(p => confirmedProjectIds.includes(p.id));
   const wishlistProjects = allProjects.filter(p => user?.wishlist.includes(p.id));
-  const displayedProjects = activeTab === 'enrolled' ? enrolledProjects : activeTab === 'wishlist' ? wishlistProjects : allProjects;
+  const baseProjects = activeTab === 'enrolled' ? enrolledProjects : activeTab === 'wishlist' ? wishlistProjects : allProjects;
+  const displayedProjects = search.trim()
+    ? baseProjects.filter(p => p.title.toLowerCase().includes(search.toLowerCase()) || p.description?.toLowerCase().includes(search.toLowerCase()))
+    : baseProjects;
   const pendingCount = purchases.filter(p => p.status === 'pending').length;
 
   const handleLogout = () => { logout(); setShowLogoutModal(false); };
@@ -218,7 +225,30 @@ export default function DashboardPage() {
 
           {/* Projects tabs */}
           {activeTab !== 'payments' && (
-            loading ? (
+            <>
+              {/* Tab heading + optional search */}
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+                <div>
+                  <h2 className="text-lg font-bold">
+                    {activeTab === 'enrolled' ? 'My Materials' : activeTab === 'wishlist' ? 'Saved Topics' : 'All Topics'}
+                  </h2>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {activeTab === 'enrolled' ? 'Research materials you have purchased.' : activeTab === 'wishlist' ? 'Topics you saved for later.' : 'Browse all available research topics.'}
+                  </p>
+                </div>
+                {activeTab === 'all' && (
+                  <div className="relative w-full sm:w-64">
+                    <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                    <input
+                      value={search}
+                      onChange={e => setSearch(e.target.value)}
+                      placeholder="Search topics…"
+                      className="w-full pl-8 pr-4 h-9 rounded-xl border border-border bg-input text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+                    />
+                  </div>
+                )}
+              </div>
+            {loading ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {Array.from({ length: 6 }).map((_, i) => <div key={i} className="clay h-40 animate-pulse rounded-2xl" />)}
               </div>
@@ -246,6 +276,7 @@ export default function DashboardPage() {
                 )}
               </div>
             )
+            }</>
           )}
         </main>
       </div>
