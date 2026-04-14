@@ -11,11 +11,11 @@ interface BottomSheetProps {
 
 export function BottomSheet({ isOpen, onClose, children, maxHeight = '85vh' }: BottomSheetProps) {
   const [visible, setVisible] = useState(false);
+  const [animating, setAnimating] = useState(false); // true = entering/open, false = leaving
   const [translateY, setTranslateY] = useState(0);
   const [isDesktop, setIsDesktop] = useState(false);
   const startY = useRef(0);
   const dragging = useRef(false);
-  const sheetRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const mq = window.matchMedia('(min-width: 768px)');
@@ -25,17 +25,19 @@ export function BottomSheet({ isOpen, onClose, children, maxHeight = '85vh' }: B
     return () => mq.removeEventListener('change', handler);
   }, []);
 
-  // Lock body scroll when open
   useEffect(() => {
     document.body.style.overflow = isOpen ? 'hidden' : '';
     return () => { document.body.style.overflow = ''; };
   }, [isOpen]);
 
-  // Mount/unmount with animation
   useEffect(() => {
-    if (isOpen) { setTranslateY(0); setVisible(true); }
-    else {
-      setTranslateY(600);
+    if (isOpen) {
+      setVisible(true);
+      setTranslateY(0);
+      // Trigger enter animation on next frame
+      requestAnimationFrame(() => requestAnimationFrame(() => setAnimating(true)));
+    } else {
+      setAnimating(false);
       const t = setTimeout(() => setVisible(false), 320);
       return () => clearTimeout(t);
     }
@@ -71,51 +73,53 @@ export function BottomSheet({ isOpen, onClose, children, maxHeight = '85vh' }: B
 
   if (!visible) return null;
 
+  const desktopStyle: React.CSSProperties = {
+    borderRadius: '16px',
+    width: '100%',
+    maxWidth: '520px',
+    maxHeight,
+    top: '50%',
+    left: '50%',
+    transform: animating
+      ? 'translate(-50%, -50%) scale(1)'
+      : 'translate(-50%, -50%) scale(0.95)',
+    opacity: animating ? 1 : 0,
+    transition: 'transform 0.28s cubic-bezier(0.32,0.72,0,1), opacity 0.28s ease',
+    boxShadow: '0 24px 60px rgba(0,0,0,0.22)',
+  };
+
+  const mobileStyle: React.CSSProperties = {
+    borderRadius: '20px 20px 0 0',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    maxHeight,
+    transform: `translateY(${animating ? translateY : 600}px)`,
+    transition: dragging.current ? 'none' : 'transform 0.32s cubic-bezier(0.32,0.72,0,1)',
+    boxShadow: '0 -8px 40px rgba(0,0,0,0.18)',
+  };
+
   return (
     <>
-      {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/50 z-50 animate-in fade-in duration-200"
-        style={{ opacity: isOpen ? 1 : 0, transition: 'opacity 0.3s' }}
+        className="fixed inset-0 bg-black/50 z-50"
+        style={{ opacity: animating ? 1 : 0, transition: 'opacity 0.28s ease' }}
         onClick={onClose}
       />
-
-      {/* Sheet — bottom sheet on mobile, centered modal on desktop */}
       <div
-        ref={sheetRef}
         className="fixed z-50 bg-background flex flex-col overflow-hidden"
-        style={isDesktop ? {
-          borderRadius: '16px',
-          width: '100%',
-          maxWidth: '520px',
-          maxHeight,
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          boxShadow: '0 24px 60px rgba(0,0,0,0.22)',
-        } : {
-          borderRadius: '20px 20px 0 0',
-          bottom: 0,
-          left: 0,
-          right: 0,
-          maxHeight,
-          transform: `translateY(${translateY}px)`,
-          transition: dragging.current ? 'none' : 'transform 0.32s cubic-bezier(0.32,0.72,0,1)',
-          boxShadow: '0 -8px 40px rgba(0,0,0,0.18)',
-        }}
+        style={isDesktop ? desktopStyle : mobileStyle}
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
         onMouseDown={onMouseDown}
         onClick={e => e.stopPropagation()}
       >
-        {/* Drag handle — mobile only */}
         {!isDesktop && (
           <div className="flex-shrink-0 flex justify-center pt-3 pb-1 cursor-grab active:cursor-grabbing">
             <div className="w-10 h-1 rounded-full bg-border" />
           </div>
         )}
-
         <div className="flex-1 overflow-y-auto">
           {children}
         </div>
