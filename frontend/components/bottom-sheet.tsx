@@ -29,18 +29,19 @@ export function BottomSheet({ isOpen, onClose, children, maxHeight = '85vh' }: B
     }
   }, [isOpen]);
 
-  const onTouchStart = (e: React.TouchEvent) => {
-    startY.current = e.touches[0].clientY;
+  const onDragStart = (clientY: number) => {
+    startY.current = clientY;
     dragging.current = true;
   };
 
-  const onTouchMove = useCallback((e: React.TouchEvent) => {
+  const onDragMove = useCallback((clientY: number) => {
     if (!dragging.current) return;
-    const dy = e.touches[0].clientY - startY.current;
+    const dy = clientY - startY.current;
     if (dy > 0) setTranslateY(dy);
   }, []);
 
-  const onTouchEnd = useCallback(() => {
+  const onDragEnd = useCallback(() => {
+    if (!dragging.current) return;
     dragging.current = false;
     if (translateY > 100) {
       onClose();
@@ -48,6 +49,24 @@ export function BottomSheet({ isOpen, onClose, children, maxHeight = '85vh' }: B
       setTranslateY(0);
     }
   }, [translateY, onClose]);
+
+  // Touch handlers
+  const onTouchStart = (e: React.TouchEvent) => onDragStart(e.touches[0].clientY);
+  const onTouchMove = (e: React.TouchEvent) => onDragMove(e.touches[0].clientY);
+  const onTouchEnd = () => onDragEnd();
+
+  // Mouse handlers
+  const onMouseDown = (e: React.MouseEvent) => onDragStart(e.clientY);
+  useEffect(() => {
+    const onMouseMove = (e: MouseEvent) => onDragMove(e.clientY);
+    const onMouseUp = () => onDragEnd();
+    window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('mouseup', onMouseUp);
+    return () => {
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mouseup', onMouseUp);
+    };
+  }, [onDragMove, onDragEnd]);
 
   if (!visible) return null;
 
@@ -74,15 +93,14 @@ export function BottomSheet({ isOpen, onClose, children, maxHeight = '85vh' }: B
           flexDirection: 'column',
           overflow: 'hidden',
         }}
+        onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onTouchEnd}
+        onMouseDown={onMouseDown}
         onClick={e => e.stopPropagation()}
       >
         {/* Drag handle */}
-        <div
-          className="flex-shrink-0 flex justify-center pt-3 pb-1 cursor-grab active:cursor-grabbing"
-          onTouchStart={onTouchStart}
-          onTouchMove={onTouchMove}
-          onTouchEnd={onTouchEnd}
-        >
+        <div className="flex-shrink-0 flex justify-center pt-3 pb-1 cursor-grab active:cursor-grabbing">
           <div className="w-10 h-1 rounded-full bg-border" />
         </div>
 

@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { LogoutModal } from '@/components/logout-modal';
-import { User, Mail, Calendar, Save, Camera, FolderOpen, BarChart3, Award, Phone, ChevronLeft, AlertCircle } from 'lucide-react';
+import { User, Mail, Calendar, Save, Camera, FolderOpen, BarChart3, Award, Phone, ChevronLeft, AlertCircle, LogOut } from 'lucide-react';
 import { createClient } from '@/utils/supabase/client';
 import { toast } from 'sonner';
 import { CustomSelect } from '@/app/components/custom-select';
@@ -29,6 +29,7 @@ export default function ProfilePage() {
   const [countryCode, setCountryCode] = useState('+234');
   const [whatsappError, setWhatsappError] = useState('');
   const [profilePicture, setProfilePicture] = useState('');
+  const [confirmedPurchases, setConfirmedPurchases] = useState(0);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -41,14 +42,13 @@ export default function ProfilePage() {
       setName(user.name);
       setProfilePicture(user.profile_picture_url ?? '');
       const stored = user.whatsapp ?? '';
-      // Try to match a known country code prefix
       const matched = countryCodes.find(c => stored.startsWith(c.code));
-      if (matched) {
-        setCountryCode(matched.code);
-        setWhatsapp(stored.slice(matched.code.length));
-      } else {
-        setWhatsapp(stored.replace(/\D/g, ''));
-      }
+      if (matched) { setCountryCode(matched.code); setWhatsapp(stored.slice(matched.code.length)); }
+      else { setWhatsapp(stored.replace(/\D/g, '')); }
+      // Fetch confirmed purchases count
+      createClient().from('purchases').select('id', { count: 'exact', head: true })
+        .eq('user_id', user.id).eq('status', 'confirmed')
+        .then(({ count }) => setConfirmedPurchases(count ?? 0));
     }
   }, [user]);
 
@@ -139,6 +139,10 @@ export default function ProfilePage() {
                     <Calendar size={14} /><span>Joined {user?.created_at ? formatDate(user.created_at) : 'N/A'}</span>
                   </div>
                 </div>
+                <Separator className="my-4" />
+                <Button variant="outline" className="w-full text-destructive border-destructive/30 hover:bg-destructive/10 hover:text-destructive" onClick={() => setShowLogoutModal(true)}>
+                  <LogOut size={15} className="mr-2" />Sign Out
+                </Button>
                 <Separator className="my-4" />
                 <div className="grid grid-cols-3 gap-2 text-center">
                   {[

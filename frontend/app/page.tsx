@@ -58,7 +58,7 @@ export default function HomePage() {
               <div className="flex flex-col sm:flex-row gap-3 pt-4 w-full sm:w-auto justify-center md:justify-start">
                 <Link href="/departments" className="w-full sm:w-auto">
                   <Button size="lg" className="w-full sm:w-auto bg-white/20 text-white hover:bg-white/30 border border-white/30 shadow-none backdrop-blur-sm">
-                    <FileText size={18} className="mr-2" />Browse Research Materials
+                    <FileText size={18} className="mr-2" />Browse Research Topics and Materials
                   </Button>
                 </Link>
                 <Link href="/hire" className="w-full sm:w-auto">
