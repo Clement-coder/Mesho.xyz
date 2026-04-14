@@ -200,14 +200,14 @@ export default function DashboardPage() {
                       </div>
                     )}
                     {p.status === 'confirmed' && (
-                      <div className="space-y-2">
-                        <div className="flex items-start gap-2 bg-green-50 border border-green-200 rounded-xl px-3 py-2 text-xs text-green-700">
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                        <div className="flex items-start gap-2 bg-green-50 border border-green-200 rounded-xl px-3 py-2 text-xs text-green-700 flex-1">
                           <CheckCircle size={13} className="flex-shrink-0 mt-0.5" />
-                          <span><strong>Payment confirmed!</strong> Tap below to send your receipt and get your file.</span>
+                          <span><strong>Payment confirmed!</strong> Send your receipt to get your file.</span>
                         </div>
                         <a href={`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(`🧾 *PAYMENT RECEIPT — MESHO DATA SCIENCES*\n\n📚 Course: ${(p as any).projects?.title ?? 'Research Material'}\n💰 Amount: ₦${p.amount.toLocaleString()}\n🔖 Ref: ${p.payment_reference ?? '—'}\n📅 Date: ${new Date(p.created_at).toLocaleString()}\n✅ Status: CONFIRMED\n\nPlease send my file. Thank you!`)}`}
                           target="_blank" rel="noopener noreferrer"
-                          className="flex items-center justify-center gap-2 w-full bg-[#25D366] hover:bg-[#20BA5A] text-white py-2 rounded-xl text-xs font-medium transition-colors">
+                          className="flex items-center justify-center gap-2 sm:flex-shrink-0 bg-[#25D366] hover:bg-[#20BA5A] text-white py-2 px-4 rounded-xl text-xs font-medium transition-colors whitespace-nowrap">
                           <MessageCircle size={13} /> Send Receipt & Get My File
                         </a>
                       </div>
