@@ -5,7 +5,6 @@ import { useParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/app/components/badge';
 import { BankTransferModal } from '@/app/components/bank-transfer-modal';
-import { MessageAlert } from '@/app/components/message-alert';
 import { ConfirmModal } from '@/components/confirm-modal';
 import { ChevronLeft, Clock, GraduationCap, FileText, Lock, MessageCircle, Heart } from 'lucide-react';
 import { createClient } from '@/utils/supabase/client';
@@ -24,13 +23,11 @@ export default function ProjectPreviewPage() {
   const [showTransferModal, setShowTransferModal] = useState(false);
   const [showConfirmPurchase, setShowConfirmPurchase] = useState(false);
   const [showConfirmRemove, setShowConfirmRemove] = useState(false);
-  const [showSuccessAlert, setShowSuccessAlert] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [alreadyPurchased, setAlreadyPurchased] = useState(false);
   const [inWishlist, setInWishlist] = useState(false);
   const [wishlistLoading, setWishlistLoading] = useState(false);
   const [payRef, setPayRef] = useState('');
-  const [draftPurchaseId, setDraftPurchaseId] = useState<string | null>(null);
 
   // Redirect to signup if not authenticated
   useEffect(() => {
@@ -63,48 +60,37 @@ export default function ProjectPreviewPage() {
     setShowConfirmPurchase(true);
   };
 
-  const confirmAndOpenPayment = async () => {
+  const confirmAndOpenPayment = () => {
     if (!user || !project) return;
     setShowConfirmPurchase(false);
     const ref = `MESHO-${Date.now()}-${Math.random().toString(36).slice(2, 7).toUpperCase()}`;
     setPayRef(ref);
-    // Create draft purchase immediately so it shows in payments tab
-    const supabase = createClient();
-    const { data, error } = await supabase.from('purchases').insert({
-      user_id: user.id,
-      project_id: project.id,
-      amount: project.price,
-      payment_reference: ref,
-      status: 'awaiting_confirmation',
-      user_name: user.name,
-      user_email: user.email ?? '',
-      user_whatsapp: user.whatsapp ?? user.phone ?? '',
-    }).select('id').single();
-    if (error) { toast.error('Could not initiate payment. Please try again.'); return; }
-    setDraftPurchaseId(data.id);
     setShowTransferModal(true);
   };
 
-  const handleCancelPayment = async () => {
+  const handleCancelPayment = () => {
     setShowTransferModal(false);
-    if (draftPurchaseId) {
-      const supabase = createClient();
-      await supabase.from('purchases').delete().eq('id', draftPurchaseId);
-      setDraftPurchaseId(null);
-    }
     setPayRef('');
   };
 
   const handleIHavePaid = async () => {
-    if (!user || !project || !draftPurchaseId) return;
+    if (!user || !project) return;
     setSubmitting(true);
     const supabase = createClient();
-    const { error } = await supabase.from('purchases').update({ status: 'pending' }).eq('id', draftPurchaseId);
+    const { error } = await supabase.from('purchases').insert({
+      user_id: user.id,
+      project_id: project.id,
+      amount: project.price,
+      payment_reference: payRef,
+      status: 'pending',
+      user_name: user.name,
+      user_email: user.email ?? '',
+      user_whatsapp: user.whatsapp ?? user.phone ?? '',
+    });
     if (error) { toast.error('Submission failed. Please try again.'); setSubmitting(false); return; }
     setSubmitting(false);
     setShowTransferModal(false);
-    setDraftPurchaseId(null);
-    setShowSuccessAlert(true);
+    router.push('/dashboard?tab=payments');
   };
 
   const toggleWishlist = async () => {
@@ -139,16 +125,6 @@ export default function ProjectPreviewPage() {
 
   return (
     <div className="w-full">
-      {showSuccessAlert && (
-        <div className="fixed top-20 left-4 right-4 z-50 max-w-md mx-auto">
-          <MessageAlert
-            type="success"
-            message="Payment submitted! The admin will verify your transfer and send your material via WhatsApp or email shortly."
-            onClose={() => setShowSuccessAlert(false)}
-          />
-        </div>
-      )}
-
       <section className="py-8 md:py-12 px-4 bg-gradient-to-b from-accent/5 to-transparent border-b border-border">
         <div className="max-w-7xl mx-auto">
           <button onClick={() => router.back()} className="flex items-center gap-2 text-accent hover:text-accent/80 transition-colors mb-6 text-sm font-medium">

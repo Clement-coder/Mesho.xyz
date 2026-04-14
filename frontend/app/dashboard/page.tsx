@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { ProjectCard } from '../components/project-card';
 import { ProtectedRoute } from '@/components/protected-route';
@@ -30,6 +30,13 @@ export default function DashboardPage() {
   const [viewPayment, setViewPayment] = useState<(Purchase & { projects?: Project }) | null>(null);
   const { user, logout, refreshUser } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // Honor ?tab=payments redirect from payment flow
+  useEffect(() => {
+    const tab = searchParams.get('tab');
+    if (tab === 'payments') setActiveTab('payments');
+  }, [searchParams]);
 
   // Refresh user on mount so role/profile changes take effect
   useEffect(() => { refreshUser(); }, []);
