@@ -74,14 +74,15 @@ export default function DashboardPage() {
   const displayedProjects = search.trim()
     ? baseProjects.filter(p => p.title.toLowerCase().includes(search.toLowerCase()) || p.description?.toLowerCase().includes(search.toLowerCase()))
     : baseProjects;
-  const pendingCount = purchases.filter(p => p.status === 'pending').length;
+  const pendingCount = purchases.filter(p => p.status === 'pending' || p.status === 'awaiting_confirmation').length;
+  const purchasedCount = purchases.filter(p => p.status === 'confirmed').length;
 
   const handleLogout = () => { logout(); setShowLogoutModal(false); };
 
   const stats = [
-    { icon: FolderOpen, label: 'Purchased Materials', value: enrolledProjects.length, desc: 'Research materials you own' },
+    { icon: FolderOpen, label: 'Purchased Materials', value: purchasedCount, desc: 'Research materials you own' },
     { icon: CreditCard, label: 'Pending Payments', value: pendingCount, desc: 'Awaiting admin confirmation' },
-    { icon: Award, label: 'Completed Projects', value: user?.certificates ?? 0, desc: 'Projects fully completed' },
+    { icon: Award, label: 'Completed Projects', value: purchasedCount, desc: 'Projects fully completed' },
   ];
 
   const tabs = [
