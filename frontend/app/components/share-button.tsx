@@ -70,7 +70,7 @@ export function ShareButton({ title, url, description, compact }: ShareSheetProp
     <>
       <button
         onClick={e => { e.stopPropagation(); setOpen(true); }}
-        className={`flex items-center gap-1.5 rounded-xl border border-border hover:bg-muted transition-colors text-muted-foreground hover:text-foreground ${compact ? 'p-1.5' : 'text-sm px-3 py-2'}`}
+        className={`relative z-10 flex items-center gap-1.5 rounded-xl border border-border hover:bg-muted transition-colors text-muted-foreground hover:text-foreground ${compact ? 'p-1.5' : 'text-sm px-3 py-2'}`}
         title="Share"
       >
         <Share2 size={compact ? 13 : 15} />

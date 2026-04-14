@@ -146,8 +146,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-background gap-4">
         <div className="w-10 h-10 border-4 border-accent border-t-transparent rounded-full animate-spin" />
+        <div className="text-center space-y-1">
+          <p className="text-sm font-semibold text-foreground">Loading account details</p>
+          <p className="text-xs text-muted-foreground">Fetching your profile and preferences…</p>
+        </div>
       </div>
     );
   }

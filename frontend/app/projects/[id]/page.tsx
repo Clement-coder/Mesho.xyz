@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/app/components/badge';
 import { BankTransferModal } from '@/app/components/bank-transfer-modal';
 import { MessageAlert } from '@/app/components/message-alert';
+import { ConfirmModal } from '@/components/confirm-modal';
 import { ChevronLeft, Clock, GraduationCap, FileText, Lock, MessageCircle, Heart } from 'lucide-react';
 import { createClient } from '@/utils/supabase/client';
 import { useAuth } from '@/lib/auth-context';
@@ -21,6 +22,8 @@ export default function ProjectPreviewPage() {
   const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
   const [showTransferModal, setShowTransferModal] = useState(false);
+  const [showConfirmPurchase, setShowConfirmPurchase] = useState(false);
+  const [showConfirmRemove, setShowConfirmRemove] = useState(false);
   const [showSuccessAlert, setShowSuccessAlert] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [alreadyPurchased, setAlreadyPurchased] = useState(false);
@@ -56,6 +59,11 @@ export default function ProjectPreviewPage() {
       });
       return;
     }
+    setShowConfirmPurchase(true);
+  };
+
+  const confirmAndOpenPayment = () => {
+    setShowConfirmPurchase(false);
     const ref = `MESHO-${Date.now()}-${Math.random().toString(36).slice(2, 7).toUpperCase()}`;
     setPayRef(ref);
     setShowTransferModal(true);
@@ -84,6 +92,17 @@ export default function ProjectPreviewPage() {
   const toggleWishlist = async () => {
     if (!user) { router.push('/login'); return; }
     if (!project) return;
+    // Only confirm when removing
+    if (inWishlist) {
+      setShowConfirmPurchase(false); // reuse confirm modal for remove
+      setShowConfirmRemove(true);
+      return;
+    }
+    await doToggleWishlist();
+  };
+
+  const doToggleWishlist = async () => {
+    if (!user || !project) return;
     setWishlistLoading(true);
     const supabase = createClient();
     const newWishlist = inWishlist
@@ -238,6 +257,27 @@ export default function ProjectPreviewPage() {
         reference={payRef}
         onIHavePaid={handleIHavePaid}
         submitting={submitting}
+      />
+
+      <ConfirmModal
+        isOpen={showConfirmPurchase}
+        onClose={() => setShowConfirmPurchase(false)}
+        onConfirm={confirmAndOpenPayment}
+        title="Confirm Purchase"
+        description={`You are about to purchase "${project.title}" for ₦${project.price.toLocaleString()}. You will be shown bank transfer details to complete payment.`}
+        confirmLabel="Proceed to Payment"
+        cancelLabel="Cancel"
+      />
+
+      <ConfirmModal
+        isOpen={showConfirmRemove}
+        onClose={() => setShowConfirmRemove(false)}
+        onConfirm={() => { setShowConfirmRemove(false); doToggleWishlist(); }}
+        title="Remove from Saved?"
+        description="This topic will be removed from your saved list."
+        confirmLabel="Remove"
+        cancelLabel="Keep"
+        variant="destructive"
       />
     </div>
   );

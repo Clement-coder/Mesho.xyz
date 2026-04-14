@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { LogoutModal } from '@/components/logout-modal';
+import { ConfirmModal } from '@/components/confirm-modal';
 import { User, Mail, Calendar, Save, Camera, FolderOpen, BarChart3, Award, Phone, ChevronLeft, AlertCircle, LogOut } from 'lucide-react';
 import { createClient } from '@/utils/supabase/client';
 import { toast } from 'sonner';
@@ -36,6 +37,7 @@ export default function ProfilePage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [saving, setSaving] = useState(false);
   const [changingPw, setChangingPw] = useState(false);
+  const [showConfirmPw, setShowConfirmPw] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -88,6 +90,11 @@ export default function ProfilePage() {
     if (!newPassword || !confirmPassword) { toast.error('All password fields are required'); return; }
     if (newPassword !== confirmPassword) { toast.error('New passwords do not match'); return; }
     if (newPassword.length < 6) { toast.error('Password must be at least 6 characters'); return; }
+    setShowConfirmPw(true);
+  };
+
+  const doChangePassword = async () => {
+    setShowConfirmPw(false);
     setChangingPw(true);
     try {
       await changePassword(newPassword);
@@ -244,6 +251,16 @@ export default function ProfilePage() {
         </div>
       </div>
       <LogoutModal isOpen={showLogoutModal} onClose={() => setShowLogoutModal(false)} onConfirm={() => { logout(); setShowLogoutModal(false); }} />
+      <ConfirmModal
+        isOpen={showConfirmPw}
+        onClose={() => setShowConfirmPw(false)}
+        onConfirm={doChangePassword}
+        title="Change Password?"
+        description="Your current password will be replaced. You may need to sign in again on other devices."
+        confirmLabel="Yes, Change Password"
+        cancelLabel="Cancel"
+        variant="destructive"
+      />
     </ProtectedRoute>
   );
 }
