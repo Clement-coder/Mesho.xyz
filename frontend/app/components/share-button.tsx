@@ -16,6 +16,9 @@ interface ShareButtonProps {
 
 function ShareSheet({ title, url, description, onClose, gridRef }: ShareButtonProps & { onClose: () => void }) {
   const [copied, setCopied] = useState(false);
+  const [dragY, setDragY] = useState(0);
+  const startY = useRef(0);
+  const dragging = useRef(false);
 
   const copy = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -49,8 +52,15 @@ function ShareSheet({ title, url, description, onClose, gridRef }: ShareButtonPr
       {/* Sheet slides up from bottom of the container */}
       <div
         className="absolute inset-x-0 bottom-0 bg-background rounded-t-2xl shadow-2xl p-5 space-y-4 animate-in slide-in-from-bottom duration-300"
+        style={{ transform: `translateY(${dragY}px)`, transition: dragging.current ? 'none' : 'transform 0.3s ease' }}
         onClick={e => e.stopPropagation()}
+        onTouchStart={e => { dragging.current = true; startY.current = e.touches[0].clientY; setDragY(0); }}
+        onTouchMove={e => { if (!dragging.current) return; const dy = e.touches[0].clientY - startY.current; if (dy > 0) setDragY(dy); }}
+        onTouchEnd={() => { dragging.current = false; if (dragY > 80) onClose(); else setDragY(0); }}
       >
+        <div className="flex justify-center -mt-1 mb-1 cursor-grab">
+          <div className="w-10 h-1 rounded-full bg-border" />
+        </div>
         <div className="flex items-center justify-between">
           <h2 className="font-bold text-base">Share</h2>
           <button onClick={e => { e.stopPropagation(); onClose(); }} className="p-1.5 hover:bg-muted rounded-lg"><X size={16} /></button>
