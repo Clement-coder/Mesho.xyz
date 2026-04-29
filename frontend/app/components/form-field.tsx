@@ -44,10 +44,10 @@ interface IconInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
 export function IconInput({ icon: Icon, error, className = '', ...props }: IconInputProps) {
   return (
     <div className="relative">
-      {Icon && <Icon size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" aria-hidden="true" />}
+      {Icon && <Icon size={15} className={`absolute left-3 top-1/2 -translate-y-1/2 ${props.disabled ? 'text-muted-foreground/50' : 'text-muted-foreground'} pointer-events-none`} aria-hidden="true" />}
       <input
         {...props}
-        className={`w-full ${Icon ? 'pl-9' : 'pl-3'} pr-4 h-10 rounded-xl border ${error ? 'border-destructive focus-visible:ring-destructive' : 'border-border focus-visible:ring-ring'} bg-input text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 clay-inset transition-colors ${className}`}
+        className={`w-full ${Icon ? 'pl-9' : 'pl-3'} pr-4 h-10 rounded-xl border ${error ? 'border-destructive focus-visible:ring-destructive' : 'border-border focus-visible:ring-ring'} bg-input text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 clay-inset transition-colors disabled:opacity-60 disabled:cursor-not-allowed ${className}`}
       />
     </div>
   );

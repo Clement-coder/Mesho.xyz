@@ -20,7 +20,13 @@ export const ProjectCard = ({ title, description, difficulty, price, onClick, hr
 
   return (
     <div className="group w-full clay clay-hover transition-all duration-300 relative">
-      <button onClick={onClick} className="w-full text-left p-5 cursor-pointer block">
+      <div 
+        onClick={onClick} 
+        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onClick(); }}
+        className="w-full text-left p-5 cursor-pointer block focus:outline-none" 
+        role="button" 
+        tabIndex={0}
+      >
         <div className="flex items-start justify-between mb-3">
           <div className="flex-1 pr-2">
             <h3 className="font-semibold text-sm mb-1 line-clamp-2">{title}</h3>
@@ -37,7 +43,7 @@ export const ProjectCard = ({ title, description, difficulty, price, onClick, hr
             </div>
           </div>
         </div>
-      </button>
+      </div>
     </div>
   );
 };

@@ -5,10 +5,12 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { CheckCircle, ChevronLeft, User, Mail, Phone, BookOpen, FileText, Clock, GraduationCap, UserCheck, Eraser, BarChart3, FileSearch, Database, Building } from 'lucide-react';
 import { FormField, IconInput, StyledTextarea } from '@/app/components/form-field';
+import { DisabledPhoneInput } from '@/app/components/phone-display';
 import { createClient } from '@/utils/supabase/client';
 import { toast } from 'sonner';
 import { useAuthGuard } from '@/lib/use-auth-guard';
 import { useAuth } from '@/lib/auth-context';
+import { validatePhoneNumber } from '@/lib/phone-utils';
 
 const analystServices = [
   { id: 'cleaning', label: 'Data Cleaning & Preparation', icon: Eraser },
@@ -54,11 +56,21 @@ function HirePageContent() {
   const [researcherErrors, setResearcherErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const guard = useAuthGuard();
-  const { isAuthenticated, isLoading } = useAuth();
+  const { user, isAuthenticated, isLoading } = useAuth();
 
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) router.replace('/signup');
-  }, [isLoading, isAuthenticated, router]);
+    if (!isLoading && !isAuthenticated) {
+      toast.error('Please sign up or log in to continue');
+      router.replace('/signup');
+    } else if (user && (!user.name || !(user.whatsapp || user.phone))) {
+      toast.error('Please complete your profile (add phone/WhatsApp number) to continue');
+      router.replace('/profile');
+    } else if (user) {
+      const uPhone = user.whatsapp || user.phone || '';
+      setAnalystForm(f => ({ ...f, name: user.name || '', email: user.email || '', phone: uPhone }));
+      setResearcherForm(f => ({ ...f, name: user.name || '', email: user.email || '', phone: uPhone }));
+    }
+  }, [isLoading, isAuthenticated, user, router]);
 
   const setA = (k: string, v: string) => { setAnalystForm(f => ({ ...f, [k]: v })); setAnalystErrors(e => ({ ...e, [k]: '' })); };
   const setR = (k: string, v: string) => { setResearcherForm(f => ({ ...f, [k]: v })); setResearcherErrors(e => ({ ...e, [k]: '' })); };
@@ -74,6 +86,7 @@ function HirePageContent() {
     if (!analystForm.email.trim()) e.email = 'Email is required';
     else if (!/\S+@\S+\.\S+/.test(analystForm.email)) e.email = 'Enter a valid email';
     if (!analystForm.phone.trim()) e.phone = 'Phone number is required';
+    else if (!validatePhoneNumber(analystForm.phone)) e.phone = 'Enter a valid phone number';
     if (!analystForm.department.trim()) e.department = 'Department is required';
     if (analystForm.selectedServices.length === 0) e.services = 'Select at least one service';
     return e;
@@ -85,6 +98,7 @@ function HirePageContent() {
     if (!researcherForm.email.trim()) e.email = 'Email is required';
     else if (!/\S+@\S+\.\S+/.test(researcherForm.email)) e.email = 'Enter a valid email';
     if (!researcherForm.phone.trim()) e.phone = 'Phone number is required';
+    else if (!validatePhoneNumber(researcherForm.phone)) e.phone = 'Enter a valid phone number';
     if (!researcherForm.department.trim()) e.department = 'Department is required';
     if (!researcherForm.researchType) e.researchType = 'Select a research type';
     return e;
@@ -144,7 +158,10 @@ function HirePageContent() {
       </div>
       <h2 className="text-2xl font-bold mb-2">Request Submitted!</h2>
       <p className="text-muted-foreground mb-1">Thank you, <span className="font-semibold text-foreground">{name}</span>. Your request has been received.</p>
-      <p className="text-muted-foreground text-sm">We'll contact you at <span className="font-semibold text-foreground">{email}</span> shortly.</p>
+      <p className="text-muted-foreground text-sm mb-6">We'll contact you at <span className="font-semibold text-foreground">{email}</span> shortly.</p>
+      <Button onClick={() => router.push('/dashboard?tab=hire')} className="gap-2">
+        <UserCheck size={16} /> View My Hire Requests
+      </Button>
     </div>
   );
 
@@ -208,15 +225,15 @@ function HirePageContent() {
                   <form onSubmit={handleAnalystSubmit} className="space-y-5" noValidate>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <FormField label="Full Name" required icon={User} error={analystErrors.name} success={!analystErrors.name && analystForm.name.length > 1}>
-                        <IconInput icon={User} placeholder="Your full name" value={analystForm.name} onChange={e => setA('name', e.target.value)} error={!!analystErrors.name} autoComplete="name" />
+                        <IconInput icon={User} placeholder="Your full name" value={analystForm.name} onChange={e => setA('name', e.target.value)} error={!!analystErrors.name} autoComplete="name" disabled />
                       </FormField>
                       <FormField label="Email Address" required icon={Mail} error={analystErrors.email} success={!analystErrors.email && /\S+@\S+\.\S+/.test(analystForm.email)}>
-                        <IconInput icon={Mail} type="email" placeholder="your@email.com" value={analystForm.email} onChange={e => setA('email', e.target.value)} error={!!analystErrors.email} autoComplete="email" />
+                        <IconInput icon={Mail} type="email" placeholder="your@email.com" value={analystForm.email} onChange={e => setA('email', e.target.value)} error={!!analystErrors.email} autoComplete="email" disabled />
                       </FormField>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <FormField label="Phone Number" required icon={Phone} error={analystErrors.phone} success={!analystErrors.phone && analystForm.phone.length >= 7}>
-                        <IconInput icon={Phone} placeholder="e.g. 08012345678" value={analystForm.phone} onChange={e => setA('phone', e.target.value.replace(/\D/g, ''))} error={!!analystErrors.phone} autoComplete="tel" />
+                        <DisabledPhoneInput phone={analystForm.phone} />
                       </FormField>
                       <FormField label="Institution" icon={Building} hint="Optional">
                         <IconInput icon={Building} placeholder="Your university or organisation" value={analystForm.institution} onChange={e => setA('institution', e.target.value)} />
@@ -267,15 +284,15 @@ function HirePageContent() {
                   <form onSubmit={handleResearcherSubmit} className="space-y-5" noValidate>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <FormField label="Full Name" required icon={User} error={researcherErrors.name} success={!researcherErrors.name && researcherForm.name.length > 1}>
-                        <IconInput icon={User} placeholder="Your full name" value={researcherForm.name} onChange={e => setR('name', e.target.value)} error={!!researcherErrors.name} autoComplete="name" />
+                        <IconInput icon={User} placeholder="Your full name" value={researcherForm.name} onChange={e => setR('name', e.target.value)} error={!!researcherErrors.name} autoComplete="name" disabled />
                       </FormField>
                       <FormField label="Email Address" required icon={Mail} error={researcherErrors.email} success={!researcherErrors.email && /\S+@\S+\.\S+/.test(researcherForm.email)}>
-                        <IconInput icon={Mail} type="email" placeholder="your@email.com" value={researcherForm.email} onChange={e => setR('email', e.target.value)} error={!!researcherErrors.email} autoComplete="email" />
+                        <IconInput icon={Mail} type="email" placeholder="your@email.com" value={researcherForm.email} onChange={e => setR('email', e.target.value)} error={!!researcherErrors.email} autoComplete="email" disabled />
                       </FormField>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <FormField label="Phone Number" required icon={Phone} error={researcherErrors.phone} success={!researcherErrors.phone && researcherForm.phone.length >= 7}>
-                        <IconInput icon={Phone} placeholder="e.g. 08012345678" value={researcherForm.phone} onChange={e => setR('phone', e.target.value.replace(/\D/g, ''))} error={!!researcherErrors.phone} autoComplete="tel" />
+                        <DisabledPhoneInput phone={researcherForm.phone} />
                       </FormField>
                       <FormField label="Department" required icon={BookOpen} error={researcherErrors.department} success={!researcherErrors.department && researcherForm.department.length > 1}>
                         <IconInput icon={BookOpen} placeholder="e.g. Accounting, Microbiology" value={researcherForm.department} onChange={e => setR('department', e.target.value)} error={!!researcherErrors.department} />

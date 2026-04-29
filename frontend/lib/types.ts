@@ -79,6 +79,7 @@ export interface HireRequest {
   details: string | null;
   status: 'pending' | 'in_progress' | 'completed' | 'cancelled';
   created_at: string;
+  profile_picture_url?: string | null;
 }
 
 export interface TrainingRegistration {
@@ -90,6 +91,7 @@ export interface TrainingRegistration {
   schedule: string;
   status: 'pending' | 'confirmed' | 'cancelled';
   created_at: string;
+  profile_picture_url?: string | null;
 }
 
 export interface ContactMessage {

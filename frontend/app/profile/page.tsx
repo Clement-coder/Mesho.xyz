@@ -14,14 +14,7 @@ import { createClient } from '@/utils/supabase/client';
 import { toast } from 'sonner';
 import { CustomSelect } from '@/app/components/custom-select';
 
-const countryCodes = [
-  { code: '+234', flag: '🇳🇬', name: 'Nigeria' },
-  { code: '+1',   flag: '🇺🇸', name: 'USA' },
-  { code: '+44',  flag: '🇬🇧', name: 'UK' },
-  { code: '+233', flag: '🇬🇭', name: 'Ghana' },
-  { code: '+254', flag: '🇰🇪', name: 'Kenya' },
-  { code: '+27',  flag: '🇿🇦', name: 'South Africa' },
-];
+import { countryCodes, validatePhoneNumber } from '@/lib/phone-utils';
 
 export default function ProfilePage() {
   const { user, logout, refreshUser, changePassword } = useAuth();
@@ -73,7 +66,7 @@ export default function ProfilePage() {
     e.preventDefault();
     if (!name.trim()) { toast.error('Name is required'); return; }
     if (!whatsapp.trim()) { setWhatsappError('WhatsApp number is required to receive your materials'); return; }
-    if (whatsapp.length < 7) { setWhatsappError('Enter a valid WhatsApp number'); return; }
+    if (!validatePhoneNumber(whatsapp)) { setWhatsappError('Enter a valid WhatsApp number'); return; }
     if (!user) return;
     setSaving(true);
     const supabase = createClient();

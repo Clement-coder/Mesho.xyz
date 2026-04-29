@@ -15,14 +15,7 @@ const BG_IMAGES = [
   '/Hire-Data-anylyst.jpg',
 ];
 
-const countryCodes = [
-  { code: '+234', flag: '🇳🇬', name: 'Nigeria' },
-  { code: '+1', flag: '🇺🇸', name: 'USA' },
-  { code: '+44', flag: '🇬🇧', name: 'UK' },
-  { code: '+233', flag: '🇬🇭', name: 'Ghana' },
-  { code: '+254', flag: '🇰🇪', name: 'Kenya' },
-  { code: '+27', flag: '🇿🇦', name: 'South Africa' },
-];
+import { countryCodes, validatePhoneNumber } from '@/lib/phone-utils';
 
 function PasswordStrength({ password }: { password: string }) {
   const checks = [
@@ -82,7 +75,7 @@ export default function SignUpPage() {
     setError('');
     if (!form.name.trim()) { setError('Full name is required'); return; }
     if (!form.email.trim() || !/\S+@\S+\.\S+/.test(form.email)) { setError('Please enter a valid email address'); return; }
-    if (!form.phone.trim()) { setError('WhatsApp number is required'); return; }
+    if (!form.phone.trim() || !validatePhoneNumber(form.phone)) { setError('Please enter a valid WhatsApp number'); return; }
     if (!form.password) { setError('Password is required'); return; }
     if (form.password.length < 6) { setError('Password must be at least 6 characters'); return; }
     if (form.password !== form.confirmPassword) { setError('Passwords do not match'); return; }

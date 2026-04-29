@@ -10,35 +10,39 @@ import { useAuth } from '@/lib/auth-context';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { LogoutModal } from '@/components/logout-modal';
 import { DashboardSidebar } from '../components/dashboard-sidebar';
-import { BookOpen, BarChart3, Award, FolderOpen, Search, Heart, UserCircle, CreditCard, Clock, CheckCircle, XCircle, ChevronLeft, MessageCircle, ShieldCheck, Eye, X, Copy } from 'lucide-react';
+import { BookOpen, BarChart3, Award, FolderOpen, Search, Heart, UserCircle, CreditCard, Clock, CheckCircle, XCircle, ChevronLeft, MessageCircle, ShieldCheck, Eye, X, Copy, Building2, ClipboardList, Info } from 'lucide-react';
 import { PaymentReceipt } from '../components/payment-receipt';
 import { BottomSheet } from '@/components/bottom-sheet';
 import { toast } from 'sonner';
 
 const WA_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? '2348012345678';
 import { createClient } from '@/utils/supabase/client';
-import type { Project, Purchase } from '@/lib/types';
+import type { Project, Purchase, HireRequest } from '@/lib/types';
+import { getUserHireRequests } from './actions';
 
 const statusIcon = { awaiting_confirmation: Clock, pending: Clock, confirmed: CheckCircle, failed: XCircle };
 const statusColor = { awaiting_confirmation: 'text-blue-600 bg-blue-50', pending: 'text-yellow-600 bg-yellow-50', confirmed: 'text-green-600 bg-green-50', failed: 'text-red-600 bg-red-50' };
 
 export default function DashboardPage() {
-  const [activeTab, setActiveTab] = useState<'enrolled' | 'all' | 'wishlist' | 'payments'>('enrolled');
+  const [activeTab, setActiveTab] = useState<'enrolled' | 'all' | 'wishlist' | 'payments' | 'hire'>('enrolled');
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [allProjects, setAllProjects] = useState<Project[]>([]);
   const [purchases, setPurchases] = useState<(Purchase & { projects?: Project })[]>([]);
+  const [hireRequests, setHireRequests] = useState<HireRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewPayment, setViewPayment] = useState<(Purchase & { projects?: Project }) | null>(null);
+  const [viewHireRequest, setViewHireRequest] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const gridRef = useRef<HTMLDivElement>(null);
   const { user, logout, refreshUser } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // Honor ?tab=payments redirect from payment flow
+  // Honor ?tab= redirect from external pages
   useEffect(() => {
     const tab = searchParams.get('tab');
     if (tab === 'payments') setActiveTab('payments');
+    if (tab === 'hire') setActiveTab('hire');
   }, [searchParams]);
 
   // Reset search on tab change
@@ -52,17 +56,15 @@ export default function DashboardPage() {
     const supabase = createClient();
     Promise.all([
       supabase.from('projects').select('*').order('title'),
-      // Fetch all purchases visible to this client, filter by user_id client-side
-      // This works regardless of RLS since 07_fixes.sql opens select
       supabase.from('purchases').select('*, projects(*)').order('created_at', { ascending: false }),
-    ]).then(([{ data: projs, error: projErr }, { data: allPurch, error: purchErr }]) => {
+      getUserHireRequests(user.email)
+    ]).then(([{ data: projs, error: projErr }, { data: allPurch, error: purchErr }, hireData]) => {
       if (projErr) console.error('projects error:', projErr);
       if (purchErr) console.error('purchases error:', purchErr);
-      // Filter to this user's purchases client-side
       const purch = (allPurch ?? []).filter((p: any) => p.user_id === user.id);
-      console.log('user.id:', user.id, 'all purchases:', allPurch?.length, 'mine:', purch.length);
       setAllProjects(projs ?? []);
       setPurchases(purch);
+      setHireRequests(hireData ?? []);
       setLoading(false);
     });
   }, [user]);
@@ -86,10 +88,11 @@ export default function DashboardPage() {
   ];
 
   const tabs = [
-    { id: 'enrolled', label: 'My Materials', icon: FolderOpen },
-    { id: 'payments', label: 'Payments', icon: CreditCard, badge: pendingCount },
-    { id: 'all', label: 'All Topics', icon: Search },
-    { id: 'wishlist', label: 'Saved', icon: Heart },
+    { id: 'enrolled', label: 'My Materials', short: 'Materials', icon: FolderOpen },
+    { id: 'payments', label: 'Payments', short: 'Payments', icon: CreditCard, badge: pendingCount },
+    { id: 'all', label: 'All Topics', short: 'Topics', icon: Search },
+    { id: 'wishlist', label: 'Saved', short: 'Saved', icon: Heart },
+    { id: 'hire', label: 'My Hire Requests', short: 'Hire', icon: UserCircle },
   ];
 
   return (
@@ -225,8 +228,96 @@ export default function DashboardPage() {
             </div>
           )}
 
+          {/* Hire Requests tab */}
+          {activeTab === 'hire' && (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between mb-2">
+                <h2 className="font-semibold">My Hire Requests</h2>
+                <span className="text-xs text-muted-foreground">{hireRequests.length} total</span>
+              </div>
+              {loading ? (
+                Array.from({ length: 3 }).map((_, i) => <div key={i} className="clay h-24 animate-pulse rounded-2xl" />)
+              ) : hireRequests.length === 0 ? (
+                <div className="clay p-10 text-center">
+                  <UserCircle size={36} className="text-accent mx-auto mb-3 opacity-60" />
+                  <p className="font-semibold mb-1">No hire requests yet</p>
+                  <p className="text-muted-foreground text-sm mb-5">Need a data analyst or researcher? We can help.</p>
+                  <Link href="/hire"><Button><BookOpen size={16} className="mr-2" />Hire a Professional</Button></Link>
+                </div>
+              ) : hireRequests.map((r, i) => {
+                const isExpanded = viewHireRequest === r.id;
+                return (
+                  <div key={r.id} className="clay p-4 animate-in fade-in slide-in-from-bottom duration-500" style={{ animationDelay: `${i * 50}ms` }}>
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2 flex-wrap mb-1">
+                          <p className="font-medium truncate">{r.name}</p>
+                          <span className="text-xs px-2 py-0.5 rounded-full bg-accent/10 text-accent font-medium">
+                            {r.type === 'analyst' ? 'Data Analyst' : 'Researcher'}
+                          </span>
+                          <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${r.status === 'completed' ? 'bg-green-100 text-green-700' : r.status === 'in_progress' ? 'bg-blue-100 text-blue-700' : r.status === 'cancelled' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                            {r.status.replace('_', ' ')}
+                          </span>
+                        </div>
+                        <p className="text-sm text-muted-foreground truncate">Dept: {r.department}{r.topic ? ` • Topic: ${r.topic}` : ''}</p>
+                      </div>
+                      <button onClick={() => setViewHireRequest(isExpanded ? null : r.id)} className="text-xs px-3 py-1.5 rounded-lg border border-border hover:bg-muted transition-colors flex-shrink-0">
+                        {isExpanded ? 'Hide' : 'View Details'}
+                      </button>
+                    </div>
+                    {isExpanded && (
+                      <div className="mt-4 pt-4 border-t border-border animate-in fade-in slide-in-from-top-2 duration-200">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5 text-sm">
+                          {r.deadline && (
+                            <div className="flex items-start gap-2 bg-muted/30 rounded-xl p-3">
+                              <Clock size={16} className="text-muted-foreground mt-0.5 flex-shrink-0" />
+                              <div><p className="text-xs text-muted-foreground mb-0.5">Deadline</p><p className="font-medium">{new Date(r.deadline).toLocaleDateString(undefined, { weekday: 'short', year: 'numeric', month: 'long', day: 'numeric' })}</p></div>
+                            </div>
+                          )}
+                          {r.institution && (
+                            <div className="flex items-start gap-2 bg-muted/30 rounded-xl p-3">
+                              <Building2 size={16} className="text-muted-foreground mt-0.5 flex-shrink-0" />
+                              <div><p className="text-xs text-muted-foreground mb-0.5">Institution</p><p className="font-medium">{r.institution}</p></div>
+                            </div>
+                          )}
+                          {r.research_type && (
+                            <div className="flex items-start gap-2 bg-muted/30 rounded-xl p-3">
+                              <BookOpen size={16} className="text-muted-foreground mt-0.5 flex-shrink-0" />
+                              <div><p className="text-xs text-muted-foreground mb-0.5">Research Type</p><p className="font-medium capitalize">{r.research_type}</p></div>
+                            </div>
+                          )}
+                          {r.services && r.services.length > 0 && (
+                            <div className="flex items-start gap-2 bg-muted/30 rounded-xl p-3">
+                              <ClipboardList size={16} className="text-muted-foreground mt-0.5 flex-shrink-0" />
+                              <div><p className="text-xs text-muted-foreground mb-0.5">Requested Services</p><p className="font-medium capitalize">{r.services.join(', ')}</p></div>
+                            </div>
+                          )}
+                        </div>
+                        {r.details && (
+                          <div className="flex items-start gap-3 bg-accent/5 rounded-xl p-4 mb-5">
+                            <Info size={18} className="text-accent mt-0.5 flex-shrink-0" />
+                            <div>
+                              <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wide mb-1">Additional Details</p>
+                              <p className="text-sm leading-relaxed">{r.details}</p>
+                            </div>
+                          </div>
+                        )}
+                        <p className="text-xs text-muted-foreground mb-4">Submitted on {new Date(r.created_at).toLocaleString()}</p>
+                        <div className="mt-4 flex justify-end">
+                          <a href={`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(`Hello Mesho Data Sciences, I would like to follow up on my ${r.type === 'analyst' ? 'Data Analyst' : 'Researcher'} request submitted on ${new Date(r.created_at).toLocaleDateString()}.`)}`} target="_blank" rel="noopener noreferrer">
+                            <Button size="sm" className="bg-[#25D366] hover:bg-[#20BA5A] text-white gap-2 border-0"><MessageCircle size={14} /> Contact Support via WhatsApp</Button>
+                          </a>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
           {/* Projects tabs */}
-          {activeTab !== 'payments' && (
+          {(activeTab !== 'payments' && activeTab !== 'hire') && (
             <>
               {/* Tab heading + optional search */}
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
@@ -289,7 +380,8 @@ export default function DashboardPage() {
           <button key={item.id} onClick={() => setActiveTab(item.id as any)}
             className={`relative flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-xl transition-all text-xs ${activeTab === item.id ? 'text-accent' : 'text-muted-foreground'}`}>
             <item.icon size={20} />
-            <span>{item.label}</span>
+            <span className="hidden sm:inline">{item.label}</span>
+            <span className="sm:hidden">{item.short}</span>
             {(item as any).badge > 0 && (
               <span className="absolute -top-0.5 right-0.5 w-4 h-4 bg-yellow-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center">
                 {(item as any).badge}
@@ -298,14 +390,14 @@ export default function DashboardPage() {
           </button>
         ))}
         {user?.role === 'admin' ? (
-          <Link href="/admin" className="flex-1 px-2">
-            <button className="w-full flex flex-col items-center gap-0.5 py-1.5 rounded-xl bg-accent text-white text-xs font-medium">
+          <Link href="/admin">
+            <button className="flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-xl text-accent transition-all text-xs font-medium">
               <ShieldCheck size={20} /><span>Admin</span>
             </button>
           </Link>
         ) : (
           <Link href="/profile">
-            <button className="flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-xl text-muted-foreground text-xs">
+            <button className="flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-xl text-muted-foreground text-xs transition-colors hover:text-foreground">
               <UserCircle size={20} /><span>Profile</span>
             </button>
           </Link>

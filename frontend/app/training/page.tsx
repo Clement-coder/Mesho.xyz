@@ -9,6 +9,8 @@ import { createClient } from '@/utils/supabase/client';
 import { toast } from 'sonner';
 import { useAuthGuard } from '@/lib/use-auth-guard';
 import { useAuth } from '@/lib/auth-context';
+import { DisabledPhoneInput } from '@/app/components/phone-display';
+import { validatePhoneNumber } from '@/lib/phone-utils';
 
 const schedules = [
   { id: 'weekday-morning', label: 'Weekdays — Morning (8am–11am)', icon: Clock },
@@ -33,11 +35,19 @@ export default function TrainingPage() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const guard = useAuthGuard();
-  const { isAuthenticated, isLoading } = useAuth();
+  const { user, isAuthenticated, isLoading } = useAuth();
 
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) router.replace('/signup');
-  }, [isLoading, isAuthenticated, router]);
+    if (!isLoading && !isAuthenticated) {
+      toast.error('Please sign up or log in to continue');
+      router.replace('/signup');
+    } else if (user && (!user.name || !(user.whatsapp || user.phone))) {
+      toast.error('Please complete your profile (add phone/WhatsApp number) to continue');
+      router.replace('/profile');
+    } else if (user) {
+      setForm(f => ({ ...f, name: user.name || '', email: user.email || '', phone: user.whatsapp || user.phone || '' }));
+    }
+  }, [isLoading, isAuthenticated, user, router]);
 
   const set = (k: string, v: string) => { setForm(f => ({ ...f, [k]: v })); setErrors(e => ({ ...e, [k]: '' })); };
 
@@ -49,7 +59,7 @@ export default function TrainingPage() {
     if (!form.email.trim()) errs.email = 'Email is required';
     else if (!/\S+@\S+\.\S+/.test(form.email)) errs.email = 'Enter a valid email address';
     if (!form.phone.trim()) errs.phone = 'Phone number is required';
-    else if (!/^\d{7,15}$/.test(form.phone.replace(/\s/g, ''))) errs.phone = 'Enter a valid phone number';
+    else if (!validatePhoneNumber(form.phone)) errs.phone = 'Enter a valid phone number';
     if (!form.schedule) errs.schedule = 'Please select a preferred schedule';
     if (Object.keys(errs).length) { setErrors(errs); return; }
 
@@ -127,15 +137,15 @@ export default function TrainingPage() {
                   <form onSubmit={handleSubmit} className="space-y-5" noValidate>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <FormField label="Full Name" required icon={User} error={errors.name} success={!errors.name && form.name.length > 1}>
-                        <IconInput icon={User} placeholder="Your full name" value={form.name} onChange={e => set('name', e.target.value)} error={!!errors.name} autoComplete="name" />
+                        <IconInput icon={User} placeholder="Your full name" value={form.name} onChange={e => set('name', e.target.value)} error={!!errors.name} autoComplete="name" disabled />
                       </FormField>
                       <FormField label="Email Address" required icon={Mail} error={errors.email} success={!errors.email && /\S+@\S+\.\S+/.test(form.email)}>
-                        <IconInput icon={Mail} type="email" placeholder="your@email.com" value={form.email} onChange={e => set('email', e.target.value)} error={!!errors.email} autoComplete="email" />
+                        <IconInput icon={Mail} type="email" placeholder="your@email.com" value={form.email} onChange={e => set('email', e.target.value)} error={!!errors.email} autoComplete="email" disabled />
                       </FormField>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <FormField label="Phone Number" required icon={Phone} error={errors.phone} success={!errors.phone && form.phone.length >= 7}>
-                        <IconInput icon={Phone} placeholder="e.g. 08012345678" value={form.phone} onChange={e => set('phone', e.target.value.replace(/\D/g, ''))} error={!!errors.phone} autoComplete="tel" />
+                        <DisabledPhoneInput phone={form.phone} />
                       </FormField>
                       <FormField label="Institution" icon={Building} hint="Optional">
                         <IconInput icon={Building} placeholder="Your university or organisation" value={form.institution} onChange={e => set('institution', e.target.value)} />

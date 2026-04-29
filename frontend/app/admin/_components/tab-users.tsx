@@ -6,6 +6,7 @@ import { useAuth } from '@/lib/auth-context';
 import { toast } from 'sonner';
 import type { Profile } from '@/lib/types';
 import { BottomSheet } from '@/components/bottom-sheet';
+import { PhoneDisplay } from '@/app/components/phone-display';
 
 const WA = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? '2348012345678';
 
@@ -40,7 +41,7 @@ function UserModal({ u, onClose }: { u: Profile; onClose: () => void }) {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
               {[
                 { icon: Mail, label: 'Email', value: u.email || '—' },
-                { icon: Phone, label: 'WhatsApp', value: u.whatsapp || u.phone || '—' },
+                { icon: Phone, label: 'WhatsApp', isPhone: true, value: u.whatsapp || u.phone || '' },
                 { icon: Calendar, label: 'Joined', value: new Date(u.created_at).toLocaleDateString() },
                 { icon: FolderOpen, label: 'Materials Purchased', value: u.enrolled_projects.length },
                 { icon: Heart, label: 'Saved Topics', value: u.wishlist.length },
@@ -49,7 +50,7 @@ function UserModal({ u, onClose }: { u: Profile; onClose: () => void }) {
                   <item.icon size={15} className="text-accent flex-shrink-0" />
                   <div>
                     <p className="text-xs text-muted-foreground">{item.label}</p>
-                    <p className="font-medium">{item.value}</p>
+                    {item.isPhone ? <PhoneDisplay phone={item.value as string} className="mt-0.5" /> : <p className="font-medium">{item.value}</p>}
                   </div>
                 </div>
               ))}

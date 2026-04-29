@@ -75,7 +75,7 @@ export function AdminShell({ active, onTab, badges = {}, children }: AdminShellP
       </div>
 
       {/* Main content */}
-      <main className="flex-1 md:ml-56 pt-[57px] md:pt-0">
+      <main className="flex-1 min-w-0 md:ml-56 pt-[57px] md:pt-0">
         <div className="md:hidden h-24" />{/* spacer for mobile tabs + back row */}
         <div className="max-w-6xl mx-auto px-4 py-6">
           {children}

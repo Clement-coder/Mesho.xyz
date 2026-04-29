@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { createClient } from '@/utils/supabase/client';
 import { Users, ShoppingCart, TrendingUp, FolderOpen, UserCheck, BookOpen, MessageCircle, Mail, Clock } from 'lucide-react';
 import type { AdminTab } from './admin-shell';
+import { getAdminOverviewStats } from '../actions';
 
 interface Props { onTab: (t: AdminTab) => void; }
 
@@ -11,31 +12,26 @@ export function AdminOverview({ onTab }: Props) {
   const [recent, setRecent] = useState<{ purchases: any[]; hire: any[] }>({ purchases: [], hire: [] });
 
   useEffect(() => {
-    const s = createClient();
-    Promise.all([
-      s.from('profiles').select('id', { count: 'exact', head: true }),
-      s.from('purchases').select('id,amount,status'),
-      s.from('hire_requests').select('id', { count: 'exact', head: true }),
-      s.from('training_registrations').select('id', { count: 'exact', head: true }),
-      s.from('contact_messages').select('id,read'),
-      s.from('projects').select('id', { count: 'exact', head: true }),
-      s.from('purchases').select('id,amount,status,created_at,user_name,user_email,projects(title)').order('created_at',{ascending:false}).limit(5),
-      s.from('hire_requests').select('id,name,type,department,status,created_at').order('created_at',{ascending:false}).limit(5),
-    ]).then(([u,pu,h,tr,cm,pr,rpu,rh]) => {
-      const pData = pu.data ?? [];
-      setStats({
-        users: u.count ?? 0,
-        purchases: pData.length,
-        revenue: pData.filter((x:any)=>x.status==='confirmed').reduce((a:number,x:any)=>a+x.amount,0),
-        projects: pr.count ?? 0,
-        hire: h.count ?? 0,
-        training: tr.count ?? 0,
-        messages: cm.count ?? 0,
-        unread: (cm.data??[]).filter((x:any)=>!x.read).length,
-        pending: pData.filter((x:any)=>x.status==='pending').length,
-      });
-      setRecent({ purchases: rpu.data??[], hire: rh.data??[] });
-    });
+    const fetchAll = async () => {
+      try {
+        const data = await getAdminOverviewStats();
+        setStats({
+          users: data.users,
+          purchases: data.purchases,
+          revenue: data.revenue,
+          projects: data.projects,
+          hire: data.hire,
+          training: data.training,
+          messages: data.messages,
+          unread: data.unread,
+          pending: data.pending,
+        });
+        setRecent({ purchases: data.recentPurchases, hire: data.recentHire });
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    fetchAll();
   }, []);
 
   const cards = [

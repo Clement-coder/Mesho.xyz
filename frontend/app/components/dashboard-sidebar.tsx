@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { BookOpen, BarChart3, TrendingUp, Settings, LogOut, FolderOpen, Search, Heart, ShieldCheck, CreditCard } from 'lucide-react';
+import { BookOpen, BarChart3, TrendingUp, Settings, LogOut, FolderOpen, Search, Heart, ShieldCheck, CreditCard, UserCircle } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 
 interface DashboardSidebarProps {
@@ -18,6 +18,7 @@ export function DashboardSidebar({ activeTab, onTabChange, onLogout }: Dashboard
   const navItems = [
     { id: 'enrolled', label: 'My Materials', icon: FolderOpen, desc: 'View purchased research materials' },
     { id: 'payments', label: 'My Payments', icon: CreditCard, desc: 'Track your payment status' },
+    { id: 'hire', label: 'My Hire Requests', icon: UserCircle, desc: 'Track your data analyst or researcher requests' },
     { id: 'all', label: 'All Topics', icon: Search, desc: 'Browse all available project topics' },
     { id: 'wishlist', label: 'Saved', icon: Heart, desc: 'Your saved topics' },
   ];
