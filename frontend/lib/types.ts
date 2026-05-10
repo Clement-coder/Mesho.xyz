@@ -10,6 +10,8 @@ export interface Profile {
   wishlist: string[];
   hours_learned: number;
   certificates: number;
+  referral_code: string | null;
+  referred_by: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -54,6 +56,8 @@ export interface Purchase {
   project_id: string;
   amount: number;
   payment_reference: string | null;
+  discount_code: string | null;
+  discount_amount: number;
   status: 'awaiting_confirmation' | 'pending' | 'confirmed' | 'failed';
   rejection_reason: string | null;
   user_name: string | null;
@@ -62,6 +66,28 @@ export interface Purchase {
   created_at: string;
   project?: Project;
   profile?: Profile;
+}
+
+export interface ReferralReward {
+  id: string;
+  referrer_id: string;
+  referee_id: string;
+  purchase_id: string;
+  discount_code: string;
+  discount_amount: number;
+  used: boolean;
+  created_at: string;
+}
+
+export interface ReferralSignup {
+  id: string;
+  referrer_code: string;
+  referrer_id: string;
+  referee_id: string;
+  referee_name: string;
+  referee_email: string;
+  completed: boolean;
+  created_at: string;
 }
 
 export interface HireRequest {

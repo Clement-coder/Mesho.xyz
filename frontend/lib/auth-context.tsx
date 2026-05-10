@@ -34,10 +34,53 @@ async function ensureProfile(fbUser: FirebaseUser): Promise<Profile> {
   const supabase = createClient();
   // Try to fetch existing profile
   const { data } = await supabase.from('profiles').select('*').eq('id', fbUser.uid).single();
-  if (data) return { ...data, email: data.email || fbUser.email || '' };
+  if (data) {
+    // If the profile exists but has no referred_by yet, apply any stored referral code now
+    if (!data.referred_by) {
+      const referredBy = typeof window !== 'undefined' ? localStorage.getItem('mesho_ref') : null;
+      if (referredBy) {
+        // Validate: code must exist and must not be the user's own code
+        const { data: referrer } = await supabase
+          .from('profiles')
+          .select('id, referral_code')
+          .eq('referral_code', referredBy)
+          .neq('id', fbUser.uid)   // block self-referral
+          .maybeSingle();
+        if (referrer) {
+          await supabase.from('profiles').update({ referred_by: referredBy }).eq('id', fbUser.uid);
+          // Record signup row (ignore conflict — may already exist)
+          await supabase.from('referral_signups').upsert({
+            referrer_code: referredBy,
+            referrer_id: referrer.id,
+            referee_id: fbUser.uid,
+            referee_name: data.name,
+            referee_email: data.email || fbUser.email || '',
+            completed: false,
+          }, { onConflict: 'referrer_id,referee_id', ignoreDuplicates: true });
+        }
+        if (typeof window !== 'undefined') localStorage.removeItem('mesho_ref');
+        return { ...data, referred_by: referredBy, email: data.email || fbUser.email || '' };
+      }
+    }
+    return { ...data, email: data.email || fbUser.email || '' };
+  }
 
   // Profile doesn't exist yet — create it (Google sign-up or race condition)
   const name = fbUser.displayName ?? fbUser.email?.split('@')[0] ?? 'User';
+  const referredBy = typeof window !== 'undefined' ? localStorage.getItem('mesho_ref') : null;
+
+  // Validate referral code: must exist and not be the user's own
+  let validReferrer: { id: string } | null = null;
+  if (referredBy) {
+    const { data: ref } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('referral_code', referredBy)
+      .neq('id', fbUser.uid)
+      .maybeSingle();
+    validReferrer = ref ?? null;
+  }
+
   await supabase.from('profiles').insert({
     id: fbUser.uid,
     name,
@@ -50,9 +93,24 @@ async function ensureProfile(fbUser: FirebaseUser): Promise<Profile> {
     wishlist: [],
     hours_learned: 0,
     certificates: 0,
+    referred_by: validReferrer ? referredBy : null,
   });
+
+  // Record referral signup row
+  if (validReferrer && referredBy) {
+    await supabase.from('referral_signups').upsert({
+      referrer_code: referredBy,
+      referrer_id: validReferrer.id,
+      referee_id: fbUser.uid,
+      referee_name: name,
+      referee_email: fbUser.email ?? '',
+      completed: false,
+    }, { onConflict: 'referrer_id,referee_id', ignoreDuplicates: true });
+  }
+
+  if (referredBy && typeof window !== 'undefined') localStorage.removeItem('mesho_ref');
   const { data: created } = await supabase.from('profiles').select('*').eq('id', fbUser.uid).single();
-  return { ...(created ?? { id: fbUser.uid, name, role: 'user', enrolled_projects: [], wishlist: [], hours_learned: 0, certificates: 0, phone: null, whatsapp: null, profile_picture_url: fbUser.photoURL ?? null, created_at: new Date().toISOString(), updated_at: new Date().toISOString() }), email: fbUser.email ?? '' };
+  return { ...(created ?? { id: fbUser.uid, name, role: 'user', enrolled_projects: [], wishlist: [], hours_learned: 0, certificates: 0, phone: null, whatsapp: null, profile_picture_url: fbUser.photoURL ?? null, referral_code: null, referred_by: validReferrer ? referredBy : null, created_at: new Date().toISOString(), updated_at: new Date().toISOString() }), email: fbUser.email ?? '' };
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -96,8 +154,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signupWithEmail = async (name: string, email: string, password: string, phone: string) => {
     const { user: fbUser } = await createUserWithEmailAndPassword(auth, email, password);
     await sendEmailVerification(fbUser);
-    // Create profile with phone/whatsapp
     const supabase = createClient();
+    const referredBy = typeof window !== 'undefined' ? localStorage.getItem('mesho_ref') : null;
+
+    // Validate referral code: must exist and not be the user's own
+    let validReferrer: { id: string } | null = null;
+    if (referredBy) {
+      const { data: ref } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('referral_code', referredBy)
+        .neq('id', fbUser.uid)
+        .maybeSingle();
+      validReferrer = ref ?? null;
+    }
+
     await supabase.from('profiles').insert({
       id: fbUser.uid,
       name,
@@ -110,7 +181,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       wishlist: [],
       hours_learned: 0,
       certificates: 0,
+      referred_by: validReferrer ? referredBy : null,
     });
+
+    // Record referral signup row so referrer sees this person immediately
+    if (validReferrer && referredBy) {
+      await supabase.from('referral_signups').upsert({
+        referrer_code: referredBy,
+        referrer_id: validReferrer.id,
+        referee_id: fbUser.uid,
+        referee_name: name,
+        referee_email: email,
+        completed: false,
+      }, { onConflict: 'referrer_id,referee_id', ignoreDuplicates: true });
+    }
+
+    if (referredBy && typeof window !== 'undefined') localStorage.removeItem('mesho_ref');
     // Sign out immediately — user must verify email first
     await signOut(auth);
   };

@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Menu, X, Bell, FileText, BarChart3, UserCheck, Home } from 'lucide-react';
+import { Menu, X, Bell, FileText, BarChart3, UserCheck, Home, CheckCircle, XCircle, MessageSquare, Gift, Users, BellOff } from 'lucide-react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -69,41 +69,70 @@ export const Navbar = () => {
       <>
         {notifOpen && <div className="fixed inset-0 bg-black/40 z-50" onClick={() => setNotifOpen(false)} />}
         <div className={`fixed top-0 right-0 h-full w-80 bg-card border-l border-border z-50 flex flex-col transition-transform duration-300 ${notifOpen ? 'translate-x-0' : 'translate-x-full'}`} style={{ boxShadow: '-8px 0 32px rgba(0,0,0,0.10)' }} role="dialog" aria-label="Notifications panel">
-          <div className="flex items-center justify-between p-5 border-b border-border">
-            <div className="flex items-center gap-2">
-              <Bell size={18} className="text-accent" />
-              <h2 className="font-semibold text-base">Notifications</h2>
-              {unreadCount > 0 && <span className="text-xs bg-accent text-white px-1.5 py-0.5 rounded-full font-bold">{unreadCount}</span>}
+          {/* Panel header */}
+          <div className="flex items-center justify-between px-5 py-4 border-b border-border bg-card">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 bg-accent/10 rounded-xl flex items-center justify-center">
+                <Bell size={16} className="text-accent" />
+              </div>
+              <div>
+                <h2 className="font-bold text-sm leading-tight">Notifications</h2>
+                {unreadCount > 0 && <p className="text-[10px] text-muted-foreground">{unreadCount} unread</p>}
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              {unreadCount > 0 && <button onClick={markAllRead} className="text-xs text-accent hover:underline">Mark all read</button>}
-              <button onClick={() => setNotifOpen(false)} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-muted transition-colors"><X size={18} /></button>
+            <div className="flex items-center gap-1.5">
+              {unreadCount > 0 && (
+                <button onClick={markAllRead} className="text-xs text-accent hover:text-accent/80 font-medium px-2 py-1 rounded-lg hover:bg-accent/10 transition-colors">
+                  Mark all read
+                </button>
+              )}
+              <button onClick={() => setNotifOpen(false)} className="w-8 h-8 flex items-center justify-center rounded-xl hover:bg-muted transition-colors">
+                <X size={16} />
+              </button>
             </div>
           </div>
+
+          {/* Panel body */}
           <div className="flex-1 overflow-y-auto">
             {notifications.length === 0 ? (
-              <div className="p-5 text-center py-12">
-                <div className="w-12 h-12 bg-accent/10 rounded-2xl flex items-center justify-center mx-auto mb-3">
-                  <Bell size={22} className="text-accent" />
+              <div className="flex flex-col items-center justify-center h-full px-6 text-center">
+                <div className="w-14 h-14 bg-muted rounded-2xl flex items-center justify-center mb-4">
+                  <BellOff size={24} className="text-muted-foreground" />
                 </div>
-                <p className="text-sm font-medium mb-1">No notifications yet</p>
-                <p className="text-xs text-muted-foreground">We'll notify you about payments, messages and updates.</p>
+                <p className="text-sm font-semibold mb-1">All caught up</p>
+                <p className="text-xs text-muted-foreground leading-relaxed">You have no notifications yet. We'll alert you about payments, referrals, and messages.</p>
               </div>
             ) : (
-              <div className="divide-y divide-border">
-                {notifications.map(n => (
-                  <button key={n.id} onClick={() => handleNotifClick(n)}
-                    className={`w-full text-left px-4 py-3.5 hover:bg-muted/50 transition-colors ${!n.read ? 'bg-accent/5' : ''}`}>
-                    <div className="flex items-start gap-3">
-                      <div className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${!n.read ? 'bg-accent' : 'bg-transparent'}`} />
-                      <div className="min-w-0 flex-1">
-                        <p className={`text-sm font-medium leading-tight ${!n.read ? 'text-foreground' : 'text-muted-foreground'}`}>{n.title}</p>
-                        <p className="text-xs text-muted-foreground mt-0.5 leading-snug">{n.body}</p>
-                        <p className="text-[10px] text-muted-foreground/60 mt-1">{new Date(n.created_at).toLocaleString()}</p>
+              <div className="divide-y divide-border/60">
+                {notifications.map(n => {
+                  const iconMap: Record<string, { icon: React.ElementType; bg: string; color: string }> = {
+                    payment_confirmed: { icon: CheckCircle, bg: 'bg-green-100', color: 'text-green-600' },
+                    payment_rejected: { icon: XCircle, bg: 'bg-red-100', color: 'text-red-500' },
+                    message: { icon: MessageSquare, bg: 'bg-blue-100', color: 'text-blue-600' },
+                    referral_signup: { icon: Users, bg: 'bg-accent/10', color: 'text-accent' },
+                    referral_completed: { icon: Gift, bg: 'bg-amber-100', color: 'text-amber-600' },
+                    general: { icon: Bell, bg: 'bg-accent/10', color: 'text-accent' },
+                  };
+                  const { icon: Icon, bg, color } = iconMap[n.type] ?? iconMap.general;
+                  return (
+                    <button key={n.id} onClick={() => handleNotifClick(n)}
+                      className={`w-full text-left px-4 py-3.5 hover:bg-muted/50 transition-colors ${!n.read ? 'bg-accent/[0.04]' : ''}`}>
+                      <div className="flex items-start gap-3">
+                        <div className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 ${bg}`}>
+                          <Icon size={15} className={color} />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center justify-between gap-2 mb-0.5">
+                            <p className={`text-xs font-semibold leading-tight truncate ${!n.read ? 'text-foreground' : 'text-muted-foreground'}`}>{n.title}</p>
+                            {!n.read && <span className="w-1.5 h-1.5 rounded-full bg-accent flex-shrink-0" />}
+                          </div>
+                          <p className="text-xs text-muted-foreground leading-snug line-clamp-2">{n.body}</p>
+                          <p className="text-[10px] text-muted-foreground/50 mt-1">{new Date(n.created_at).toLocaleString()}</p>
+                        </div>
                       </div>
-                    </div>
-                  </button>
-                ))}
+                    </button>
+                  );
+                })}
               </div>
             )}
           </div>

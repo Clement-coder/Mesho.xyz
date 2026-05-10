@@ -5,9 +5,9 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { CustomSelect } from '../components/custom-select';
 import { Button } from '@/components/ui/button';
-import { Loader2, Mail, Lock, Eye, EyeOff, User, Phone, BookOpen, CheckCircle, Sparkles, UserPlus } from 'lucide-react';
+import { Loader2, Mail, Lock, Eye, EyeOff, User, Phone, BookOpen, CheckCircle, Sparkles, UserPlus, Gift } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 const BG_IMAGES = [
   '/research-material-acces.jpg',
@@ -55,8 +55,22 @@ export default function SignUpPage() {
   const [showSuccess, setShowSuccess] = useState(false);
   const [bgIndex, setBgIndex] = useState(0);
   const [leaving, setLeaving] = useState(false);
+  const [refCode, setRefCode] = useState('');
   const { signupWithEmail, loginWithGoogle, isAuthenticated } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // Persist referral code from URL into localStorage so Google OAuth flow can pick it up
+  useEffect(() => {
+    const ref = searchParams.get('ref');
+    if (ref) {
+      localStorage.setItem('mesho_ref', ref.toUpperCase());
+      setRefCode(ref.toUpperCase());
+    } else {
+      const stored = localStorage.getItem('mesho_ref');
+      if (stored) setRefCode(stored);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     const id = setInterval(() => setBgIndex(i => (i + 1) % BG_IMAGES.length), 5000);
@@ -265,9 +279,16 @@ export default function SignUpPage() {
                 )}
               </div>
 
+              {/* Referral code banner */}
+              {refCode && (
+                <div className="flex items-center gap-2 bg-green-50 border border-green-200 rounded-xl px-3 py-2 text-xs text-green-700">
+                  <Gift size={13} className="flex-shrink-0" />
+                  <span>Referral code <strong>{refCode}</strong> applied — you'll get a discount on your first purchase!</span>
+                </div>
+              )}
+
               {/* Terms & Conditions checkbox */}
-              <label className="flex items-start gap-2.5 cursor-pointer select-none">
-                <div className="relative mt-0.5 flex-shrink-0">
+              <label className="flex items-start gap-2.5 cursor-pointer select-none">                <div className="relative mt-0.5 flex-shrink-0">
                   <input type="checkbox" checked={agreedToTerms} onChange={e => setAgreedToTerms(e.target.checked)} className="sr-only peer" />
                   <div className="w-4 h-4 rounded border border-border bg-input peer-checked:bg-accent peer-checked:border-accent transition-colors flex items-center justify-center">
                     {agreedToTerms && <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4l2.5 2.5L9 1" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>}

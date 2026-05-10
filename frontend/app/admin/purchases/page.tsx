@@ -62,14 +62,42 @@ export function PurchasesContent() {
     const { error } = await supabase.from('purchases').update({ status: 'confirmed' }).eq('id', p.id);
     if (error) { toast.error(`Confirm failed: ${error.message}`); setUpdating(null); return; }
 
-    // Update enrolled_projects — fetch first then update
-    const { data: prof, error: profErr } = await supabase.from('profiles').select('enrolled_projects').eq('id', p.user_id).single();
+    // Update enrolled_projects
+    const { data: prof, error: profErr } = await supabase.from('profiles').select('enrolled_projects, referred_by').eq('id', p.user_id).single();
     if (profErr) {
       toast.error(`Profile update failed: ${profErr.message}`);
     } else if (prof) {
       const updated = Array.from(new Set([...(prof.enrolled_projects ?? []), p.project_id]));
-      const { error: upErr } = await supabase.from('profiles').update({ enrolled_projects: updated }).eq('id', p.user_id);
-      if (upErr) toast.error(`Enrolled update failed: ${upErr.message}`);
+      await supabase.from('profiles').update({ enrolled_projects: updated }).eq('id', p.user_id);
+
+      // Generate referral reward if this buyer was referred by someone
+      // and no reward has been issued for this purchase yet (prevent duplicates)
+      if (prof.referred_by) {
+        const { data: referrer } = await supabase.from('profiles').select('id').eq('referral_code', prof.referred_by).single();
+        if (referrer) {
+          const { data: existingReward } = await supabase
+            .from('referral_rewards')
+            .select('id')
+            .eq('purchase_id', p.id)
+            .maybeSingle();
+          if (!existingReward) {
+            const discountCode = `REF-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
+            await supabase.from('referral_rewards').insert({
+              referrer_id: referrer.id,
+              referee_id: p.user_id,
+              purchase_id: p.id,
+              discount_code: discountCode,
+              discount_amount: 500,
+            });
+          }
+          // Mark the referral signup as completed
+          await supabase
+            .from('referral_signups')
+            .update({ completed: true })
+            .eq('referrer_id', referrer.id)
+            .eq('referee_id', p.user_id);
+        }
+      }
     }
 
     setPurchases(prev => prev.map(x => x.id === p.id ? { ...x, status: 'confirmed' } : x));
@@ -87,9 +115,11 @@ export function PurchasesContent() {
     setUpdating(null);
   };
 
-  const filtered = filter === 'all' ? purchases : purchases.filter(p => p.status === filter);
+  const filtered = filter === 'all' ? purchases
+    : filter === 'pending' ? purchases.filter(p => p.status === 'pending' || p.status === 'awaiting_confirmation')
+    : purchases.filter(p => p.status === filter);
   const totalRevenue = purchases.filter(p => p.status === 'confirmed').reduce((s, p) => s + p.amount, 0);
-  const pendingCount = purchases.filter(p => p.status === 'pending').length;
+  const pendingCount = purchases.filter(p => p.status === 'pending' || p.status === 'awaiting_confirmation').length;
 
   if (loading) return <div className="flex justify-center py-20"><div className="w-8 h-8 border-4 border-accent border-t-transparent rounded-full animate-spin" /></div>;
 
@@ -159,7 +189,7 @@ export function PurchasesContent() {
                   )}
 
                   <div className="flex flex-wrap gap-2">
-                    {p.status === 'pending' && (
+                    {(p.status === 'pending' || p.status === 'awaiting_confirmation') && (
                       <>
                         <Button size="sm" onClick={() => confirmPayment(p)} disabled={updating === p.id}
                           className="bg-green-600 hover:bg-green-700 text-white border-0 gap-1.5">

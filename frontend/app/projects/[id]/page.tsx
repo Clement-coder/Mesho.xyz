@@ -73,21 +73,52 @@ export default function ProjectPreviewPage() {
     setPayRef('');
   };
 
-  const handleIHavePaid = async () => {
+  const handleIHavePaid = async (discountCode: string, discountAmount: number) => {
     if (!user || !project) return;
     setSubmitting(true);
     const supabase = createClient();
-    const { error } = await supabase.from('purchases').insert({
-      user_id: user.id,
-      project_id: project.id,
-      amount: project.price,
-      payment_reference: payRef,
-      status: 'pending',
-      user_name: user.name,
-      user_email: user.email ?? '',
-      user_whatsapp: user.whatsapp ?? user.phone ?? '',
-    });
-    if (error) { toast.error('Submission failed. Please try again.'); setSubmitting(false); return; }
+    const finalAmount = Math.max(0, project.price - discountAmount);
+
+    // Check for an existing pending/awaiting purchase for this project to avoid duplicates
+    const { data: existing } = await supabase
+      .from('purchases')
+      .select('id')
+      .eq('user_id', user.id)
+      .eq('project_id', project.id)
+      .in('status', ['pending', 'awaiting_confirmation'])
+      .maybeSingle();
+
+    if (existing) {
+      // Update the existing record to pending instead of inserting a duplicate
+      const { error } = await supabase.from('purchases').update({
+        amount: finalAmount,
+        payment_reference: payRef,
+        status: 'pending',
+        discount_code: discountCode || null,
+        discount_amount: discountAmount,
+      }).eq('id', existing.id);
+      if (error) { toast.error('Submission failed. Please try again.'); setSubmitting(false); return; }
+    } else {
+      const { error } = await supabase.from('purchases').insert({
+        user_id: user.id,
+        project_id: project.id,
+        amount: finalAmount,
+        payment_reference: payRef,
+        status: 'pending',
+        user_name: user.name,
+        user_email: user.email ?? '',
+        user_whatsapp: user.whatsapp ?? user.phone ?? '',
+        discount_code: discountCode || null,
+        discount_amount: discountAmount,
+      });
+      if (error) { toast.error('Submission failed. Please try again.'); setSubmitting(false); return; }
+    }
+
+    // Mark discount code as used
+    if (discountCode) {
+      await supabase.from('referral_rewards').update({ used: true }).eq('discount_code', discountCode);
+    }
+
     setSubmitting(false);
     setShowTransferModal(false);
     router.push('/dashboard?tab=payments');
@@ -249,6 +280,7 @@ export default function ProjectPreviewPage() {
         projectTitle={project.title}
         amount={project.price}
         reference={payRef}
+        userId={user?.id ?? ''}
         onIHavePaid={handleIHavePaid}
         submitting={submitting}
       />

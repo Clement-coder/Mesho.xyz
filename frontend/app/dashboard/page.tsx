@@ -10,14 +10,14 @@ import { useAuth } from '@/lib/auth-context';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { LogoutModal } from '@/components/logout-modal';
 import { DashboardSidebar } from '../components/dashboard-sidebar';
-import { BookOpen, BarChart3, Award, FolderOpen, Search, Heart, UserCircle, CreditCard, Clock, CheckCircle, XCircle, ChevronLeft, MessageCircle, ShieldCheck, Eye, X, Copy, Building2, ClipboardList, Info } from 'lucide-react';
+import { BookOpen, BarChart3, Award, FolderOpen, Search, Heart, UserCircle, CreditCard, Clock, CheckCircle, XCircle, ChevronLeft, MessageCircle, ShieldCheck, Eye, X, Copy, Building2, ClipboardList, Info, Gift } from 'lucide-react';
 import { PaymentReceipt } from '../components/payment-receipt';
 import { BottomSheet } from '@/components/bottom-sheet';
 import { toast } from 'sonner';
 
 const WA_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? '2348012345678';
 import { createClient } from '@/utils/supabase/client';
-import type { Project, Purchase, HireRequest } from '@/lib/types';
+import type { Project, Purchase, HireRequest, ReferralSignup } from '@/lib/types';
 import { getUserHireRequests } from './actions';
 
 const statusIcon = { awaiting_confirmation: Clock, pending: Clock, confirmed: CheckCircle, failed: XCircle };
@@ -29,6 +29,8 @@ export default function DashboardPage() {
   const [allProjects, setAllProjects] = useState<Project[]>([]);
   const [purchases, setPurchases] = useState<(Purchase & { projects?: Project })[]>([]);
   const [hireRequests, setHireRequests] = useState<HireRequest[]>([]);
+  const [referralRewards, setReferralRewards] = useState<{ discount_code: string; discount_amount: number; used: boolean; created_at: string }[]>([]);
+  const [referralSignups, setReferralSignups] = useState<ReferralSignup[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewPayment, setViewPayment] = useState<(Purchase & { projects?: Project }) | null>(null);
   const [viewHireRequest, setViewHireRequest] = useState<string | null>(null);
@@ -57,14 +59,18 @@ export default function DashboardPage() {
     Promise.all([
       supabase.from('projects').select('*').order('title'),
       supabase.from('purchases').select('*, projects(*)').order('created_at', { ascending: false }),
-      getUserHireRequests(user.email)
-    ]).then(([{ data: projs, error: projErr }, { data: allPurch, error: purchErr }, hireData]) => {
+      getUserHireRequests(user.email),
+      supabase.from('referral_rewards').select('discount_code, discount_amount, used, created_at').eq('referrer_id', user.id).order('created_at', { ascending: false }),
+      supabase.from('referral_signups').select('*').eq('referrer_id', user.id).order('created_at', { ascending: false }),
+    ]).then(([{ data: projs, error: projErr }, { data: allPurch, error: purchErr }, hireData, { data: rewards }, { data: signups }]) => {
       if (projErr) console.error('projects error:', projErr);
       if (purchErr) console.error('purchases error:', purchErr);
       const purch = (allPurch ?? []).filter((p: any) => p.user_id === user.id);
       setAllProjects(projs ?? []);
       setPurchases(purch);
       setHireRequests(hireData ?? []);
+      setReferralRewards(rewards ?? []);
+      setReferralSignups(signups ?? []);
       setLoading(false);
     });
   }, [user]);
@@ -131,6 +137,140 @@ export default function DashboardPage() {
               </div>
             ))}
           </div>
+
+          {/* Referral card */}
+          {user?.referral_code && (() => {
+            const referralLink = typeof window !== 'undefined' ? `${window.location.origin}/signup?ref=${user.referral_code}` : `/signup?ref=${user.referral_code}`;
+            const totalCount = referralSignups.length;
+            const pendingReferrals = referralSignups.filter(s => !s.completed);
+            const completedReferrals = referralSignups.filter(s => s.completed);
+            const availableCodes = referralRewards.filter(r => !r.used);
+            return (
+              <div className="mb-6 rounded-2xl overflow-hidden border border-blue-200/60 shadow-sm">
+                {/* Top banner — blue → navy gradient with gold accent */}
+                <div className="px-5 pt-5 pb-4" style={{ background: 'linear-gradient(135deg, #1e3a5f 0%, #1e40af 60%, #1d4ed8 100%)' }}>
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <div className="w-7 h-7 bg-white/20 rounded-xl flex items-center justify-center">
+                          <Gift size={15} className="text-amber-300" />
+                        </div>
+                        <p className="text-white font-bold text-base">Refer & Earn ₦500</p>
+                      </div>
+                      <p className="text-blue-100/80 text-xs leading-relaxed max-w-xs">
+                        Invite friends to Mesho. When they sign up and make their first purchase, you earn a ₦500 discount code.
+                      </p>
+                    </div>
+                    {availableCodes.length > 0 && (
+                      <div className="flex-shrink-0 bg-amber-400/20 border border-amber-300/40 rounded-xl px-3 py-1.5 text-center">
+                        <p className="text-amber-300 font-bold text-lg leading-none">{availableCodes.length}</p>
+                        <p className="text-amber-200/70 text-[9px] mt-0.5">Reward{availableCodes.length !== 1 ? 's' : ''} ready</p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Share row */}
+                  <div className="flex items-center gap-2 mt-4">
+                    <div className="flex-1 bg-white/10 border border-white/20 rounded-xl px-3 py-2 min-w-0">
+                      <p className="text-blue-200/60 text-[9px] uppercase tracking-wide mb-0.5">Your referral link</p>
+                      <p className="text-white text-xs font-mono font-semibold truncate">{referralLink}</p>
+                    </div>
+                    <button
+                      onClick={() => navigator.clipboard.writeText(referralLink).then(() => toast.success('Referral link copied!'))}
+                      className="flex-shrink-0 w-9 h-9 bg-white/15 hover:bg-white/25 border border-white/25 rounded-xl flex items-center justify-center text-white transition-colors"
+                      title="Copy link"
+                    >
+                      <Copy size={14} />
+                    </button>
+                    <a
+                      href={`https://wa.me/?text=${encodeURIComponent(`Join me on Mesho Data Sciences! Get a discount on your first research material purchase: ${referralLink}`)}`}
+                      target="_blank" rel="noopener noreferrer"
+                      className="flex-shrink-0 w-9 h-9 bg-[#25D366] hover:bg-[#20BA5A] rounded-xl flex items-center justify-center text-white transition-colors"
+                      title="Share on WhatsApp"
+                    >
+                      <MessageCircle size={14} />
+                    </a>
+                  </div>
+                </div>
+
+                {/* Stats row */}
+                <div className="grid grid-cols-3 divide-x divide-blue-100 border-b border-blue-100 bg-blue-50/40">
+                  {[
+                    { label: 'Total', value: totalCount, color: 'text-blue-700' },
+                    { label: 'Pending', value: pendingReferrals.length, color: 'text-amber-600' },
+                    { label: 'Completed', value: completedReferrals.length, color: 'text-green-600' },
+                  ].map(s => (
+                    <div key={s.label} className="py-3 text-center">
+                      <p className={`text-xl font-bold ${s.color}`}>{s.value}</p>
+                      <p className="text-[10px] text-muted-foreground mt-0.5">{s.label}</p>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="p-4 space-y-3 bg-card">
+                  {/* Referee list */}
+                  {referralSignups.length > 0 && (
+                    <div>
+                      <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2">Your Referrals</p>
+                      <div className="space-y-1.5">
+                        {referralSignups.map(s => (
+                          <div key={s.id} className={`flex items-center gap-3 rounded-xl px-3 py-2.5 border ${s.completed ? 'bg-green-50 border-green-200' : 'bg-amber-50/60 border-amber-200/60'}`}>
+                            <div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold ${s.completed ? 'bg-green-200 text-green-800' : 'bg-blue-100 text-blue-700'}`}>
+                              {s.referee_name.charAt(0).toUpperCase()}
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <p className="text-xs font-semibold truncate">{s.referee_name}</p>
+                              <p className="text-[10px] text-muted-foreground truncate">{s.referee_email}</p>
+                            </div>
+                            <span className={`flex-shrink-0 flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full ${s.completed ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
+                              {s.completed ? <><CheckCircle size={9} />Completed</> : <><Clock size={9} />Pending</>}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Earned discount codes */}
+                  {referralRewards.length > 0 && (
+                    <div>
+                      <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2">Earned Discount Codes</p>
+                      <div className="space-y-1.5">
+                        {referralRewards.map(r => (
+                          <div key={r.discount_code} className={`flex items-center justify-between gap-2 rounded-xl px-3 py-2.5 border ${r.used ? 'bg-muted/30 border-border' : 'bg-accent/5 border-accent/20'}`}>
+                            <div className="flex items-center gap-2 min-w-0">
+                              <div className={`w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0 ${r.used ? 'bg-muted' : 'bg-accent/10'}`}>
+                                <Gift size={11} className={r.used ? 'text-muted-foreground' : 'text-accent'} />
+                              </div>
+                              <span className={`font-mono font-bold text-xs ${r.used ? 'line-through text-muted-foreground' : 'text-accent'}`}>{r.discount_code}</span>
+                            </div>
+                            <div className="flex items-center gap-2 flex-shrink-0">
+                              <span className={`text-xs font-semibold ${r.used ? 'text-muted-foreground' : 'text-accent'}`}>₦{r.discount_amount.toLocaleString()} off</span>
+                              {r.used ? (
+                                <span className="text-[9px] bg-muted text-muted-foreground px-1.5 py-0.5 rounded-full font-medium">Used</span>
+                              ) : (
+                                <button
+                                  onClick={() => navigator.clipboard.writeText(r.discount_code).then(() => toast.success('Discount code copied!'))}
+                                  className="w-6 h-6 flex items-center justify-center hover:bg-accent/10 rounded-lg text-accent transition-colors"
+                                  title="Copy code"
+                                >
+                                  <Copy size={11} />
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {referralSignups.length === 0 && (
+                    <p className="text-xs text-muted-foreground text-center py-1">No referrals yet. Share your link and start earning!</p>
+                  )}
+                </div>
+              </div>
+            );
+          })()}
 
           {/* Tabs — hidden on mobile (use bottom nav instead) */}
           <div className="hidden sm:flex clay p-1 gap-1 mb-5 w-full overflow-x-auto">

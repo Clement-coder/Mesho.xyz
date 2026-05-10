@@ -1,10 +1,11 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
-import { X, Copy, Clock, CheckCircle, Banknote, AlertCircle, Loader2 } from 'lucide-react';
+import { X, Copy, Clock, CheckCircle, Banknote, AlertCircle, Loader2, Tag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { BottomSheet } from '@/components/bottom-sheet';
+import { createClient } from '@/utils/supabase/client';
 
 const BANK_NAME = process.env.NEXT_PUBLIC_BANK_NAME ?? 'First Bank of Nigeria';
 const ACCOUNT_NUMBER = process.env.NEXT_PUBLIC_BANK_ACCOUNT_NUMBER ?? '0000000000';
@@ -17,13 +18,18 @@ interface BankTransferModalProps {
   projectTitle: string;
   amount: number;
   reference: string;
-  onIHavePaid: () => void;
+  userId: string;
+  onIHavePaid: (discountCode: string, discountAmount: number) => void;
   submitting: boolean;
 }
 
-export function BankTransferModal({ isOpen, onClose, projectTitle, amount, reference, onIHavePaid, submitting }: BankTransferModalProps) {
+export function BankTransferModal({ isOpen, onClose, projectTitle, amount, reference, userId, onIHavePaid, submitting }: BankTransferModalProps) {
   const [seconds, setSeconds] = useState(COUNTDOWN_SECONDS);
   const [loadingDetails, setLoadingDetails] = useState(true);
+  const [discountInput, setDiscountInput] = useState('');
+  const [appliedCode, setAppliedCode] = useState('');
+  const [discountAmount, setDiscountAmount] = useState(0);
+  const [checkingCode, setCheckingCode] = useState(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
@@ -31,9 +37,11 @@ export function BankTransferModal({ isOpen, onClose, projectTitle, amount, refer
       if (intervalRef.current) clearInterval(intervalRef.current);
       setSeconds(COUNTDOWN_SECONDS);
       setLoadingDetails(true);
+      setDiscountInput('');
+      setAppliedCode('');
+      setDiscountAmount(0);
       return;
     }
-    // Simulate a brief loading phase for payment details
     setLoadingDetails(true);
     const loadTimer = setTimeout(() => setLoadingDetails(false), 2500);
     setSeconds(COUNTDOWN_SECONDS);
@@ -47,6 +55,25 @@ export function BankTransferModal({ isOpen, onClose, projectTitle, amount, refer
     };
   }, [isOpen]);
 
+  const applyDiscount = async () => {
+    const code = discountInput.trim().toUpperCase();
+    if (!code) return;
+    setCheckingCode(true);
+    const { data, error } = await createClient()
+      .from('referral_rewards')
+      .select('*')
+      .eq('discount_code', code)
+      .eq('used', false)
+      .eq('referrer_id', userId)
+      .single();
+    setCheckingCode(false);
+    if (error || !data) { toast.error('Invalid, already used, or not your discount code'); return; }
+    setAppliedCode(code);
+    setDiscountAmount(data.discount_amount);
+    toast.success(`₦${data.discount_amount.toLocaleString()} discount applied!`);
+  };
+
+  const finalAmount = Math.max(0, amount - discountAmount);
   const mins = String(Math.floor(seconds / 60)).padStart(2, '0');
   const secs = String(seconds % 60).padStart(2, '0');
   const expired = seconds === 0;
@@ -71,7 +98,6 @@ export function BankTransferModal({ isOpen, onClose, projectTitle, amount, refer
 
       <div className="p-5 space-y-4">
         {loadingDetails ? (
-          /* ── Loading state ── */
           <div className="flex flex-col items-center justify-center py-10 gap-4">
             <Loader2 size={32} className="text-accent animate-spin" />
             <div className="text-center space-y-1">
@@ -100,9 +126,40 @@ export function BankTransferModal({ isOpen, onClose, projectTitle, amount, refer
             {/* Amount */}
             <div className="clay p-4 text-center rounded-xl">
               <p className="text-xs text-muted-foreground mb-1">Amount to Transfer</p>
-              <p className="text-3xl font-bold text-accent">₦{amount.toLocaleString()}</p>
+              {discountAmount > 0 ? (
+                <>
+                  <p className="text-lg line-through text-muted-foreground">₦{amount.toLocaleString()}</p>
+                  <p className="text-3xl font-bold text-green-600">₦{finalAmount.toLocaleString()}</p>
+                  <p className="text-xs text-green-600 mt-0.5">₦{discountAmount.toLocaleString()} discount applied</p>
+                </>
+              ) : (
+                <p className="text-3xl font-bold text-accent">₦{amount.toLocaleString()}</p>
+              )}
               <p className="text-xs text-muted-foreground mt-1 line-clamp-1">{projectTitle}</p>
             </div>
+
+            {/* Discount code */}
+            {!appliedCode ? (
+              <div className="flex gap-2">
+                <div className="relative flex-1">
+                  <Tag size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                  <input
+                    value={discountInput}
+                    onChange={e => setDiscountInput(e.target.value.toUpperCase())}
+                    placeholder="Discount code (optional)"
+                    className="w-full pl-8 pr-3 h-9 rounded-xl border border-border bg-input text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+                  />
+                </div>
+                <Button size="sm" variant="outline" onClick={applyDiscount} disabled={checkingCode || !discountInput.trim()}>
+                  {checkingCode ? <Loader2 size={13} className="animate-spin" /> : 'Apply'}
+                </Button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 bg-green-50 border border-green-200 rounded-xl px-3 py-2 text-xs text-green-700">
+                <Tag size={13} />
+                <span>Code <strong>{appliedCode}</strong> applied — ₦{discountAmount.toLocaleString()} off</span>
+              </div>
+            )}
 
             {/* Bank details */}
             <div className="space-y-2">
@@ -123,10 +180,10 @@ export function BankTransferModal({ isOpen, onClose, projectTitle, amount, refer
             </div>
 
             <div className="bg-muted/30 rounded-xl p-3 text-xs text-muted-foreground leading-relaxed">
-              ⚠️ Use the <strong className="text-foreground">reference number</strong> as your transfer narration. After sending, tap <strong className="text-foreground">"I Have Paid"</strong>.
+              ⚠️ Transfer exactly <strong className="text-foreground">₦{finalAmount.toLocaleString()}</strong> and use the <strong className="text-foreground">reference number</strong> as your narration. Then tap <strong className="text-foreground">"I Have Paid"</strong>.
             </div>
 
-            <Button size="lg" className="w-full" onClick={onIHavePaid} disabled={submitting || expired}>
+            <Button size="lg" className="w-full" onClick={() => onIHavePaid(appliedCode, discountAmount)} disabled={submitting || expired}>
               {submitting
                 ? <><span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />Submitting payment…</>
                 : <><CheckCircle size={16} className="mr-2" />I Have Paid</>}
@@ -137,3 +194,4 @@ export function BankTransferModal({ isOpen, onClose, projectTitle, amount, refer
     </BottomSheet>
   );
 }
+
